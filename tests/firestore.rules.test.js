@@ -197,6 +197,15 @@ describe('(d) não aprovado não escreve nada', () => {
     await assertFails(setDoc(doc(db(), 'config/admins'), { uids: ['pendente'] }));
   });
 
+  it('controle: admin aprova o pendente', async () => {
+    await assertSucceeds(updateDoc(doc(as('admin'), 'members/pendente'), { approved: true }));
+  });
+
+  it('controle: membro aprovado edita o próprio perfil, mas não o approved', async () => {
+    await assertSucceeds(updateDoc(doc(as('alice'), 'members/alice'), { name: 'Alice B.', platforms: ['PC', 'Xbox'] }));
+    await assertFails(updateDoc(doc(as('alice'), 'members/alice'), { approved: false }));
+  });
+
   it('controle: usuário novo cria o próprio doc com approved=false', async () => {
     await assertSucceeds(
       setDoc(doc(as('novato'), 'members/novato'), {

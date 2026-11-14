@@ -8,7 +8,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test:rules": "firebase emulators:exec --only firestore --project demo-clube \"node --test tests/\"",
+    "test:rules": "firebase emulators:exec --only firestore --project demo-clube \"node --test tests/firestore.rules.test.js\"",
     "emulators": "firebase emulators:start --only auth,firestore --project demo-clube"
   },
   "dependencies": {
