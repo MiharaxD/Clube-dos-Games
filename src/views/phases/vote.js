@@ -81,7 +81,7 @@ export async function closeVoting(panel, data, ctx, button) {
   const plural = (n) => `${n} ${n === 1 ? 'voto' : 'votos'}`;
 
   if (top.length === 1) {
-    const ok = await confirmInline(button, `Fechar a votação? "${top[0].name}" ganhou com ${plural(votes)}.`, 'Fechar e revelar');
+    const ok = await confirmInline(button, `Fechar a votação? “${top[0].name}” ganhou com ${plural(votes)}.`, 'Fechar e revelar');
     if (!ok) return;
     await saveWinner(top[0], null, data, ctx);
     return;

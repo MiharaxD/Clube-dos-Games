@@ -513,3 +513,6 @@ fieldset { border: 0; padding: 0; }
 .confirm .btn { border-color: var(--paper-ink); color: var(--paper-ink); }
 .confirm .btn--primary { background: var(--paper-ink); color: var(--paper); }
 .confirm .btn:hover { background: var(--stamp); border-color: var(--stamp); color: var(--paper); }
+
+/* Número sozinho no adesivo: fonte pixel (o "1" à mão parecia um parêntese) */
+.sticker--num { font: 1.6rem/1.1 var(--font-display); padding: 2px 10px 0; }

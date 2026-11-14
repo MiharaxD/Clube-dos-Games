@@ -44,7 +44,7 @@ export function renderSuggest(container, data, ctx) {
 
   container.querySelector('[data-remove]')?.addEventListener('click', async (event) => {
     const button = event.currentTarget;
-    if (!(await confirmInline(button, `Tirar "${mine.name}" da prateleira?`, 'Tirar da prateleira'))) return;
+    if (!(await confirmInline(button, `Tirar “${mine.name}” da prateleira?`, 'Tirar da prateleira'))) return;
     const ok = await withBusy(button, () => deleteGame(data.round.id, uid).then(() => true));
     if (ok) {
       toast('Sugestão removida. A vaga é sua de novo.');

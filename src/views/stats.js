@@ -74,7 +74,7 @@ export async function renderStats(main, { session }) {
       <ol class="list">${winners.map(([uid, list]) => `
         <li>
           ${memberChip(members.find((m) => m.id === uid) ?? { name: memberName(members, uid) })}
-          <span><span class="sticker">${list.length}</span> ${list.length === 1 ? 'vitória' : 'vitórias'}
+          <span><span class="sticker sticker--num">${list.length}</span> ${list.length === 1 ? 'vitória' : 'vitórias'}
           <span class="small muted">· ${list.map((p) => esc(p.winner.name)).join(', ')}</span></span>
         </li>`).join('')}</ol>
     </section>

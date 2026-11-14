@@ -221,7 +221,7 @@ function ratingsSection({ ratings, members, uid }) {
     <section aria-labelledby="ratings-title">
       <div class="page-head" style="margin-bottom:8px">
         <h2 id="ratings-title">Notas</h2>
-        <p class="muted">${avg === null ? 'Ninguém deu nota ainda' : `<span class="sticker">${fmtScore(avg)}</span> média de ${ratings.length} ${ratings.length === 1 ? 'nota' : 'notas'}`}</p>
+        <p class="muted">${avg === null ? 'Ninguém deu nota ainda' : `<span class="sticker sticker--num">${fmtScore(avg)}</span> média de ${ratings.length} ${ratings.length === 1 ? 'nota' : 'notas'}`}</p>
       </div>
       <form class="form panel" id="rating-form">
         <label class="field" for="score"><span>${mine ? 'Sua nota (dá pra mudar)' : 'Sua nota'}</span></label>
@@ -237,7 +237,7 @@ function ratingsSection({ ratings, members, uid }) {
       </form>
       ${sorted.length ? `<ul class="list ratings">${sorted.map((r) => `
         <li>
-          <div class="rating__head">${memberChip(members.find((m) => m.id === r.id) ?? { name: 'Ex-sócio' })}<span class="sticker">${fmtScore(r.score)}<span class="sr-only"> de 10</span></span></div>
+          <div class="rating__head">${memberChip(members.find((m) => m.id === r.id) ?? { name: 'Ex-sócio' })}<span class="sticker sticker--num">${fmtScore(r.score)}<span class="sr-only"> de 10</span></span></div>
           ${commentHtml(r)}
         </li>`).join('')}</ul>` : ''}
     </section>`;
