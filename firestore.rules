@@ -1,0 +1,299 @@
+rules_version = '2';
+
+// =============================================================================
+// Regras do Clube dos Jogos
+//
+// Modelo de dados:
+//   config/admins                      { uids: [uid, ...] }  (criado à mão no console)
+//   members/{uid}                      perfil + approved
+//   rounds/{roundId}                   rodada (status, vencedor, prazo, datas...)
+//     games/{uid}                      sugestão: o ID do doc É o uid do autor
+//       votes/{uid}                    voto por aprovação: o ID do doc É o uid do eleitor
+//     dateVotes/{uid}                  datas que o membro pode pra reunião
+//     ratings/{uid}                    nota pós-jogo
+//     questions/{autoId}               perguntas pra discussão
+//
+// Tudo que não está liberado aqui é negado por padrão.
+// =============================================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------- Quem é quem ----------
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function me() {
+      return request.auth.uid;
+    }
+
+    // Admin = uid listado em config/admins.uids.
+    function isAdmin() {
+      let path = /databases/$(database)/documents/config/admins;
+      return signedIn() && exists(path) && me() in get(path).data.uids;
+    }
+
+    // Membro aprovado. O admin conta como aprovado mesmo sem doc em members.
+    function isApproved() {
+      let path = /databases/$(database)/documents/members/$(me());
+      return signedIn()
+        && (isAdmin() || (exists(path) && get(path).data.approved == true));
+    }
+
+    // ---------- Ajudantes de validação ----------
+
+    function isText(value, minSize, maxSize) {
+      return value is string && value.size() >= minSize && value.size() <= maxSize;
+    }
+
+    function platformFamilies() {
+      return ['PC', 'PlayStation', 'Xbox', 'Nintendo', 'Mobile', 'Mac', 'Linux'];
+    }
+
+    function isPlatformList(value) {
+      return value is list && value.hasOnly(platformFamilies());
+    }
+
+    function statusIndex(status) {
+      return {'sugerindo': 0, 'votando': 1, 'jogando': 2, 'encerrada': 3}[status];
+    }
+
+    function roundStatus(roundId) {
+      return get(/databases/$(database)/documents/rounds/$(roundId)).data.status;
+    }
+
+    // =========================================================================
+    // config/admins: qualquer pessoa logada lê (pra saber se é admin); ninguém
+    // escreve pelo app, só pelo console.
+    // =========================================================================
+    match /config/admins {
+      allow read: if signedIn();
+      allow write: if false;
+    }
+
+    // =========================================================================
+    // members/{uid}
+    // =========================================================================
+    match /members/{memberId} {
+      function validProfile(d) {
+        return isText(d.name, 1, 80)
+          && d.get('photoURL', '') is string
+          && isPlatformList(d.platforms);
+      }
+
+      // Cada um lê o próprio doc (inclusive pendente); aprovados leem todos.
+      allow read: if signedIn() && (memberId == me() || isApproved());
+
+      // Usuário novo cria o próprio doc, SEMPRE com approved=false.
+      allow create: if signedIn()
+        && memberId == me()
+        && request.resource.data.keys().hasOnly(['name', 'photoURL', 'approved', 'platforms', 'createdAt'])
+        && request.resource.data.approved == false
+        && request.resource.data.createdAt == request.time
+        && validProfile(request.resource.data);
+
+      allow update: if
+        // O próprio membro aprovado edita o perfil, mas nunca o campo approved.
+        (memberId == me()
+          && isApproved()
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'photoURL', 'platforms'])
+          && validProfile(request.resource.data))
+        // O admin só mexe no campo approved.
+        || (isAdmin()
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['approved'])
+          && request.resource.data.approved is bool);
+
+      allow delete: if false;
+    }
+
+    // =========================================================================
+    // rounds/{roundId}
+    // =========================================================================
+    match /rounds/{roundId} {
+
+      // Status só anda 1 passo pra frente ou 1 pra trás.
+      function validStatusStep(fromStatus, toStatus) {
+        return toStatus in ['sugerindo', 'votando', 'jogando', 'encerrada']
+          && math.abs(statusIndex(toStatus) - statusIndex(fromStatus)) <= 1;
+      }
+
+      function validRound(d) {
+        return d.keys().hasOnly([
+            'number', 'status', 'createdAt',
+            'winnerGameId', 'winner', 'tiebreak',
+            'deadline', 'callLink', 'dateOptions', 'meetingDate'
+          ])
+          // De "jogando" em diante precisa ter vencedor, e ele precisa existir.
+          // Antes disso não pode ter (ao voltar pra "votando" o vencedor é limpo).
+          && (statusIndex(d.status) >= 2
+            ? (d.get('winnerGameId', null) is string
+              && exists(/databases/$(database)/documents/rounds/$(roundId)/games/$(d.winnerGameId)))
+            : d.get('winnerGameId', null) == null)
+          && d.get('dateOptions', []) is list
+          && d.get('dateOptions', []).size() <= 20
+          && isText(d.get('callLink', ''), 0, 500);
+      }
+
+      allow read: if isApproved();
+
+      // Só o admin cria rodada, e ela sempre nasce em "sugerindo".
+      allow create: if isAdmin()
+        && request.resource.data.keys().hasOnly(['number', 'status', 'createdAt'])
+        && request.resource.data.number is int
+        && request.resource.data.status == 'sugerindo'
+        && request.resource.data.createdAt == request.time;
+
+      // Só o admin altera a rodada (inclusive o status).
+      allow update: if isAdmin()
+        && validRound(request.resource.data)
+        && validStatusStep(resource.data.status, request.resource.data.status)
+        && request.resource.data.number == resource.data.number
+        && request.resource.data.createdAt == resource.data.createdAt;
+
+      allow delete: if false;
+
+      // -----------------------------------------------------------------------
+      // rounds/{roundId}/games/{gameId}: sugestões
+      // -----------------------------------------------------------------------
+      match /games/{gameId} {
+        function validGame(d) {
+          return d.keys().hasOnly([
+              'name', 'cover', 'platforms', 'year', 'genre', 'pitch',
+              'duration', 'mode', 'price', 'suggestedBy', 'rawgId', 'createdAt'
+            ])
+            && isText(d.name, 1, 100)
+            && isText(d.pitch, 1, 200)
+            && d.duration in ['curto', 'medio', 'longo']
+            && d.mode in ['solo', 'coop', 'multi']
+            && d.price is int && d.price >= 0 && d.price <= 10000
+            && isPlatformList(d.platforms)
+            && isText(d.get('cover', ''), 0, 500)
+            && isText(d.get('genre', ''), 0, 60)
+            && (d.get('year', null) == null || (d.year is int && d.year >= 1950 && d.year <= 2100))
+            && (d.get('rawgId', null) == null || d.rawgId is int);
+        }
+
+        allow read: if isApproved();
+
+        // 1 jogo por pessoa por rodada: o ID do doc PRECISA ser o uid do autor.
+        // Uma segunda sugestão com outro ID é negada; uma segunda "criação" no
+        // mesmo ID cai no update, que exige createdAt inalterado (então um
+        // setDoc novo por cima também é negado).
+        allow create: if isApproved()
+          && gameId == me()
+          && request.resource.data.suggestedBy == me()
+          && request.resource.data.createdAt == request.time
+          && roundStatus(roundId) == 'sugerindo'
+          && validGame(request.resource.data);
+
+        // O autor edita o próprio jogo enquanto a rodada está em "sugerindo".
+        allow update: if isApproved()
+          && resource.data.suggestedBy == me()
+          && request.resource.data.suggestedBy == me()
+          && request.resource.data.createdAt == resource.data.createdAt
+          && roundStatus(roundId) == 'sugerindo'
+          && validGame(request.resource.data);
+
+        allow delete: if isApproved()
+          && resource.data.suggestedBy == me()
+          && roundStatus(roundId) == 'sugerindo';
+
+        // ---------------------------------------------------------------------
+        // rounds/{roundId}/games/{gameId}/votes/{voterId}: voto por aprovação
+        // ---------------------------------------------------------------------
+        match /votes/{voterId} {
+          // Voto secreto: enquanto está "votando", cada um só lê o próprio voto.
+          // O admin lê todos (é ele quem conta). Depois disso, todos leem.
+          allow read: if isApproved()
+            && (voterId == me() || isAdmin() || roundStatus(roundId) != 'votando');
+
+          allow create: if isApproved()
+            && voterId == me()
+            && roundStatus(roundId) == 'votando'
+            // REGRA CRÍTICA: ninguém vota no próprio jogo.
+            // Se o jogo não existir, o get() falha e o voto é negado.
+            && get(/databases/$(database)/documents/rounds/$(roundId)/games/$(gameId)).data.suggestedBy != me()
+            && gameId != me()
+            && request.resource.data.keys().hasOnly(['createdAt'])
+            && request.resource.data.createdAt == request.time;
+
+          allow update: if false;
+
+          // O eleitor desmarca o próprio voto durante a votação. O admin pode
+          // apagar votos (ao voltar a rodada de "votando" para "sugerindo").
+          allow delete: if (isApproved() && voterId == me() && roundStatus(roundId) == 'votando')
+            || isAdmin();
+        }
+      }
+
+      // -----------------------------------------------------------------------
+      // rounds/{roundId}/dateVotes/{voterId}: enquete de datas da reunião
+      // -----------------------------------------------------------------------
+      match /dateVotes/{voterId} {
+        function validDateVote(d) {
+          return d.keys().hasOnly(['dates', 'updatedAt'])
+            && d.dates is list
+            // Só vale marcar datas que o admin propôs.
+            && d.dates.hasOnly(get(/databases/$(database)/documents/rounds/$(roundId)).data.get('dateOptions', []))
+            && d.updatedAt == request.time;
+        }
+
+        allow read: if isApproved();
+        allow create, update: if isApproved()
+          && voterId == me()
+          && roundStatus(roundId) == 'jogando'
+          && validDateVote(request.resource.data);
+        allow delete: if false;
+      }
+
+      // -----------------------------------------------------------------------
+      // rounds/{roundId}/ratings/{raterId}: nota pós-jogo
+      // -----------------------------------------------------------------------
+      match /ratings/{raterId} {
+        function validRating(d) {
+          return d.keys().hasOnly(['score', 'comment', 'spoiler', 'updatedAt'])
+            && (d.score is int || d.score is float)
+            && d.score >= 0 && d.score <= 10
+            // Meio ponto: 0, 0.5, 1 ... 10
+            && math.floor(d.score * 2) == d.score * 2
+            && isText(d.comment, 0, 1000)
+            && d.spoiler is bool
+            && d.updatedAt == request.time;
+        }
+
+        allow read: if isApproved();
+        allow create, update: if isApproved()
+          && raterId == me()
+          && roundStatus(roundId) in ['jogando', 'encerrada']
+          && validRating(request.resource.data);
+        allow delete: if false;
+      }
+
+      // -----------------------------------------------------------------------
+      // rounds/{roundId}/questions/{questionId}: perguntas pra discussão
+      // -----------------------------------------------------------------------
+      match /questions/{questionId} {
+        allow read: if isApproved();
+
+        allow create: if isApproved()
+          && request.resource.data.keys().hasOnly(['text', 'createdBy', 'createdAt'])
+          && request.resource.data.createdBy == me()
+          && request.resource.data.createdAt == request.time
+          && isText(request.resource.data.text, 1, 300)
+          && roundStatus(roundId) in ['jogando', 'encerrada'];
+
+        // O autor edita só o texto.
+        allow update: if isApproved()
+          && resource.data.createdBy == me()
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text', 'updatedAt'])
+          && isText(request.resource.data.text, 1, 300)
+          && request.resource.data.updatedAt == request.time;
+
+        // O autor apaga a própria; o admin apaga qualquer uma.
+        allow delete: if isApproved() && (resource.data.createdBy == me() || isAdmin());
+      }
+    }
+  }
+}
