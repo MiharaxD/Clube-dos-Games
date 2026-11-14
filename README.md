@@ -157,6 +157,13 @@ existe só no emulador e nunca toca o seu projeto real.
 npm run test:rules
 ```
 
+São 46 testes. Entre eles: membro não aprovado não vota nem escreve nada, autor não vota no
+próprio jogo, voto fora de "votando" é negado, só o admin muda o status, e a segunda sugestão
+do mesmo usuário na mesma rodada é negada.
+
+Se aparecer "java: command not found" logo depois de instalar o Java, feche e abra o terminal:
+o PATH novo só vale para terminais abertos depois da instalação.
+
 ## 13. Build e deploy do site
 
 ```bash

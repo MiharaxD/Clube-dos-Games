@@ -101,7 +101,7 @@ p { max-width: 68ch; }
 .nav { order: 3; width: 100%; display: flex; gap: 2px; overflow-x: auto; }
 .nav a {
   color: var(--muted); text-decoration: none; font-weight: 600; font-size: 0.95rem;
-  padding: 8px 12px; border-radius: var(--radius); white-space: nowrap; min-height: 40px;
+  padding: 8px 12px; border-radius: var(--radius); white-space: nowrap; min-height: 44px;
   display: inline-flex; align-items: center; gap: 6px;
 }
 .nav a:hover { color: var(--ink); background: var(--shelf); }
@@ -159,7 +159,8 @@ section + section { margin-top: 40px; }
 .btn--ghost { border-color: transparent; color: var(--muted); padding-inline: 10px; }
 .btn--ghost:hover { background: var(--shelf); color: var(--ink); }
 
-.btn--sm { min-height: 36px; padding: 4px 10px; font-size: 0.9rem; }
+.btn--sm { min-height: 44px; padding: 4px 12px; font-size: 0.9rem; }
+.btn--ghost.btn--sm { min-width: 44px; }
 .btn--block { width: 100%; }
 
 .actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
@@ -182,7 +183,7 @@ section + section { margin-top: 40px; }
 .ficha {
   position: relative; background: var(--paper); color: var(--paper-ink);
   padding: 16px 16px 18px; margin-bottom: 28px; transform: rotate(-0.6deg);
-  box-shadow: var(--shadow-box);
+  box-shadow: 0 5px 0 var(--deep);
 }
 .ficha__title { font: 1.75rem/1 var(--font-display); padding-right: 120px; }
 .ficha__todo { font: 1.25rem/1.35 var(--font-hand); margin-top: 8px; max-width: 36ch; }
@@ -217,7 +218,7 @@ section + section { margin-top: 40px; }
 /* Toda capa tem a mesma proporção 3:4, em qualquer tela. */
 .cover {
   position: relative; aspect-ratio: 3 / 4; width: 100%; overflow: hidden;
-  background: var(--deep); box-shadow: var(--shadow-box);
+  background: var(--deep); box-shadow: 0 6px 0 var(--deep);
 }
 .cover img { width: 100%; height: 100%; object-fit: cover; }
 .cover__blank {
@@ -398,8 +399,10 @@ fieldset { border: 0; padding: 0; }
 }
 
 .facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 6px 0; }
-.facts div { background: var(--shelf); border-radius: var(--radius); padding: 10px 12px; }
-.facts dt { font-size: 0.8rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; }
+.facts div { background: var(--paper); color: var(--paper-ink); padding: 10px 12px; box-shadow: 0 4px 0 var(--deep); }
+.facts div:nth-child(odd) { transform: rotate(-0.8deg); }
+.facts div:nth-child(even) { transform: rotate(0.6deg); }
+.facts dt { font-size: 0.8rem; color: var(--paper-muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; }
 .facts dd { margin: 2px 0 0; font: 1.6rem/1.05 var(--font-display); }
 
 .pill {
@@ -428,7 +431,7 @@ fieldset { border: 0; padding: 0; }
 .score-inline { font: 1.5rem/1 var(--font-display); color: var(--orange); }
 
 .spoiler summary {
-  display: inline-flex; align-items: center; gap: 8px; cursor: pointer; min-height: 40px;
+  display: inline-flex; align-items: center; gap: 8px; cursor: pointer; min-height: 44px;
   padding: 4px 10px; border: 2px dashed var(--pink); border-radius: var(--radius); color: var(--pink); font-weight: 700;
 }
 .spoiler summary::-webkit-details-marker { display: none; }
@@ -465,3 +468,48 @@ fieldset { border: 0; padding: 0; }
 
 /* No PC a ficha continua com cara de ficha (não vira faixa de largura total) */
 @media (min-width: 760px) { .ficha { max-width: 760px; } }
+
+/* ---------- Ajustes da revisão final ---------- */
+
+/* 4. Foco visível também sobre o papel (limão some no creme) */
+.ficha :focus-visible, .confirm :focus-visible, .facts :focus-visible { outline-color: var(--paper-ink); }
+
+/* 6. Botão de voto não quebra linha */
+.btn--vote { white-space: nowrap; padding-inline: 10px; }
+
+/* 7. Caixas desabilitadas parecem desabilitadas */
+.check:has(input:disabled) { cursor: default; opacity: 0.7; }
+.check:has(input:disabled) input { cursor: default; }
+
+/* Capa vencedora em pé na prateleira */
+.winner__shelf { max-width: 320px; }
+.winner__shelf .winner__cover { max-width: none; margin: 0 16px; }
+.winner__shelf .shelf-lip { margin-bottom: 0; }
+
+/* Adesivo de nota (mesma etiqueta laranja escrita à mão da estante) */
+.sticker {
+  display: inline-block; background: var(--orange); color: var(--deep);
+  font: 1.25rem/1.3 var(--font-hand); padding: 2px 10px; transform: rotate(-3deg);
+  box-shadow: 0 3px 0 var(--deep); white-space: nowrap;
+}
+.sticker--lime { background: var(--lime); font-size: 1.1rem; margin: 6px 0; }
+.rating__head .sticker { transform: rotate(4deg); }
+
+/* Prateleira pequena (stats: nunca ganharam) */
+.shelf-row--mini { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px 12px; }
+.shelf-row--mini .box__name { font-size: 0.95rem; margin-top: 10px; }
+.shelf-row--mini .price { font-size: 0.95rem; }
+@media (min-width: 760px) { .shelf-row--mini { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+
+/* 2. Balcão do admin depois da prateleira */
+#phase + .panel--admin { margin-top: 40px; }
+
+/* 8. Confirmação dentro da página */
+.confirm {
+  margin-top: 12px; padding: 12px 14px; background: var(--paper); color: var(--paper-ink);
+  transform: rotate(-0.4deg); box-shadow: 0 4px 0 var(--deep); max-width: 520px;
+}
+.confirm p { font-weight: 700; margin-bottom: 10px; }
+.confirm .btn { border-color: var(--paper-ink); color: var(--paper-ink); }
+.confirm .btn--primary { background: var(--paper-ink); color: var(--paper); }
+.confirm .btn:hover { background: var(--stamp); border-color: var(--stamp); color: var(--paper); }

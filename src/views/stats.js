@@ -49,7 +49,7 @@ export async function renderStats(main, { session }) {
     for (const game of gamesPerRound[i]) {
       const key = gameKey(game);
       if (winnerKeys.has(key)) continue;
-      const entry = losers.get(key) ?? { name: game.name, times: 0, by: new Set() };
+      const entry = losers.get(key) ?? { name: game.name, cover: game.cover, times: 0, by: new Set() };
       entry.times += 1;
       entry.by.add(game.suggestedBy);
       losers.set(key, entry);
@@ -74,18 +74,19 @@ export async function renderStats(main, { session }) {
       <ol class="list">${winners.map(([uid, list]) => `
         <li>
           ${memberChip(members.find((m) => m.id === uid) ?? { name: memberName(members, uid) })}
-          <span><strong class="score-inline">${list.length}</strong> ${list.length === 1 ? 'vitória' : 'vitórias'}
+          <span><span class="sticker">${list.length}</span> ${list.length === 1 ? 'vitória' : 'vitórias'}
           <span class="small muted">· ${list.map((p) => esc(p.winner.name)).join(', ')}</span></span>
         </li>`).join('')}</ol>
     </section>
 
     <section aria-labelledby="never-title">
       <h2 id="never-title">Sugestões que nunca ganharam</h2>
-      ${neverWon.length ? `<ul class="list">${neverWon.map((g) => `
-        <li>
-          <span><strong>${esc(g.name)}</strong><br><span class="small muted">por ${[...g.by].map((id) => esc(memberName(members, id))).join(', ')}</span></span>
-          <span class="small">${g.times}× na prateleira</span>
-        </li>`).join('')}</ul>` : empty('Nenhuma', 'Todo jogo sugerido já ganhou alguma vez. Que clube eficiente.')}
+      ${neverWon.length ? `<div class="shelf-row shelf-row--mini">${neverWon.map((g) => `
+        <article class="box">
+          <div class="box__art">${cover(g)}${g.times > 1 ? `<span class="price">${g.times}×</span>` : ''}</div>
+          <h3 class="box__name">${esc(g.name)}</h3>
+          <p class="box__by">por ${[...g.by].map((id) => esc(memberName(members, id))).join(', ')}</p>
+        </article>`).join('')}</div><div class="shelf-lip"></div>` : empty('Nenhuma', 'Todo jogo sugerido já ganhou alguma vez. Que clube eficiente.')}
     </section>`;
 }
 
@@ -101,7 +102,7 @@ function highlight(title, entry, figure, emptyText) {
         <span class="stat__cover">${cover(entry.winner)}</span>
         <span>
           <strong class="stat__name">${esc(entry.winner.name)}</strong>
-          <span class="stat__figure">${esc(figure)}</span>
+          <span class="sticker sticker--lime">${esc(figure)}</span>
           <span class="small muted">Fase ${esc(entry.round.number)}</span>
         </span>
       </a>

@@ -3,7 +3,7 @@
 import { castVote, changeStatus, listAllVotes, removeVote } from '../../api.js';
 import { icon } from '../../lib/icons.js';
 import { drawIndex, leaders, rankGames } from '../../lib/tally.js';
-import { esc, toast, withBusy } from '../../lib/util.js';
+import { confirmInline, esc, toast, withBusy } from '../../lib/util.js';
 import { gameBox, shelf } from '../parts.js';
 import { spinRoulette } from '../roulette.js';
 
@@ -65,14 +65,14 @@ export function renderVote(container, data) {
 
 function voteButton(game, voted) {
   return voted
-    ? `<button class="btn btn--vote" data-vote="${esc(game.id)}" aria-pressed="true">${icon('check')} Separado pra mim</button>`
+    ? `<button class="btn btn--vote" data-vote="${esc(game.id)}" aria-pressed="true">${icon('check')} Separado<span class="sr-only"> pra mim: ${esc(game.name)}</span></button>`
     : `<button class="btn btn--vote" data-vote="${esc(game.id)}" aria-pressed="false">Topo jogar<span class="sr-only"> ${esc(game.name)}</span></button>`;
 }
 
 // ------------------------------------------------------------ admin: fechar votação
 
 // Conta os votos no cliente. Vencedor único: grava direto. Empate: mostra a roleta.
-export async function closeVoting(panel, data, ctx) {
+export async function closeVoting(panel, data, ctx, button) {
   const { round, games } = data;
   const votesByGame = await listAllVotes(round.id, games); // lê de novo pra pegar votos recentes
   const ranking = rankGames(games, votesByGame);
@@ -81,7 +81,8 @@ export async function closeVoting(panel, data, ctx) {
   const plural = (n) => `${n} ${n === 1 ? 'voto' : 'votos'}`;
 
   if (top.length === 1) {
-    if (!confirm(`Fechar a votação? "${top[0].name}" ganhou com ${plural(votes)}.`)) return;
+    const ok = await confirmInline(button, `Fechar a votação? "${top[0].name}" ganhou com ${plural(votes)}.`, 'Fechar e revelar');
+    if (!ok) return;
     await saveWinner(top[0], null, data, ctx);
     return;
   }

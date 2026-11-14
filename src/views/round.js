@@ -14,7 +14,7 @@ import {
 import { buildAnnouncement } from '../lib/announce.js';
 import { icon } from '../lib/icons.js';
 import { rankGames } from '../lib/tally.js';
-import { STATUS_LABEL, STATUS_ORDER, copyText, esc, toast, withBusy } from '../lib/util.js';
+import { STATUS_LABEL, STATUS_ORDER, confirmInline, copyText, esc, toast, withBusy } from '../lib/util.js';
 import { memberName, phaseSteps } from './parts.js';
 import { renderSuggest } from './phases/suggest.js';
 import { closeVoting, renderVote } from './phases/vote.js';
@@ -71,8 +71,8 @@ export async function renderRound(main, ctx) {
         <button class="btn btn--sm" id="announce">${icon('copy')} Copiar mensagem pro grupo</button>
       </div>
     </section>
-    ${session.isAdmin && data.isLatest ? adminPanel(data) : ''}
-    <div id="phase"></div>`;
+    <div id="phase"></div>
+    ${session.isAdmin && data.isLatest ? adminPanel(data) : ''}`;
 
   main.querySelector('#announce').addEventListener('click', async () => {
     const text = buildAnnouncement({
@@ -202,7 +202,9 @@ function bindAdmin(main, data, ctx) {
   const { round, games } = data;
   bindCreateRound(main, ctx, round.number + 1);
 
-  main.querySelector('#close-voting')?.addEventListener('click', () => closeVoting(main.querySelector('#tie'), data, ctx));
+  main.querySelector('#close-voting')?.addEventListener('click', (event) =>
+    closeVoting(main.querySelector('#tie'), data, ctx, event.currentTarget),
+  );
 
   main.querySelectorAll('[data-status]').forEach((button) => {
     button.addEventListener('click', async () => {
@@ -210,7 +212,8 @@ function bindAdmin(main, data, ctx) {
       const goingBack = STATUS_ORDER.indexOf(target) < STATUS_ORDER.indexOf(round.status);
       if (goingBack) {
         const totalVotes = Object.values(data.votesByGame ?? {}).reduce((s, v) => s + v.length, 0);
-        if (!confirm(CONFIRM_BACK[target](totalVotes))) return;
+        const label = { sugerindo: 'Voltar e apagar votos', votando: 'Voltar pra votação', jogando: 'Reabrir' }[target];
+        if (!(await confirmInline(button, CONFIRM_BACK[target](totalVotes), label))) return;
       }
       const ok = await withBusy(button, () => changeStatus(round, target, { games }).then(() => true));
       if (ok) {

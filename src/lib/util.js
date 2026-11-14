@@ -109,5 +109,34 @@ export async function copyText(text) {
   }
 }
 
+// Confirmação dentro da página (uma "ficha" logo abaixo do botão), no lugar do confirm() do navegador.
+// Uso: if (!(await confirmInline(botao, 'Tem certeza?', 'Apagar'))) return;
+export function confirmInline(anchor, message, okLabel = 'Confirmar') {
+  document.querySelectorAll('.confirm').forEach((el) => el.remove());
+  const host = anchor.closest('.actions') ?? anchor;
+  const box = document.createElement('div');
+  box.className = 'confirm';
+  box.setAttribute('role', 'alertdialog');
+  box.setAttribute('aria-label', 'Confirmação');
+  box.innerHTML = `
+    <p>${esc(message)}</p>
+    <div class="actions">
+      <button class="btn btn--primary" type="button" data-ok>${esc(okLabel)}</button>
+      <button class="btn" type="button" data-cancel>Cancelar</button>
+    </div>`;
+  host.insertAdjacentElement('afterend', box);
+  box.querySelector('[data-ok]').focus();
+  return new Promise((resolve) => {
+    const done = (answer) => {
+      box.remove();
+      anchor.focus?.();
+      resolve(answer);
+    };
+    box.querySelector('[data-ok]').addEventListener('click', () => done(true));
+    box.querySelector('[data-cancel]').addEventListener('click', () => done(false));
+    box.addEventListener('keydown', (event) => event.key === 'Escape' && done(false));
+  });
+}
+
 export const prefersReducedMotion = () =>
   window.matchMedia('(prefers-reduced-motion: reduce)').matches;

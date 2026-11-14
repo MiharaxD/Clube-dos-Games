@@ -11,7 +11,7 @@ import {
 } from '../../api.js';
 import { icon } from '../../lib/icons.js';
 import { average } from '../../lib/tally.js';
-import { esc, fmtDateTime, fmtDay, fmtScore, listJoin, safeUrl, toast, withBusy } from '../../lib/util.js';
+import { confirmInline, esc, fmtDateTime, fmtDay, fmtScore, listJoin, safeUrl, toast, withBusy } from '../../lib/util.js';
 import { cover, empty, memberChip, memberName } from '../parts.js';
 
 const QUESTION_MAX = 300;
@@ -45,7 +45,10 @@ function winnerSection({ round, games, members, ranking }, canEdit) {
 
   return `
     <section class="winner" aria-labelledby="winner-title">
-      <div class="winner__cover">${cover(game)}<span class="stamp stamp--lime">${tied.length ? 'Sorteado' : 'Vencedor'}</span></div>
+      <div class="winner__shelf">
+        <div class="winner__cover">${cover(game)}<span class="stamp stamp--lime">${tied.length ? 'Sorteado' : 'Vencedor'}</span></div>
+        <div class="shelf-lip"></div>
+      </div>
       <div class="winner__info">
         <h2 id="winner-title">${esc(game.name)}</h2>
         <p>Sugestão de <strong>${esc(memberName(members, game.suggestedBy))}</strong> · ${votes} ${votes === 1 ? 'voto' : 'votos'}</p>
@@ -196,7 +199,7 @@ function bindDates(container, data, ctx) {
     }
     if (removeBtn) {
       const date = removeBtn.dataset.removeDate;
-      if (!confirm(`Remover ${fmtDateTime(date)} da enquete?`)) return;
+      if (!(await confirmInline(removeBtn, `Remover ${fmtDateTime(date)} da enquete?`, 'Remover data'))) return;
       const meeting = round.meetingDate === date ? null : round.meetingDate;
       const ok = await withBusy(removeBtn, () =>
         updateRoundDates(round.id, options.filter((d) => d !== date), meeting).then(() => true),
@@ -218,7 +221,7 @@ function ratingsSection({ ratings, members, uid }) {
     <section aria-labelledby="ratings-title">
       <div class="page-head" style="margin-bottom:8px">
         <h2 id="ratings-title">Notas</h2>
-        <p class="muted">${avg === null ? 'Ninguém deu nota ainda' : `Média <strong class="score-inline">${fmtScore(avg)}</strong> com ${ratings.length} ${ratings.length === 1 ? 'nota' : 'notas'}`}</p>
+        <p class="muted">${avg === null ? 'Ninguém deu nota ainda' : `<span class="sticker">${fmtScore(avg)}</span> média de ${ratings.length} ${ratings.length === 1 ? 'nota' : 'notas'}`}</p>
       </div>
       <form class="form panel" id="rating-form">
         <label class="field" for="score"><span>${mine ? 'Sua nota (dá pra mudar)' : 'Sua nota'}</span></label>
@@ -234,7 +237,7 @@ function ratingsSection({ ratings, members, uid }) {
       </form>
       ${sorted.length ? `<ul class="list ratings">${sorted.map((r) => `
         <li>
-          <div class="rating__head">${memberChip(members.find((m) => m.id === r.id) ?? { name: 'Ex-sócio' })}<span class="rating__score">${fmtScore(r.score)}</span></div>
+          <div class="rating__head">${memberChip(members.find((m) => m.id === r.id) ?? { name: 'Ex-sócio' })}<span class="sticker">${fmtScore(r.score)}<span class="sr-only"> de 10</span></span></div>
           ${commentHtml(r)}
         </li>`).join('')}</ul>` : ''}
     </section>`;
@@ -317,7 +320,8 @@ function bindQuestions(container, data, ctx) {
     const question = data.questions.find((q) => q.id === id);
 
     if (event.target.closest('[data-delete-q]')) {
-      if (!confirm('Apagar essa pergunta?')) return;
+      const deleteBtn = event.target.closest('[data-delete-q]');
+      if (!(await confirmInline(deleteBtn, 'Apagar essa pergunta?', 'Apagar'))) return;
       const ok = await withBusy(null, () => deleteQuestion(roundId, id).then(() => true));
       if (ok) await ctx.refresh();
     }
