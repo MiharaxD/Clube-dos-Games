@@ -103,12 +103,52 @@ O admin é definido no documento `config/admins`, que só pode ser criado pelo c
    - ID da coleção: `config`
    - ID do documento: `admins`
    - Campo: `uids`, tipo **array**, com um item do tipo **string** = o UID copiado.
-4. Recarregue o app. Como admin você já tem acesso total e pode aprovar os outros membros na
-   tela de admin.
+4. Recarregue o app. Como admin você já tem acesso total. Vá em **Admin** e aprove a sua
+   própria ficha também: assim você entra na contagem de "X de N conseguem jogar".
+5. Ainda em **Admin**, aprove os amigos conforme eles forem entrando com o Google.
 
 Para ter mais de um admin, adicione mais UIDs nesse mesmo array pelo console.
 
-## 10. Testes das regras (emulador)
+## 10. Como funciona uma rodada
+
+Tudo é assíncrono: cada um entra quando puder, e as sugestões e os votos ficam salvos.
+
+1. **Sugerindo**: o admin abre a fase em **Rodada**. Cada membro põe 1 jogo na prateleira e
+   pode editar ou tirar o seu. Para abrir a votação, precisa haver pelo menos 2 jogos.
+2. **Votando**: cada um separa todos os jogos que toparia jogar, menos o próprio. O voto é
+   secreto até o admin clicar em "Fechar votação". Em caso de empate aparece a roleta, e o
+   sorteado fica gravado.
+3. **Jogando**: o admin define o prazo e o link da call e propõe datas. Os membros marcam as
+   datas em que podem e o admin confirma uma. Notas e perguntas já ficam liberadas.
+4. **Encerrada**: o jogo vai para a **Estante** e entra nas **Stats**. Daí o admin abre a
+   próxima fase.
+
+Em qualquer fase, o botão **Copiar mensagem pro grupo** gera o texto pronto pra colar no
+WhatsApp ou no Discord. O admin pode voltar um passo: voltar de "Votando" apaga os votos, e
+voltar de "Jogando" apaga o vencedor.
+
+## 11. Testar o app inteiro sem o projeto real (emuladores)
+
+Também precisa de Java. Num terminal, suba os emuladores:
+
+```bash
+npm run emulators
+```
+
+Em outro terminal, rode o app apontando pra eles. No `.env.local`, use
+`VITE_FIREBASE_PROJECT_ID=demo-clube`, `VITE_USE_EMULATORS=true` e qualquer valor nas outras
+variáveis do Firebase:
+
+```bash
+npm run dev
+```
+
+O login com Google abre uma tela falsa do emulador, onde dá pra criar usuários de teste. O
+`config/admins` precisa ser criado no próprio emulador, que começa vazio: use a interface dele
+em <http://127.0.0.1:4000>, aba Firestore. Antes de voltar pro projeto real, desligue o
+`VITE_USE_EMULATORS`.
+
+## 12. Testes das regras (emulador)
 
 Precisa do Java instalado (passo 1). Os testes rodam no projeto fictício `demo-clube`, que
 existe só no emulador e nunca toca o seu projeto real.
@@ -117,7 +157,7 @@ existe só no emulador e nunca toca o seu projeto real.
 npm run test:rules
 ```
 
-## 11. Build e deploy do site
+## 13. Build e deploy do site
 
 ```bash
 npm run build

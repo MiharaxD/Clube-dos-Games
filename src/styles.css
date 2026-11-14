@@ -438,3 +438,17 @@ fieldset { border: 0; padding: 0; }
 .questions > li { align-items: flex-start; flex-wrap: nowrap; }
 .question__body { flex: 1; min-width: 0; }
 .question__text { font-weight: 600; overflow-wrap: anywhere; }
+
+/* ---------- Estante ---------- */
+.box__link { color: inherit; text-decoration: none; display: block; position: relative; }
+.box__link:hover .box__name { color: var(--lime); }
+.box__link:focus-visible { outline-offset: 6px; }
+
+/* ---------- Stats ---------- */
+.stats-grid { display: grid; gap: 16px; margin-bottom: 40px; }
+@media (min-width: 760px) { .stats-grid { grid-template-columns: 1fr 1fr; } }
+.stat h2 { font-size: 2rem; color: var(--orange); }
+.stat__game { display: grid; grid-template-columns: 96px 1fr; gap: 16px; align-items: end; color: inherit; text-decoration: none; margin: 8px 0 12px; }
+.stat__game:hover .stat__name { color: var(--lime); }
+.stat__name { display: block; font-size: 1.2rem; overflow-wrap: anywhere; }
+.stat__figure { display: block; font: 2.2rem/1 var(--font-display); color: var(--lime); margin: 4px 0; }
