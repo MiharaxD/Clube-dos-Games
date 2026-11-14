@@ -56,6 +56,60 @@
         ],
         "createdAt": "2026-11-13T23:56:30.587Z",
         "reason": "agent: canon card deliberately depicts the category-standard look; not shipped"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/assigned.html"
+        ],
+        "createdAt": "2026-11-14T00:44:47.592Z",
+        "reason": "agent: archived decision-round sketch of an alternative direction, predates DESIGN.md, not shipped"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/model-pick.html"
+        ],
+        "createdAt": "2026-11-14T00:44:48.275Z",
+        "reason": "agent: archived decision-round sketch of an alternative direction, predates DESIGN.md, not shipped"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/challenger-flap.html"
+        ],
+        "createdAt": "2026-11-14T00:44:48.925Z",
+        "reason": "agent: archived decision-round sketch of an alternative direction, predates DESIGN.md, not shipped"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/canon.html"
+        ],
+        "createdAt": "2026-11-14T00:44:49.515Z",
+        "reason": "agent: archived decision-round sketch of an alternative direction, predates DESIGN.md, not shipped"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/cartucho.html"
+        ],
+        "createdAt": "2026-11-14T00:44:50.211Z",
+        "reason": "agent: archived decision-round sketch of an alternative direction, predates DESIGN.md, not shipped"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/locadora.html"
+        ],
+        "createdAt": "2026-11-14T00:44:50.810Z",
+        "reason": "agent: archived decision-round sketch of an alternative direction, predates DESIGN.md, not shipped"
       }
     ]
   }
