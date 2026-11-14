@@ -52,10 +52,12 @@ export function gameBox(game, members, { cls = '', stamp = '', note = '', action
   const meta = [game.year, game.genre].filter(Boolean).map(esc).join(' · ');
   return `
     <article class="box ${cls}" data-game="${esc(game.id)}">
-      ${cover(game)}
-      <span class="price">${esc(fmtPrice(game.price))}</span>
-      <span class="tag">${esc(DURATION_LABEL[game.duration] ?? '')} · ${esc(MODE_LABEL[game.mode] ?? '')}</span>
-      ${stamp}${note}
+      <div class="box__art">
+        ${cover(game)}
+        <span class="price">${esc(fmtPrice(game.price))}</span>
+        <span class="tag">${esc(DURATION_LABEL[game.duration] ?? '')} · ${esc(MODE_LABEL[game.mode] ?? '')}</span>
+        ${stamp}${note}
+      </div>
       <h3 class="box__name">${esc(game.name)}</h3>
       ${meta ? `<p class="box__meta">${meta}</p>` : ''}
       <p class="box__by">sugestão de ${esc(memberName(members, game.suggestedBy))}</p>

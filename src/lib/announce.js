@@ -1,5 +1,5 @@
 // Monta a mensagem pronta pra colar no WhatsApp/Discord. Não envia nada sozinho.
-import { fmtDateTime, fmtDay, fmtScore } from './util.js';
+import { fmtDateTime, fmtDay, fmtScore, listJoin } from './util.js';
 import { average } from './tally.js';
 
 export function roundLink(roundId) {
@@ -37,7 +37,7 @@ export function buildAnnouncement({ round, games, ranking, ratings, nameOf }) {
   let result = `O jogo da rodada é *${winner.name}*, sugestão de ${nameOf(winner.suggestedBy)}, com ${votes} ${votes === 1 ? 'voto' : 'votos'}.`;
   if (round.tiebreak?.candidates?.length) {
     const names = round.tiebreak.candidates.map((id) => games.find((g) => g.id === id)?.name).filter(Boolean);
-    result += ` Deu empate e saiu no sorteio entre ${names.join(', ')}.`;
+    result += ` Deu empate e saiu no sorteio entre ${listJoin(names)}.`;
   }
   lines.push(result);
 

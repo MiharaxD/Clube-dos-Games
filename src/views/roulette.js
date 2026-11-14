@@ -24,8 +24,9 @@ export function spinRoulette(stage, games, winnerIndex) {
     return new Promise((resolve) => setTimeout(resolve, 900));
   }
 
-  // Dá 3 voltas inteiras e para no vencedor; cada pulo demora um pouco mais (desacelera).
-  const totalHops = games.length * 3 + winnerIndex;
+  // Dá várias voltas (no mínimo ~14 pulos) e para no vencedor; cada pulo demora mais (desacelera).
+  const laps = Math.max(3, Math.ceil(14 / games.length));
+  const totalHops = games.length * laps + winnerIndex;
   return new Promise((resolve) => {
     let hop = 0;
     const step = () => {

@@ -1,6 +1,6 @@
 // Ponto de entrada: confere a config, acompanha o login e desenha a tela certa.
 import './styles.css';
-import { onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth';
+import { onAuthStateChanged, signInWithPopup, signInWithRedirect, signOut } from 'firebase/auth';
 import { auth, googleProvider, missingEnv } from './firebase.js';
 import { createMember, getAdminUids, getMember, listMembers } from './api.js';
 import { esc, toast } from './lib/util.js';
@@ -42,17 +42,23 @@ function renderLogin() {
         <div class="actions"><button class="btn btn--primary" id="login">Entrar com Google</button></div>
       </div>
     </div></div>`;
-  root.querySelector('#login').addEventListener('click', async (event) => {
-    event.currentTarget.disabled = true;
+  const button = root.querySelector('#login');
+  button.addEventListener('click', async () => {
+    button.disabled = true;
     try {
       await signInWithPopup(auth, googleProvider);
     } catch (error) {
+      // Navegadores embutidos (ex.: o do WhatsApp) bloqueiam popup: tenta por redirecionamento.
+      if (error?.code === 'auth/popup-blocked') {
+        await signInWithRedirect(auth, googleProvider);
+        return;
+      }
       // Fechar o popup não é erro de verdade.
       if (error?.code !== 'auth/popup-closed-by-user' && error?.code !== 'auth/cancelled-popup-request') {
         console.error(error);
         toast('Não deu pra entrar. Tenta de novo?', 'error');
       }
-      event.currentTarget.disabled = false;
+      button.disabled = false;
     }
   });
 }

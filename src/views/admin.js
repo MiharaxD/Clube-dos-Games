@@ -8,7 +8,7 @@ export async function renderAdmin(main, { session, refresh }) {
   const approved = session.members.filter((m) => m.approved);
 
   main.innerHTML = `
-    <div class="page-head"><h1>Balcão</h1><p class="muted">${approved.length} sócios aprovados</p></div>
+    <div class="page-head"><h1>Balcão</h1><p class="muted">${approved.length} ${approved.length === 1 ? 'sócio aprovado' : 'sócios aprovados'}</p></div>
     <section>
       <h2>Fichas esperando</h2>
       ${pending.length

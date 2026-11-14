@@ -40,10 +40,17 @@ export function fmtDay(isoDate) {
   return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
 }
 
+// "Hades, Celeste e Tunic"
+export function listJoin(items) {
+  return new Intl.ListFormat('pt-BR', { style: 'long', type: 'conjunction' }).format(items);
+}
+
 export function fmtDateTime(isoDateTime) {
   if (!isoDateTime) return '';
   const date = new Date(isoDateTime);
-  const day = date.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' });
+  const day = date
+    .toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' })
+    .replace('.', ''); // "dom., 20/12" -> "dom, 20/12"
   const time = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   return `${day} às ${time}`;
 }

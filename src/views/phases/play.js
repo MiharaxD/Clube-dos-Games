@@ -11,7 +11,7 @@ import {
 } from '../../api.js';
 import { icon } from '../../lib/icons.js';
 import { average } from '../../lib/tally.js';
-import { esc, fmtDateTime, fmtDay, fmtScore, safeUrl, toast, withBusy } from '../../lib/util.js';
+import { esc, fmtDateTime, fmtDay, fmtScore, listJoin, safeUrl, toast, withBusy } from '../../lib/util.js';
 import { cover, empty, memberChip, memberName } from '../parts.js';
 
 const QUESTION_MAX = 300;
@@ -49,7 +49,7 @@ function winnerSection({ round, games, members, ranking }, canEdit) {
       <div class="winner__info">
         <h2 id="winner-title">${esc(game.name)}</h2>
         <p>Sugestão de <strong>${esc(memberName(members, game.suggestedBy))}</strong> · ${votes} ${votes === 1 ? 'voto' : 'votos'}</p>
-        ${tied.length ? `<p class="muted small">Deu empate e saiu no sorteio entre ${tied.map(esc).join(', ')}.</p>` : ''}
+        ${tied.length ? `<p class="muted small">Deu empate e saiu no sorteio entre ${esc(listJoin(tied))}.</p>` : ''}
         ${game.pitch ? `<p class="box__pitch">“${esc(game.pitch)}”</p>` : ''}
         <dl class="facts">
           <div><dt>Prazo pra jogar</dt><dd>${round.deadline ? esc(fmtDay(round.deadline)) : 'sem prazo ainda'}</dd></div>
@@ -94,14 +94,14 @@ function bindInfo(container, data, ctx) {
 
 // ------------------------------------------------------------ resultado da votação
 
-function resultSection({ ranking, members }) {
+function resultSection({ round, ranking, members }) {
   const max = Math.max(1, ...ranking.map((r) => r.count));
   return `
     <section aria-labelledby="result-title">
       <h2 id="result-title">Como foi a votação</h2>
       <div class="panel tally">
-        ${ranking.map((r, i) => `
-          <div class="tally__row ${i === 0 ? 'is-top' : ''}">
+        ${ranking.map((r) => `
+          <div class="tally__row ${r.game.id === round.winnerGameId ? 'is-top' : ''}">
             <span><strong>${esc(r.game.name)}</strong> <span class="small muted">de ${esc(memberName(members, r.game.suggestedBy))}</span></span>
             <span class="tally__num">${r.count}</span>
             <span class="tally__bar" aria-hidden="true"><i style="width:${(r.count / max) * 100}%"></i></span>
@@ -245,7 +245,7 @@ function commentHtml(rating) {
   if (!rating.spoiler) return `<p class="rating__comment">${esc(rating.comment)}</p>`;
   return `
     <details class="spoiler">
-      <summary>${icon('eye')} Tem spoiler. Mostrar comentário</summary>
+      <summary>${icon('eye')} <span class="spoiler__closed">Tem spoiler. Mostrar comentário</span><span class="spoiler__open">Esconder spoiler</span></summary>
       <p class="rating__comment">${esc(rating.comment)}</p>
     </details>`;
 }

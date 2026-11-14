@@ -271,7 +271,7 @@ section + section { margin-top: 40px; }
 
 /* "esse é seu, calma": bilhetinho colado na capa */
 .note {
-  position: absolute; z-index: 2; left: 8px; right: 8px; bottom: 12px;
+  position: absolute; z-index: 2; left: 8px; right: 8px; bottom: 14px;
   background: var(--paper); color: var(--paper-ink); text-align: center;
   font: 1rem/1.3 var(--font-hand); padding: 4px 8px; transform: rotate(-3deg);
   box-shadow: 0 3px 6px rgb(0 0 0 / 0.45);
@@ -385,7 +385,7 @@ fieldset { border: 0; padding: 0; }
 .roulette__name { font-weight: 700; font-size: 0.9rem; overflow-wrap: anywhere; }
 
 /* Seu jogo na votação fica "fora do jogo" */
-.box.is-mine .cover { filter: saturate(0.55) brightness(0.8); }
+.box.is-locked .cover { filter: saturate(0.55) brightness(0.8); }
 
 /* ---------- Jogo da rodada ---------- */
 .winner { display: grid; gap: 20px; }
@@ -452,3 +452,16 @@ fieldset { border: 0; padding: 0; }
 .stat__game:hover .stat__name { color: var(--lime); }
 .stat__name { display: block; font-size: 1.2rem; overflow-wrap: anywhere; }
 .stat__figure { display: block; font: 2.2rem/1 var(--font-display); color: var(--lime); margin: 4px 0; }
+
+/* Arte do card: capa + etiqueta + tarja + carimbo/bilhete ficam presos à capa */
+.box__art { position: relative; }
+
+/* Respiro entre o balcão do admin e a prateleira */
+#phase { margin-top: 40px; }
+
+.spoiler__open { display: none; }
+.spoiler[open] .spoiler__open { display: inline; }
+.spoiler[open] .spoiler__closed { display: none; }
+
+/* No PC a ficha continua com cara de ficha (não vira faixa de largura total) */
+@media (min-width: 760px) { .ficha { max-width: 760px; } }

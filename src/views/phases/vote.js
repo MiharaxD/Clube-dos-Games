@@ -15,7 +15,7 @@ export function renderVote(container, data) {
   const boxes = games.map((g) => {
     if (g.id === uid) {
       return gameBox(g, members, {
-        cls: 'is-mine',
+        cls: 'is-mine is-locked',
         note: '<span class="note">esse é seu, calma</span>',
         actions: '<button class="btn btn--vote" disabled>Sua sugestão</button>',
       });
