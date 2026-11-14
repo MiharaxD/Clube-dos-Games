@@ -386,3 +386,55 @@ fieldset { border: 0; padding: 0; }
 
 /* Seu jogo na votação fica "fora do jogo" */
 .box.is-mine .cover { filter: saturate(0.55) brightness(0.8); }
+
+/* ---------- Jogo da rodada ---------- */
+.winner { display: grid; gap: 20px; }
+.winner__cover { position: relative; max-width: 320px; }
+.winner__cover .stamp { top: 18%; }
+.winner__info { display: grid; gap: 10px; align-content: start; }
+.winner__info h2 { font-size: clamp(2.6rem, 9vw, 4rem); margin: 0; overflow-wrap: anywhere; }
+@media (min-width: 760px) {
+  .winner { grid-template-columns: minmax(220px, 320px) 1fr; gap: 32px; align-items: start; }
+}
+
+.facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 6px 0; }
+.facts div { background: var(--shelf); border-radius: var(--radius); padding: 10px 12px; }
+.facts dt { font-size: 0.8rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; }
+.facts dd { margin: 2px 0 0; font: 1.6rem/1.05 var(--font-display); }
+
+.pill {
+  display: inline-block; background: var(--lime); color: var(--deep); font-size: 0.75rem;
+  font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; padding: 1px 8px; border-radius: 999px;
+}
+
+/* Enquete de datas */
+.date-check { border: 0; padding: 0; align-items: flex-start; flex: 1 1 240px; min-height: 0; }
+.date-check input { margin-top: 3px; }
+.date-check:has(input:checked) { background: none; }
+.list > li.is-confirmed { outline: 2px solid var(--lime); }
+
+/* Notas */
+.score-picker { display: flex; align-items: center; gap: 16px; }
+.score-picker input[type='range'] { flex: 1; accent-color: var(--orange); min-height: 44px; }
+.score-out {
+  min-width: 3.2ch; text-align: center; font: 2.6rem/1 var(--font-display); color: var(--orange);
+  font-variant-numeric: tabular-nums;
+}
+.ratings { margin-top: 16px; }
+.ratings > li { display: grid; gap: 8px; justify-content: stretch; }
+.rating__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.rating__score { font: 2rem/1 var(--font-display); color: var(--orange); }
+.rating__comment { overflow-wrap: anywhere; }
+.score-inline { font: 1.5rem/1 var(--font-display); color: var(--orange); }
+
+.spoiler summary {
+  display: inline-flex; align-items: center; gap: 8px; cursor: pointer; min-height: 40px;
+  padding: 4px 10px; border: 2px dashed var(--pink); border-radius: var(--radius); color: var(--pink); font-weight: 700;
+}
+.spoiler summary::-webkit-details-marker { display: none; }
+.spoiler[open] summary { margin-bottom: 8px; }
+
+/* Perguntas */
+.questions > li { align-items: flex-start; flex-wrap: nowrap; }
+.question__body { flex: 1; min-width: 0; }
+.question__text { font-weight: 600; overflow-wrap: anywhere; }

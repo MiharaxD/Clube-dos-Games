@@ -80,6 +80,14 @@ export function updateRound(roundId, data) {
   return updateDoc(doc(db, 'rounds', roundId), data);
 }
 
+// Enquete de datas: opções propostas pelo admin e a data confirmada (null = nenhuma).
+export function updateRoundDates(roundId, dateOptions, meetingDate) {
+  return updateDoc(doc(db, 'rounds', roundId), {
+    dateOptions,
+    meetingDate: meetingDate ?? deleteField(),
+  });
+}
+
 // Avança/volta o status. Os casos de "voltar" limpam o que deixou de valer:
 // - votando -> sugerindo: apaga todos os votos (o autor pode editar o jogo depois)
 // - jogando -> votando:  apaga o vencedor gravado
