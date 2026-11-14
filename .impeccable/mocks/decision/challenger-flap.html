@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=390">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;700&family=Barlow:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--ground:#0d0d0f;--frame:#1c1c20;--flap:#151517;--ink:#f4f4f0;--amber:#ffb000;--red:#e0533d;--muted:#a9a9a4}
+*{box-sizing:border-box;margin:0}
+body{width:390px;height:844px;overflow:hidden;background:var(--ground);color:var(--ink);font:16px/1.4 Barlow,sans-serif}
+.top{padding:14px 16px;border-bottom:4px solid var(--frame);display:flex;justify-content:space-between}
+.top b{font:700 22px "Barlow Condensed";letter-spacing:2px}
+.board{margin:16px;background:var(--frame);padding:10px}
+.head,.row{display:grid;grid-template-columns:50px 1fr 96px;gap:4px}
+.head span{font:500 12px "Barlow Condensed";color:var(--amber);letter-spacing:1.5px;padding:2px 4px}
+.row{margin-top:4px}
+.cell{background:var(--flap);font:700 20px "Barlow Condensed";letter-spacing:2px;padding:6px 4px;border-bottom:1px solid #000;text-transform:uppercase}
+.st{color:var(--amber)}.off{color:#7b7b78}
+.covers{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 16px}
+.cover{aspect-ratio:3/4}
+.c1{background:linear-gradient(160deg,#2b6cb0,#1a2a5a 60%,#e94f37)}.c2{background:linear-gradient(170deg,#3a1f4f,#c0306e 70%,#ffcf5c)}.c3{background:linear-gradient(170deg,#11423a,#3ed6c0 80%)}
+.note{margin:16px;padding:10px 12px;border-left:4px solid var(--amber);color:var(--muted);font-size:14px}
+</style></head><body>
+<header class="top"><b>CLUBE DOS JOGOS</b><span>Estante</span></header>
+<div class="board">
+ <div class="head"><span>FASE</span><span>JOGO</span><span>STATUS</span></div>
+ <div class="row"><span class="cell">07</span><span class="cell">A DEFINIR</span><span class="cell st">VOTANDO</span></div>
+ <div class="row"><span class="cell">06</span><span class="cell">CELESTE</span><span class="cell off">ENCERRADA</span></div>
+ <div class="row"><span class="cell">05</span><span class="cell">HADES</span><span class="cell off">ENCERRADA</span></div>
+</div>
+<div class="covers"><div class="cover c1"></div><div class="cover c2"></div><div class="cover c3"></div></div>
+<p class="note">Marque todos os jogos que você toparia jogar.</p>
+</body></html>

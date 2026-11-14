@@ -1,0 +1,62 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/canon.html"
+        ],
+        "createdAt": "2026-11-13T23:45:28.703Z",
+        "reason": "agent: canon card deliberately depicts the category-standard neon look for the decision round; not shipped"
+      },
+      {
+        "rule": "low-contrast",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/canon.html"
+        ],
+        "createdAt": "2026-11-13T23:45:29.314Z",
+        "reason": "agent: canon card deliberately depicts the category-standard look for the decision round; not shipped"
+      },
+      {
+        "rule": "low-contrast",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/cartucho.html"
+        ],
+        "createdAt": "2026-11-13T23:55:40.432Z",
+        "reason": "agent: only hits are placeholder-cover titles over gradients whose bottom (where the text sits) is dark; mock not shipped"
+      },
+      {
+        "rule": "low-contrast",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/locadora.html"
+        ],
+        "createdAt": "2026-11-13T23:55:41.076Z",
+        "reason": "agent: only hits are placeholder-cover titles over gradients whose bottom (where the text sits) is dark; mock not shipped"
+      },
+      {
+        "rule": "kicker-above-heading",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/assigned.html"
+        ],
+        "createdAt": "2026-11-13T23:56:29.959Z",
+        "reason": "agent: spent decision-round sketch, not shipped; the real build will drop the kicker"
+      },
+      {
+        "rule": "undersized-ui-text",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/canon.html"
+        ],
+        "createdAt": "2026-11-13T23:56:30.587Z",
+        "reason": "agent: canon card deliberately depicts the category-standard look; not shipped"
+      }
+    ]
+  }
+}

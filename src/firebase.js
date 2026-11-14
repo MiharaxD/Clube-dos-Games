@@ -3,8 +3,8 @@
 // Atenção: variáveis VITE_* são embutidas no JS publicado. A config web do
 // Firebase é pública por natureza; quem protege os dados são as firestore.rules.
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { connectAuthEmulator, getAuth, GoogleAuthProvider } from 'firebase/auth';
+import { connectFirestoreEmulator, getFirestore } from 'firebase/firestore';
 
 const env = import.meta.env;
 
@@ -32,3 +32,10 @@ export const app = missingEnv.length ? null : initializeApp(firebaseConfig);
 export const auth = app ? getAuth(app) : null;
 export const db = app ? getFirestore(app) : null;
 export const googleProvider = new GoogleAuthProvider();
+
+// Desenvolvimento local: com VITE_USE_EMULATORS=true o app fala com os emuladores
+// (npm run emulators) em vez do projeto real. Nunca ligue isso no build de produção.
+if (app && env.VITE_USE_EMULATORS === 'true') {
+  connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
+  connectFirestoreEmulator(db, '127.0.0.1', 8080);
+}

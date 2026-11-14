@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=390">
+<link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--ground:#17161d;--plastic:#26242f;--ridge:#302d3a;--ink:#f2eee6;--muted:#b9b3c4;--red:#ff5a3c;--yellow:#ffd23f;--teal:#3ed6c0}
+*{box-sizing:border-box;margin:0}
+body{width:390px;height:844px;overflow:hidden;background:var(--ground);color:var(--ink);font:16px/1.45 "Atkinson Hyperlegible",sans-serif}
+.top{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;background:var(--plastic);border-bottom:4px solid var(--red)}
+.logo{font:700 18px "Pixelify Sans";letter-spacing:.5px}
+.avatar{width:32px;height:32px;background:var(--teal);border:3px solid var(--ink);image-rendering:pixelated}
+.fase{padding:16px}
+.kicker{font:500 13px "Pixelify Sans";color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+h1{font:700 34px/1 "Pixelify Sans";margin:4px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.step{background:var(--plastic);padding:6px 6px 8px;border-top:4px solid var(--ridge)}
+.step b{display:block;font:700 15px "Pixelify Sans"}
+.step span{font-size:11px;color:var(--muted);text-transform:uppercase}
+.step.done{border-top-color:var(--yellow)}
+.step.now{background:var(--red);border-top-color:var(--ink);color:#17161d}
+.step.now span{color:#17161d;font-weight:700}
+.howto{margin:14px 16px;padding:12px 14px;border:3px solid var(--yellow);background:#221f16}
+.howto .kicker{color:var(--yellow)}
+.howto p{font-size:15px;margin-top:4px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:4px 16px}
+.cart{background:var(--plastic);padding:10px 10px 12px;position:relative}
+.cart:before{content:"";display:block;height:8px;margin:-10px -10px 8px;background:repeating-linear-gradient(90deg,var(--ridge) 0 6px,var(--plastic) 6px 10px)}
+.cover{aspect-ratio:3/4;width:100%;border:3px solid #0c0b10}
+.c1{background:linear-gradient(160deg,#2b6cb0,#1a2a5a 60%,#e94f37)}
+.c2{background:linear-gradient(170deg,#3a1f4f,#c0306e 70%,#ffcf5c)}
+.c3{background:linear-gradient(170deg,#11423a,#3ed6c0 80%)}
+.c4{background:linear-gradient(170deg,#4a2c12,#e8a33d)}
+.name{font:700 15px/1.2 "Pixelify Sans";margin:8px 0 4px}
+.meta{font-size:12px;color:var(--muted)}
+.vote{margin-top:8px;width:100%;padding:8px;border:3px solid var(--ink);background:transparent;color:var(--ink);font:700 13px "Pixelify Sans"}
+.voted .vote{background:var(--teal);border-color:var(--teal);color:#17161d}
+.stamp{position:absolute;top:22px;right:4px;transform:rotate(8deg);font:700 12px "Pixelify Sans";padding:2px 6px;border:3px solid var(--teal);color:var(--teal);background:#17161dcc}
+.mine{outline:3px dashed var(--yellow);outline-offset:-3px}
+.mine .vote{border-color:var(--yellow);color:var(--yellow)}
+.badge{display:inline-block;font-size:11px;background:#17161d;padding:1px 6px;margin-top:4px;border:2px solid var(--ridge)}
+</style></head><body>
+<header class="top"><span class="logo">CLUBE DOS JOGOS</span><span class="avatar"></span></header>
+<section class="fase">
+  <p class="kicker">Rodada atual</p>
+  <h1>FASE 07</h1>
+  <div class="strip">
+    <div class="step done"><b>01</b><span>Sugerindo</span></div>
+    <div class="step now"><b>02 ▶</b><span>Votando</span></div>
+    <div class="step"><b>03</b><span>Jogando</span></div>
+    <div class="step"><b>04</b><span>Encerrada</span></div>
+  </div>
+</section>
+<div class="howto"><p class="kicker">O que fazer agora</p><p>Marque todos os jogos que você toparia jogar. Pode marcar quantos quiser. O voto é secreto até o admin fechar.</p></div>
+<div class="grid">
+  <article class="cart voted"><div class="cover c1"></div><span class="stamp">VOTADO</span><p class="name">Outer Wilds</p><p class="meta">Médio · Solo · R$ 60</p><span class="badge">7 de 8 conseguem jogar</span><button class="vote">✓ TOPO</button></article>
+  <article class="cart mine"><div class="cover c2"></div><p class="name">Hades</p><p class="meta">Médio · Solo · R$ 47</p><span class="badge">8 de 8 conseguem jogar</span><button class="vote">esse é seu, calma</button></article>
+  <article class="cart"><div class="cover c3"></div><p class="name">It Takes Two</p><p class="meta">Longo · Co-op · R$ 90</p><span class="badge">5 de 8 conseguem jogar</span><button class="vote">TOPO JOGAR</button></article>
+  <article class="cart"><div class="cover c4"></div><p class="name">Celeste</p><p class="meta">Curto · Solo · R$ 37</p><span class="badge">8 de 8 conseguem jogar</span><button class="vote">TOPO JOGAR</button></article>
+</div>
+</body></html>
