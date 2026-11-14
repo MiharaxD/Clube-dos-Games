@@ -370,3 +370,19 @@ fieldset { border: 0; padding: 0; }
   *, *::before, *::after { animation-duration: 1ms !important; transition-duration: 1ms !important; }
 }
 .cover__blank[hidden] { display: none; }
+
+/* ---------- Roleta do desempate ---------- */
+.roulette {
+  list-style: none; padding: 12px; margin: 0; background: var(--deep); border-radius: var(--radius);
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 12px;
+}
+.roulette__item {
+  position: relative; display: grid; gap: 6px; padding: 6px; border-radius: var(--radius);
+  outline: 3px solid transparent; transition: outline-color 60ms linear, transform 60ms linear;
+}
+.roulette__item.is-lit { outline-color: var(--lime); transform: translateY(-4px); }
+.roulette__item.is-winner { background: rgb(182 240 60 / 0.14); }
+.roulette__name { font-weight: 700; font-size: 0.9rem; overflow-wrap: anywhere; }
+
+/* Seu jogo na votação fica "fora do jogo" */
+.box.is-mine .cover { filter: saturate(0.55) brightness(0.8); }
