@@ -9,7 +9,8 @@
 - **Cuidados:** sombra dura curta (`0 6px 0 var(--deep)`) em objetos; capa sempre 3:4; alvos ≥ 44px;
   foco sobre papel usa `--paper-ink`; número isolado em adesivo usa `.sticker--num`; kicker acima
   de título é proibido. Mudou regra visual → atualizar `DESIGN.md` e `.impeccable/design.json`.
-- **Não precisa ler:** `.impeccable/mocks/` (esboços arquivados), `.impeccable/review/` (capturas).
+- **Não precisa ler:** `.impeccable/mocks/` (esboços arquivados; exceção: `prateleira-3d.html`, mock
+  ativa da estante 3D), `.impeccable/review/` (capturas).
 - **Arquivo grande:** `styles.css` (~520 linhas) → grep pelo nome da classe ou da seção.
 
 ## Textos da interface

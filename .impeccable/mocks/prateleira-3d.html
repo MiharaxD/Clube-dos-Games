@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mock: prateleira 3D</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700&family=Jersey+10&family=Permanent+Marker&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/src/styles.css" />
+  <style>
+    /* Mock da prateleira 3D. Se aprovado, este CSS vai para src/styles.css. */
+    :root {
+      --wood-hi: #7d5f48;   /* topo da tábua, onde bate a luz */
+      --wood-top: #614936;
+      --wood-crease: #2a1f19;
+    }
+
+    .mock { max-width: var(--max); margin: 0 auto; padding: 24px var(--gutter) 64px; }
+    .mock .page-head { margin-bottom: 20px; }
+    .mock-switch { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 20px; }
+
+    /* ---------- Móvel (montantes, coroa e rodapé) ---------- */
+    .cabinet {
+      position: relative; padding: 24px 16px 22px; margin-bottom: 8px;
+      background:
+        /* veio vertical dos montantes */
+        repeating-linear-gradient(90deg,
+          transparent 0 3px, rgb(0 0 0 / 0.14) 3px 4px, transparent 4px 8px,
+          rgb(255 255 255 / 0.05) 8px 9px, transparent 9px 13px),
+        linear-gradient(90deg, #3a2c23, #58463a 7px, var(--edge) 15px, var(--edge) calc(100% - 15px), #58463a calc(100% - 7px), #3a2c23);
+      box-shadow: 0 8px 0 var(--deep);
+    }
+    @media (min-width: 760px) { .cabinet { padding-inline: 22px; } }
+    /* coroa (tábua de cima) e rodapé: veio horizontal, quina clara */
+    .cabinet::before, .cabinet::after {
+      content: ''; position: absolute; left: -6px; right: -6px; pointer-events: none;
+      background:
+        repeating-linear-gradient(180deg, transparent 0 2px, rgb(0 0 0 / 0.16) 2px 3px, transparent 3px 6px, rgb(255 255 255 / 0.05) 6px 7px),
+        linear-gradient(180deg, var(--wood-hi), var(--lip) 4px, #4b392c);
+      box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.18), 0 4px 0 rgb(0 0 0 / 0.45);
+    }
+    .cabinet::before { top: 0; height: 24px; }
+    .cabinet::after { bottom: 0; height: 22px; box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.14); }
+
+    /* ---------- Prateleira 3D ---------- */
+    .rack {
+      position: relative; z-index: 1;
+      list-style: none; padding: 0; margin: 0;
+      display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+      background: var(--deep);
+      box-shadow: inset 0 0 0 2px var(--deep);
+    }
+    @media (min-width: 760px) { .rack { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+
+    /* Cada nicho é uma caixa 3D: parede do fundo recuada, chão, teto e (nas pontas) laterais.
+       Ponto de fuga único por fileira: cada coluna desloca o seu para o centro da fileira,
+       então as tábuas vizinhas se emendam sem degrau. */
+    .rack__slot {
+      --vx: 100%;
+      container-type: inline-size;
+      position: relative; display: flex; flex-direction: column; min-width: 0;
+    }
+    .rack__slot:nth-child(2n) { --vx: 0%; }
+    @media (min-width: 760px) {
+      .rack__slot:nth-child(4n + 1) { --vx: 200%; }
+      .rack__slot:nth-child(4n + 2) { --vx: 100%; }
+      .rack__slot:nth-child(4n + 3) { --vx: 0%; }
+      .rack__slot:nth-child(4n + 4) { --vx: -100%; }
+    }
+    .rack__slot:hover, .rack__slot:focus-within { z-index: 2; }
+    .rack__slot--ghost.is-pc-only { display: none; }
+    @media (min-width: 760px) { .rack__slot--ghost.is-pc-only { display: flex; } }
+
+    .rack__bay { --D: 30cqw; position: relative; perspective: 900px; perspective-origin: var(--vx) 35%; }
+    /* o plano da cena fica na frente da caixa: só a caixa recebe clique */
+    .rack__scene { position: relative; transform-style: preserve-3d; padding: 30px 11% 0; pointer-events: none; }
+    .rack__scene .case { pointer-events: auto; }
+    .rack__face { position: absolute; display: block; pointer-events: none; }
+
+    /* parede do fundo: lambri vertical, sombra da tábua de cima */
+    .rack__wall {
+      inset: 0; transform: translateZ(calc(var(--D) * -1));
+      background:
+        linear-gradient(rgb(0 0 0 / 0.6), transparent 34%, transparent 80%, rgb(0 0 0 / 0.35)),
+        repeating-linear-gradient(90deg, rgb(0 0 0 / 0.38) 0 2px, rgb(255 255 255 / 0.04) 2px 3px, transparent 3px 64px),
+        repeating-linear-gradient(90deg, transparent 0 7px, rgb(0 0 0 / 0.07) 7px 8px, transparent 8px 15px, rgb(255 255 255 / 0.03) 15px 16px, transparent 16px 23px),
+        var(--shelf);
+    }
+    /* teto = fundo da tábua de cima (mais escuro, a luz não chega) */
+    .rack__ceil {
+      top: 0; left: 0; right: 0; height: var(--D);
+      transform-origin: top; transform: rotateX(-90deg);
+      background:
+        repeating-linear-gradient(180deg, transparent 0 4px, rgb(0 0 0 / 0.18) 4px 5px, transparent 5px 9px),
+        linear-gradient(180deg, #2c211a, #18110d);
+    }
+    /* chão = topo da tábua, onde a caixa fica em pé; veio paralelo ao beiço */
+    .rack__floor {
+      bottom: 0; left: 0; right: 0; height: var(--D);
+      transform-origin: bottom; transform: rotateX(90deg);
+      background:
+        repeating-linear-gradient(180deg, transparent 0 3px, rgb(0 0 0 / 0.14) 3px 4px, transparent 4px 9px, rgb(255 255 255 / 0.05) 9px 10px, transparent 10px 14px),
+        linear-gradient(180deg, #4a382b, var(--wood-top) 60%, var(--wood-hi));
+    }
+    /* sombra dura da caixa no chão */
+    .rack__floor::after {
+      content: ''; position: absolute; left: 12%; right: 9%; bottom: 36%; height: 22%;
+      background: rgb(18 13 11 / 0.7);
+    }
+    .rack__slot--ghost .rack__floor::after { display: none; }
+    /* laterais do móvel, só nas pontas da fileira */
+    .rack__side { display: none; top: 0; bottom: 0; width: var(--D); background:
+        repeating-linear-gradient(180deg, transparent 0 5px, rgb(0 0 0 / 0.14) 5px 6px, transparent 6px 11px),
+        linear-gradient(90deg, #2a1f18, #3c2d23); }
+    .rack__side--l { left: 0; transform-origin: left; transform: rotateY(90deg); }
+    .rack__side--r { right: 0; transform-origin: right; transform: rotateY(-90deg); background:
+        repeating-linear-gradient(180deg, transparent 0 5px, rgb(0 0 0 / 0.14) 5px 6px, transparent 6px 11px),
+        linear-gradient(270deg, #2a1f18, #3c2d23); }
+    .rack__slot:nth-child(2n + 1) .rack__side--l, .rack__slot:nth-child(2n) .rack__side--r { display: block; }
+    @media (min-width: 760px) {
+      .rack__slot:nth-child(n) .rack__side { display: none; }
+      .rack__slot:nth-child(4n + 1) .rack__side--l, .rack__slot:nth-child(4n) .rack__side--r { display: block; }
+    }
+
+    /* a caixa fica em pé no meio da tábua */
+    /* A caixa tem o próprio ponto de vista (lombada sempre à mostra) e entra no nicho
+       como um plano em pé no meio da tábua. */
+    .rack__stage {
+      position: relative; transform: translateZ(calc(var(--D) * -0.45));
+      perspective: 640px; perspective-origin: -40% -30%;
+    }
+    .rack__spacer { display: block; aspect-ratio: 3 / 4; }
+
+    /* Frente da tábua: beiço com quina gasta + frente grossa onde mora a etiqueta do jogo.
+       Parafuso na emenda, risco aqui e ali, nó de vez em quando. Só gradientes. */
+    .rack__plank {
+      --scr: 30%;
+      position: relative; z-index: 1; height: 28px;
+      background:
+        radial-gradient(circle at 9px 15px, #c9c2b6 0 1.3px, #6f675e 1.8px 2.6px, rgb(0 0 0 / 0.55) 2.8px 3.4px, transparent 3.6px),
+        linear-gradient(96deg, transparent 0 46%, rgb(255 255 255 / 0.10) 47% 49%, transparent 50%) var(--scr) 6px / 52px 16px no-repeat,
+        repeating-linear-gradient(180deg, transparent 0 2px, rgb(0 0 0 / 0.12) 2px 3px, transparent 3px 5px),
+        linear-gradient(180deg, #9a7a5e 0 1px, var(--wood-hi) 1px 3px, var(--lip) 3px, #4f3c2e);
+    }
+    .rack__slot:nth-child(3n) .rack__plank { --scr: 72%; }
+    .rack__slot:nth-child(3n + 1) .rack__plank { --scr: 8%; }
+    .rack__slot:nth-child(5n + 2) .rack__plank::after,
+    .rack__slot:nth-child(7n + 4) .rack__plank::after {
+      content: ''; position: absolute; left: 44%; top: 10px; width: 24px; height: 8px; border-radius: 50%;
+      background: radial-gradient(ellipse, #2b2019 0 22%, rgb(46 34 26 / 0.55) 42%, transparent 70%);
+    }
+    .rack__slot:nth-child(7n + 4) .rack__plank::after { left: 64%; width: 16px; }
+
+    .rack__label {
+      flex: 1; position: relative; z-index: 1; padding: 10px 11% 16px;
+      background:
+        repeating-linear-gradient(180deg, transparent 0 6px, rgb(255 255 255 / 0.035) 6px 7px, transparent 7px 13px, rgb(0 0 0 / 0.12) 13px 15px),
+        linear-gradient(180deg, #4b392c, #3a2c23 70%, #30241c);
+      box-shadow: inset 0 -3px 0 rgb(0 0 0 / 0.35);
+    }
+    .rack__name { overflow-wrap: anywhere; }
+    .rack__by, .rack__meta { font-size: 0.85rem; color: var(--muted); }
+    .rack__by { margin-top: 2px; }
+
+    /* ---------- Adesivos colados no móvel (decoração, aria-hidden) ---------- */
+    .decal {
+      position: absolute; z-index: 0; display: block; pointer-events: none;
+      rotate: var(--r, -4deg);
+      filter: drop-shadow(0 2px 0 rgb(0 0 0 / 0.55));
+    }
+    .decal svg { display: block; width: 100%; height: auto; }
+    .decal--px { width: var(--w, 34px); }
+    /* adesivo de texto: recorte branco em volta e uma ponta descolando */
+    .decal--txt {
+      padding: 4px 9px 3px; font: 1.25rem/1 var(--font-display); letter-spacing: 0.05em;
+      white-space: nowrap; box-shadow: 0 0 0 2px var(--paper);
+      clip-path: polygon(-3px -3px, calc(100% + 3px) -3px, calc(100% + 3px) calc(100% - 6px), calc(100% - 6px) calc(100% + 3px), -3px calc(100% + 3px));
+    }
+    .decal--txt::after {
+      content: ''; position: absolute; right: -3px; bottom: -3px; width: 9px; height: 9px;
+      background: linear-gradient(135deg, #e6dcc0 50%, transparent 50%);
+    }
+    .decal--1up { background: var(--lime); color: var(--deep); }
+    .decal--gg { background: var(--orange); color: var(--deep); font-size: 1.6rem; }
+    .decal--zerei { background: var(--pink); color: var(--deep); }
+    .decal--xp { background: var(--deep); color: var(--lime); }
+    .decal--continue { background: var(--deep); color: var(--amber); font-size: 1.1rem; }
+    .decal--press { background: var(--paper); color: var(--stamp); font-size: 0.9rem; box-shadow: 0 0 0 2px var(--paper), inset 0 0 0 2px var(--stamp); }
+    /* fita crepe escrita à mão */
+    .decal--tape {
+      padding: 4px 12px 3px; white-space: nowrap; filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.4));
+      background: linear-gradient(180deg, rgb(238 226 188 / 0.92), rgb(222 208 166 / 0.92));
+      color: var(--paper-ink); font: 1rem/1.2 var(--font-hand);
+      clip-path: polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%);
+    }
+    /* posições: no beiço da tábua, na parede entre caixas e nos montantes */
+    /* no beiço: adesivo pequeno, cabe na faixa e não cobre o nome do jogo */
+    .rack__plank .decal { top: 2px; z-index: 2; }
+    .rack__plank .decal--px { width: 26px; }
+    .rack__plank .decal--txt { top: 5px; font-size: 0.95rem; padding: 2px 6px 1px; }
+    .rack__plank .decal--gg { font-size: 1.05rem; }
+    .rack__plank .decal--tape { top: 4px; font-size: 0.8rem; padding: 2px 9px 1px; }
+    /* cada nicho é uma camada isolada: adesivo nunca passa da borda do próprio nicho */
+    .rack__wall .decal { left: 2%; }
+    .rack__slot:nth-child(4n + 3) .rack__wall .decal { left: auto; right: 3%; }
+    /* tábua com adesivo fica por cima da vizinha, pra fita comprida não ser cortada */
+    .cabinet > .decal { z-index: 2; }
+    @media (max-width: 759px) { .decal { scale: 0.8; } }
+
+    /* ---------- Caixa fechada (espessura 3D) ---------- */
+    .case {
+      --ry: 18deg; --t: 15cqw;
+      position: relative; display: block; width: 100%; aspect-ratio: 3 / 4;
+      padding: 0; border: 0; background: none; color: inherit; cursor: pointer; font: inherit;
+      transform-style: preserve-3d; transform-origin: 50% 100%;
+      transform: translateY(var(--lift, 0px)) translateZ(var(--tz, 0px))
+                 rotateX(var(--tilt-x, 0deg)) rotateY(calc(var(--ry) + var(--tilt-y, 0deg)));
+      transition: transform 280ms cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    @media (min-width: 760px) { .case { --ry: 24deg; } }
+    @media (hover: hover) { .case:hover { --ry: 0deg; --tz: 34px; --lift: -6px; } }
+    .case:focus-visible { --ry: 0deg; --tz: 34px; --lift: -6px; outline: 3px solid var(--lime); outline-offset: 4px; }
+
+    .case__face { position: absolute; display: block; backface-visibility: hidden; }
+    .case__front { inset: 0; }
+    .case__front .cover { display: block; box-shadow: none; height: 100%; }
+    /* brilho do plástico */
+    .case__front::after {
+      content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+      background: linear-gradient(110deg, rgb(255 255 255 / 0.12), transparent 32%);
+      box-shadow: inset 0 0 0 2px rgb(0 0 0 / 0.35);
+    }
+    .case__front .price, .case__front .tag, .case__front .stamp, .case__front .note { z-index: 2; }
+    .case__front .tag { left: 0; }
+
+    .case__spine {
+      top: 0; bottom: 0; right: 100%; width: var(--t);
+      transform-origin: right center; transform: rotateY(-90deg);
+      display: flex; align-items: center; justify-content: center; overflow: hidden;
+      font: calc(var(--t) * 0.62) / 1 var(--font-display);
+      background: linear-gradient(90deg,
+        hsl(var(--hue) 36% 18%), hsl(var(--hue) 42% 30%) 45%, hsl(var(--hue) 36% 20%));
+    }
+    .case__spine span {
+      writing-mode: vertical-rl; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      max-height: 90%; color: var(--ink); letter-spacing: 0.04em;
+    }
+    .case__side {
+      top: 0; bottom: 0; left: 100%; width: var(--t);
+      transform-origin: left center; transform: rotateY(90deg);
+      background: hsl(var(--hue) 30% 12%);
+    }
+    .case__top {
+      left: 0; right: 0; bottom: 100%; height: var(--t);
+      transform-origin: center bottom; transform: rotateX(90deg);
+      background: linear-gradient(90deg, hsl(var(--hue) 34% 34%), hsl(var(--hue) 30% 24%));
+    }
+
+    @media (prefers-reduced-motion: reduce) { .case { transition: none; } }
+  </style>
+</head>
+<body>
+  <main class="mock">
+    <div class="page-head"><h1>Estante</h1><p class="muted" id="count"></p></div>
+    <p class="mock-switch">
+      <a class="btn btn--sm" href="?n=6">6 caixas</a>
+      <a class="btn btn--sm" href="?n=50">50 caixas (teste de fluidez)</a>
+    </p>
+    <div class="cabinet" id="cabinet">
+      <ul class="rack" id="rack" aria-label="Estante do clube"></ul>
+    </div>
+  </main>
+
+  <script type="module">
+    // Mock: dados falsos e "artes" horizontais em SVG (imitam o background_image do RAWG,
+    // que é paisagem, para ver como fica o corte 3:4).
+    const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+
+    const ART = [
+      ['#1d3b53', '#f4a259', '#2b2d42'], ['#3d1c2e', '#ff7a1a', '#120d0b'],
+      ['#0f3d3e', '#b6f03c', '#1a1411'], ['#2c2a4a', '#ff3d6e', '#4f518c'],
+      ['#4a3a30', '#ffc36b', '#2a1d17'], null,
+    ];
+    function fakeArt(colors, seed) {
+      const [sky, sun, hill] = colors;
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360">
+        <rect width="640" height="360" fill="${sky}"/>
+        <circle cx="${200 + (seed * 70) % 300}" cy="120" r="64" fill="${sun}"/>
+        <path d="M0 260 L120 180 L240 250 L380 150 L520 240 L640 190 L640 360 L0 360Z" fill="${hill}"/>
+        <rect x="${80 + (seed * 53) % 400}" y="200" width="36" height="90" fill="${sun}" opacity=".7"/>
+      </svg>`;
+      return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+    }
+
+    const NAMES = ['Corredor Sem Fim', 'Fazendinha do Vale', 'Torre dos Ecos', 'Kart da Firma',
+      'Masmorra 64', 'Detetive de Pijama', 'O Último Ônibus', 'Pássaros Brabos'];
+    const PEOPLE = ['Yuri', 'Bia', 'Caio', 'Duda', 'Léo', 'Mari'];
+
+    function spineHue(name) {
+      let h = 0;
+      for (const ch of name) h = (h * 31 + ch.codePointAt(0)) >>> 0;
+      return h % 360;
+    }
+
+    // ---------- Adesivos: pixel art própria (só quadradinhos) + piadas de jogador.
+    // Nada de logo, personagem ou marca: só os clichês de qualquer videogame.
+    const PIX = {
+      heart: { rows: ['.XX...XX.', 'XwXX.XXXX', 'XXXXXXXXX', 'XXXXXXXXX', '.XXXXXXX.', '..XXXXX..', '...XXX...', '....X....'],
+        colors: { X: '#ff3d6e', w: '#f6efe4' } },
+      coin: { rows: ['..XXXX..', '.XXXXXX.', 'XXwDXXXX', 'XXXDXXXX', 'XXXDXXXX', 'XXXDXXXX', '.XXXXXX.', '..XXXX..'],
+        colors: { X: '#ffc36b', D: '#b4741f', w: '#f6efe4' } },
+      dpad: { rows: ['...XXX...', '...XDX...', '...XXX...', 'XXXXXXXXX', 'XDXXXXXDX', 'XXXXXXXXX', '...XXX...', '...XDX...', '...XXX...'],
+        colors: { X: '#2a2320', D: '#cdbfae' } },
+      floppy: { rows: ['XXXXXXXX.', 'XXLLLLXXX', 'XXLLDLXXX', 'XXLLLLXXX', 'XXXXXXXXX', 'XPPPPPPPX', 'XPDDDDPPX', 'XPPPPPPPX', 'XXXXXXXXX'],
+        colors: { X: '#ff7a1a', L: '#cdbfae', D: '#2a1d17', P: '#f4ecd2' } },
+      potion: { rows: ['...XX...', '...XX...', '..DDDD..', '.XXXXXX.', 'XXwXXXXX', 'XwXXXXXX', 'XXXXXXXX', '.XXXXXX.'],
+        colors: { X: '#b6f03c', D: '#4a3a30', w: '#f6efe4' } },
+    };
+    function pixelSvg({ rows, colors }) {
+      const w = rows[0].length, h = rows.length;
+      const by = {};
+      rows.forEach((row, y) => [...row].forEach((c, x) => { if (c !== '.') (by[c] ??= []).push(`M${x} ${y}h1v1h-1z`); }));
+      const all = Object.values(by).flat().join('');
+      // contorno de papel (o "recorte" do adesivo) por baixo, cores por cima
+      const outline = `<path d="${all}" fill="#f4ecd2" stroke="#f4ecd2" stroke-width="1.6" stroke-linejoin="miter"/>`;
+      const fills = Object.entries(by).map(([c, d]) => `<path d="${d.join('')}" fill="${colors[c]}"/>`).join('');
+      return `<svg viewBox="-1 -1 ${w + 2} ${h + 2}" shape-rendering="crispEdges" aria-hidden="true">${outline}${fills}</svg>`;
+    }
+    const TXT = {
+      '1up': '1UP', gg: 'GG', zerei: 'ZEREI!', xp: '+50 XP', continue: 'CONTINUE? 9', press: 'PRESS START',
+    };
+    const TAPES = ['não sopra a fita', 'só mais uma', 'save aqui', 'rage quit 2003'];
+
+    function decal(kind, style) {
+      if (PIX[kind]) return `<span class="decal decal--px" style="${style}" aria-hidden="true">${pixelSvg(PIX[kind])}</span>`;
+      if (TXT[kind]) return `<span class="decal decal--txt decal--${kind}" style="${style}" aria-hidden="true">${TXT[kind]}</span>`;
+      return `<span class="decal decal--tape" style="${style}" aria-hidden="true">${esc(kind)}</span>`;
+    }
+    // Posição e escolha determinísticas pelo índice: a prateleira não "pula" ao recarregar.
+    const LIP_KINDS = ['coin', '1up', TAPES[0], 'heart', 'gg', 'xp', 'dpad', TAPES[1], 'zerei', 'potion', 'press', 'floppy'];
+    const WALL_KINDS = ['heart', 'continue', 'floppy', TAPES[2], 'coin', 'dpad', 'gg', 'potion'];
+    function lipDecal(i) {
+      if (i % 3 !== 0 && i % 5 !== 2) return '';
+      const kind = LIP_KINDS[(i * 7) % LIP_KINDS.length];
+      return decal(kind, `left:${8 + ((i * 37) % 28)}%;--r:${((i * 13) % 13) - 6}deg;--w:38px`);
+    }
+    function wallDecal(i) {
+      if (i % 6 !== 1 && i % 6 !== 3) return '';
+      const kind = WALL_KINDS[(i * 5) % WALL_KINDS.length];
+      return decal(kind, `top:${2 + ((i * 11) % 8)}%;--r:${((i * 17) % 21) - 10}deg;--w:34px`);
+    }
+
+    // Faces fixas do nicho (decoração; a parede pode levar um adesivo).
+    const faces = (wall) => `<span class="rack__face rack__wall" aria-hidden="true">${wall}</span><span class="rack__face rack__ceil" aria-hidden="true"></span><span class="rack__face rack__floor" aria-hidden="true"></span><span class="rack__face rack__side rack__side--l" aria-hidden="true"></span><span class="rack__face rack__side rack__side--r" aria-hidden="true"></span>`;
+
+    function caseSlot(i) {
+      const name = NAMES[i % NAMES.length] + (i >= NAMES.length ? ` ${Math.floor(i / NAMES.length) + 1}` : '');
+      const colors = ART[i % ART.length];
+      const url = colors ? fakeArt(colors, i) : '';
+      const score = (6 + ((i * 37) % 40) / 10).toFixed(1).replace('.', ',');
+      const img = url ? `<img src="${url}" alt="" loading="lazy" decoding="async">` : '';
+      return `
+        <li class="rack__slot">
+          <div class="rack__bay"><div class="rack__scene">
+            ${faces(wallDecal(i))}
+            <div class="rack__stage">
+            <button type="button" class="case" aria-haspopup="dialog" aria-label="Abrir a caixa de ${esc(name)}" style="--hue:${spineHue(name)}">
+              <span class="case__face case__front">
+                <span class="cover">${img}<span class="cover__blank" ${url ? 'hidden' : ''}>${esc(name)}</span></span>
+                <span class="price">${score}</span>
+                <span class="tag">Fase ${i + 1}</span>
+              </span>
+              <span class="case__face case__spine" aria-hidden="true"><span>${esc(name)}</span></span>
+              <span class="case__face case__side" aria-hidden="true"></span>
+              <span class="case__face case__top" aria-hidden="true"></span>
+            </button>
+            </div>
+          </div></div>
+          <div class="rack__plank" aria-hidden="true">${lipDecal(i)}</div>
+          <div class="rack__label">
+            <h3 class="rack__name">${esc(name)}</h3>
+            <p class="rack__by">sugestão de ${PEOPLE[i % PEOPLE.length]}</p>
+            <p class="rack__meta">Nota média ${score} · ${2 + (i % 5)} notas</p>
+          </div>
+        </li>`;
+    }
+
+    // Completa a última tábua com espaços vazios: 4 por tábua no PC, 2 no celular.
+    function ghosts(n) {
+      const pc = (4 - (n % 4)) % 4;
+      const mobile = n % 2;
+      return Array.from({ length: pc }, (_, i) => `
+        <li class="rack__slot rack__slot--ghost ${i >= mobile ? 'is-pc-only' : ''}" aria-hidden="true">
+          <div class="rack__bay"><div class="rack__scene">${faces('')}<div class="rack__stage"><span class="rack__spacer"></span></div></div></div>
+          <div class="rack__plank"></div>
+          <div class="rack__label"></div>
+        </li>`).join('');
+    }
+
+    const n = Math.min(Number(new URLSearchParams(location.search).get('n')) || 6, 80);
+    document.getElementById('rack').innerHTML = Array.from({ length: n }, (_, i) => caseSlot(i)).join('') + ghosts(n);
+    document.getElementById('count').textContent = `${n} jogos zerados pelo clube`;
+    // adesivos dos montantes e a fita crepe na coroa
+    document.getElementById('cabinet').insertAdjacentHTML('beforeend',
+      decal('zerados do clube', 'top:2px;left:28px;--r:-2deg') +
+      decal('heart', 'top:26%;left:-6px;--r:-8deg;--w:40px') +
+      decal('1up', 'top:58%;right:-6px;--r:7deg') +
+      (n > 8 ? decal('gg', 'top:82%;left:-6px;--r:-5deg') : ''));
+
+    // Tilt leve com o mouse, só no PC e sem reduced-motion. Mede o palco (não a caixa girada).
+    const fine = matchMedia('(hover: hover) and (pointer: fine) and (min-width: 760px)').matches;
+    const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (fine && !calm) {
+      const rack = document.getElementById('rack');
+      let current = null, last = null, frame = 0;
+      const reset = (el) => { el.style.removeProperty('--tilt-x'); el.style.removeProperty('--tilt-y'); };
+      rack.addEventListener('pointermove', (e) => {
+        const btn = e.target.closest('.case');
+        if (current && current !== btn) reset(current);
+        current = btn; last = e;
+        if (!btn || frame) return;
+        frame = requestAnimationFrame(() => {
+          frame = 0;
+          if (!current) return;
+          const r = current.parentElement.getBoundingClientRect();
+          const x = (last.clientX - r.left) / r.width - 0.5;
+          const y = (last.clientY - r.top) / r.height - 0.5;
+          current.style.setProperty('--tilt-y', `${(x * 12).toFixed(2)}deg`);
+          current.style.setProperty('--tilt-x', `${(-y * 8).toFixed(2)}deg`);
+        });
+      });
+      rack.addEventListener('pointerleave', () => { if (current) reset(current); current = null; });
+    }
+  </script>
+</body>
+</html>

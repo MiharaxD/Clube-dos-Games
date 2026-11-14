@@ -1,0 +1,925 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mock: prateleira 3D v2</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700&family=Jersey+10&family=Permanent+Marker&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/src/styles.css" />
+  <style>
+    /* Mock v2: a loja em volta da prateleira (luz, madeira, ambiente). As caixas são as da v1.
+       Se aprovado, este CSS vai para src/styles.css. */
+    :root {
+      /* madeira do móvel: mais clara que a sala, é a única coisa iluminada */
+      --wood-1: #3a2618;
+      --wood-2: #5b3b26;
+      --wood-3: #7b5236;
+      --wood-4: #9d6c45;
+      --wood-5: #c88f5c;
+      /* sala escura em volta */
+      --room: #211a16;
+      --room-lit: #3a2d24;
+      /* trilho de etiqueta */
+      --metal-hi: #e2e4e5;
+      --metal: #a9adb1;
+      --metal-lo: #5f6368;
+      --metal-dk: #34373a;
+      /* fita de LED: o laranja do sistema, clareado no miolo */
+      --led: #ffb877;
+      --led-glow: 255 122 26;
+
+      /* Veio de madeira: ruído esticado numa direção, renderizado uma vez como imagem
+         (não é filtro ao vivo). As faixas da tabela viram as linhas do veio. */
+      --grain-h: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='640' height='160'><filter id='a' x='0' y='0' width='1' height='1'><feTurbulence type='fractalNoise' baseFrequency='0.0032 0.075' numOctaves='4' seed='9' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.10 0 0 0 0 0.05 0 0 0 0 0.02 1.4 0 0 0 -0.2'/><feComponentTransfer><feFuncA type='table' tableValues='0 0.42 0.04 0.36 0 0.46 0.06 0.32 0 0.4 0.05 0.3 0'/></feComponentTransfer></filter><filter id='b' x='0' y='0' width='1' height='1'><feTurbulence type='fractalNoise' baseFrequency='0.002 0.42' numOctaves='2' seed='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 0.86 0 0 0 0 0.7 2.6 0 0 0 -1.45'/></filter><rect width='640' height='160' filter='url(%23a)'/><rect width='640' height='160' filter='url(%23b)' opacity='0.5'/></svg>");
+      --grain-v: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='640'><filter id='a' x='0' y='0' width='1' height='1'><feTurbulence type='fractalNoise' baseFrequency='0.075 0.0032' numOctaves='4' seed='5' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.10 0 0 0 0 0.05 0 0 0 0 0.02 1.4 0 0 0 -0.2'/><feComponentTransfer><feFuncA type='table' tableValues='0 0.42 0.04 0.36 0 0.46 0.06 0.32 0 0.4 0.05 0.3 0'/></feComponentTransfer></filter><filter id='b' x='0' y='0' width='1' height='1'><feTurbulence type='fractalNoise' baseFrequency='0.42 0.002' numOctaves='2' seed='8' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 0.86 0 0 0 0 0.7 2.6 0 0 0 -1.45'/></filter><rect width='160' height='640' filter='url(%23a)'/><rect width='160' height='640' filter='url(%23b)' opacity='0.5'/></svg>");
+      /* poeira assentada nas tábuas */
+      --specks: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='d' x='0' y='0' width='1' height='1'><feTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='1' seed='4' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.86 0 0 0 0 0.82 0 0 0 0 0.74 7 0 0 0 -4.6'/></filter><rect width='180' height='180' filter='url(%23d)' opacity='0.4'/></svg>");
+      /* carpete geométrico de locadora */
+      --carpet: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='96' height='96'><rect width='96' height='96' fill='%231c1720'/><path d='M6 14l9-8 9 8 9-8 9 8' fill='none' stroke='%232d6468' stroke-width='4'/><path d='M60 54h18l-9 15z' fill='%23a0702b'/><path d='M12 62h5v5h-5zM21 70h5v5h-5zM30 62h5v5h-5z' fill='%23a3354f'/><circle cx='78' cy='22' r='7' fill='none' stroke='%23a3354f' stroke-width='3'/><path d='M38 84h22v4H38z' fill='%232d6468'/><path d='M86 78h3v3h-3zM4 40h3v3H4zM50 30h3v3h-3zM70 90h3v3h-3z' fill='%23c9b98f'/></svg>");
+      /* estante vizinha (fora da luz): só silhuetas de capas, sem nome nem arte */
+      --neighbor: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='480' height='250'><rect width='480' height='250' fill='%23281b13'/><rect x='22' y='44' width='92' height='122' fill='%233c5a66'/><rect x='22' y='44' width='9' height='122' fill='%23263b44'/><rect x='142' y='44' width='92' height='122' fill='%237a3b2e'/><rect x='142' y='44' width='9' height='122' fill='%23532519'/><rect x='262' y='44' width='92' height='122' fill='%23545a2a'/><rect x='262' y='44' width='9' height='122' fill='%23393d1a'/><rect x='382' y='44' width='92' height='122' fill='%234a3360'/><rect x='382' y='44' width='9' height='122' fill='%23302140'/><rect y='166' width='480' height='24' fill='%23704a31'/><rect y='166' width='480' height='3' fill='%23a5744c'/><rect y='190' width='480' height='60' fill='%23767a7f'/><rect x='10' y='198' width='104' height='44' fill='%23cfc6ae'/><rect x='130' y='198' width='104' height='44' fill='%23cfc6ae'/><rect x='250' y='198' width='104' height='44' fill='%23cfc6ae'/><rect x='370' y='198' width='104' height='44' fill='%23cfc6ae'/></svg>");
+    }
+
+    /* o mock troca o main do app por uma loja de ponta a ponta */
+    main.mock { max-width: none; padding: 0 0 64px; }
+    .mock__head { max-width: var(--max); margin: 0 auto; padding: 24px var(--gutter) 8px; }
+    .mock__head .page-head { margin-bottom: 16px; }
+    .mock-switch { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 16px; }
+
+    /* ---------- A loja: parede, chão, luz e ar ---------- */
+    .store { position: relative; overflow: clip; padding-top: 22px; background: var(--room); isolation: isolate; }
+
+    /* parede de pegboard com o foco de luz batendo no meio */
+    .store__room {
+      position: absolute; inset: -48px -24px; z-index: 0; pointer-events: none;
+      background:
+        radial-gradient(ellipse 52% 40% at 50% 26%, rgb(255 190 130 / 0.14), transparent 72%),
+        radial-gradient(circle at 11px 11px, #0c0806 0 2.3px, rgb(255 230 200 / 0.05) 2.6px 3.1px, transparent 3.4px) 0 0 / 22px 22px,
+        var(--specks) 0 0 / 180px 180px,
+        linear-gradient(180deg, #2a211c, var(--room));
+    }
+
+    /* chão: rodapé + carpete em perspectiva com a poça de luz na frente do móvel */
+    .store__floor { position: absolute; left: -24px; right: -24px; bottom: 0; height: 132px; z-index: 1; perspective: 420px; pointer-events: none; }
+    .store__floor::before {
+      content: ''; position: absolute; left: 0; right: 0; top: 0; height: 14px; z-index: 1;
+      background:
+        linear-gradient(180deg, #8a6446 0 1px, var(--wood-2) 1px 4px, var(--wood-1) 100%);
+      box-shadow: 0 2px 0 rgb(0 0 0 / 0.5);
+    }
+    .store__carpet {
+      position: absolute; inset: 14px 0 -60px; transform-origin: top; transform: rotateX(52deg);
+      background:
+        radial-gradient(ellipse 46% 60% at 50% 0%, rgb(255 190 130 / 0.18), transparent 72%),
+        linear-gradient(180deg, rgb(0 0 0 / 0.5), transparent 45%),
+        var(--carpet) 0 0 / 96px 96px;
+    }
+
+    /* facho de luz no ar, bem fraco */
+    .store__beam {
+      position: absolute; top: 0; left: 50%; z-index: 3; width: min(1240px, 130%); height: 1200px;
+      translate: -50% 0; pointer-events: none;
+      /* cone com bordas que somem aos poucos (sem quina dura cruzando as caixas) */
+      background: conic-gradient(from 155deg at 50% -6%, transparent 0deg, rgb(255 222 180 / 0.07) 22deg, rgb(255 222 180 / 0.07) 28deg, transparent 50deg);
+      -webkit-mask: linear-gradient(180deg, #000, rgb(0 0 0 / 0.4) 55%, transparent 92%);
+      mask: linear-gradient(180deg, #000, rgb(0 0 0 / 0.4) 55%, transparent 92%);
+    }
+
+    /* poeira na luz: poucas partículas, um elemento por grupo (box-shadow) */
+    .store__dust { position: absolute; left: 0; right: 0; top: 0; height: min(100%, 1100px); z-index: 4; pointer-events: none; }
+    .mote {
+      position: absolute; width: 2px; height: 2px; border-radius: 50%;
+      background: rgb(255 228 196 / 0.7); color: rgb(255 228 196 / 0.55);
+      animation: mote-drift 26s ease-in-out infinite alternate;
+    }
+    .mote--a { left: 38%; top: 12%; box-shadow: 70px 90px 0 0, 160px 30px 0 0, -40px 210px 0 1px, 230px 260px 0 0; }
+    .mote--b { left: 55%; top: 22%; box-shadow: -90px 60px 0 0, 60px 160px 0 1px, 120px -30px 0 0; animation-duration: 34s; animation-delay: -8s; }
+    .mote--c { left: 46%; top: 40%; box-shadow: 110px 40px 0 0, -130px 120px 0 0, 30px 220px 0 0; animation-duration: 30s; animation-delay: -15s; }
+    @keyframes mote-drift {
+      0% { transform: translate3d(0, 0, 0); opacity: 0.25; }
+      50% { opacity: 0.8; }
+      100% { transform: translate3d(34px, -46px, 0); opacity: 0.35; }
+    }
+
+    /* vinheta da sala: só nas bordas da loja, longe das etiquetas */
+    .store__vignette {
+      position: absolute; inset: 0; z-index: 5; pointer-events: none;
+      background:
+        linear-gradient(90deg, rgb(6 4 3 / 0.78), transparent 9%, transparent 91%, rgb(6 4 3 / 0.78)),
+        linear-gradient(180deg, var(--ground), transparent 70px),
+        linear-gradient(0deg, rgb(6 4 3 / 0.7), transparent 90px);
+    }
+    @media (max-width: 759px) {
+      .store__vignette {
+        background:
+          linear-gradient(90deg, rgb(6 4 3 / 0.6), transparent 3%, transparent 97%, rgb(6 4 3 / 0.6)),
+          linear-gradient(180deg, var(--ground), transparent 50px),
+          linear-gradient(0deg, rgb(6 4 3 / 0.7), transparent 80px);
+      }
+      .mote--c { display: none; }
+    }
+
+    .store__inner { position: relative; z-index: 2; max-width: 1072px; margin: 0 auto; padding: 0 var(--gutter) 74px; }
+    @media (max-width: 759px) { .store__inner { padding: 0 0 64px; } }
+
+    /* ---------- Cenário em cima do móvel (aria-hidden, sem clique) ---------- */
+    .cabinet { position: relative; }
+    .scenery { position: relative; height: 172px; pointer-events: none; }
+    .scenery > * { position: absolute; bottom: 0; }
+
+    /* placa pendurada no teto */
+    .sign { bottom: auto; top: 6px; left: 50%; translate: -50% 0; rotate: -1.2deg; z-index: 2; }
+    .sign::before, .sign::after {
+      content: ''; position: absolute; bottom: 100%; width: 2px; height: 400px;
+      background: repeating-linear-gradient(180deg, #8d9196 0 4px, #4d5054 4px 6px);
+    }
+    .sign::before { left: 16%; } .sign::after { right: 16%; }
+    .sign__board {
+      display: block; padding: 8px 26px 4px; background: var(--orange); color: var(--deep);
+      font: 3rem/1 var(--font-display); letter-spacing: 0.06em;
+      box-shadow: inset 0 0 0 3px var(--deep), inset 0 0 0 6px var(--orange), inset 0 0 0 8px rgb(18 13 11 / 0.35),
+                  0 4px 0 var(--deep), 10px 22px 24px rgb(0 0 0 / 0.5);
+    }
+
+    /* TV de tubo passando a arte de um jogo em loop */
+    .tv { left: 5%; width: 168px; z-index: 1; }
+    .tv__ears { position: absolute; left: 50%; bottom: 100%; width: 0; height: 0; }
+    .tv__ears::before, .tv__ears::after {
+      content: ''; position: absolute; bottom: -4px; width: 2px; height: 58px; transform-origin: bottom;
+      background: linear-gradient(180deg, #e2e4e5 0 3px, #8d9196 3px);
+    }
+    .tv__ears::before { rotate: -28deg; } .tv__ears::after { rotate: 22deg; }
+    .tv__body {
+      position: relative; display: flex; gap: 8px; height: 124px; padding: 10px;
+      background: linear-gradient(180deg, #b9ad97, #8f8472 70%, #7a705f);
+      border-radius: 6px;
+      box-shadow: inset 0 2px 0 rgb(255 255 255 / 0.25), inset 0 -3px 0 rgb(0 0 0 / 0.25),
+                  0 4px 0 var(--deep);
+    }
+    /* a luz da tela respinga na parede atrás (gradiente fraco, não é sombra colorida) */
+    .tv::before {
+      content: ''; position: absolute; left: -40px; right: -40px; top: -30px; bottom: -10px; z-index: -1;
+      background: radial-gradient(ellipse 50% 50% at 42% 50%, rgb(150 180 205 / 0.09), transparent 70%);
+    }
+    .tv__body::after { content: ''; position: absolute; left: 18px; right: 18px; top: 100%; height: 5px; background: linear-gradient(90deg, #4a4438 0 16px, transparent 16px calc(100% - 16px), #4a4438 calc(100% - 16px)); }
+    .tv__screen {
+      position: relative; flex: 1; overflow: hidden; border-radius: 16px / 12px; background: #0d1214;
+      box-shadow: 0 0 0 4px #2b2722, 0 0 0 6px #5d5547;
+    }
+    .tv__feed { position: absolute; top: 0; bottom: 0; left: 0; width: 170%; background: center / cover; animation: tv-pan 16s ease-in-out infinite alternate; }
+    /* linhas de varredura + vidro curvo */
+    .tv__screen::after {
+      content: ''; position: absolute; inset: 0; z-index: 2;
+      background:
+        radial-gradient(ellipse 70% 50% at 30% 18%, rgb(255 255 255 / 0.22), transparent 60%),
+        radial-gradient(ellipse at 50% 50%, transparent 55%, rgb(0 0 0 / 0.55) 100%),
+        repeating-linear-gradient(180deg, rgb(0 0 0 / 0.38) 0 1px, transparent 1px 3px);
+    }
+    .tv__roll { position: absolute; left: 0; right: 0; top: 0; height: 30%; z-index: 1; background: linear-gradient(180deg, transparent, rgb(255 255 255 / 0.07), transparent); animation: tv-roll 7s linear infinite; }
+    .tv__panel { width: 26px; display: flex; flex-direction: column; align-items: center; gap: 8px; padding-top: 4px; }
+    .tv__knob { width: 16px; height: 16px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #6d665a, #2b2722 70%); box-shadow: 0 2px 0 rgb(0 0 0 / 0.4); }
+    .tv__grille { width: 20px; flex: 1; margin-bottom: 4px; background: repeating-linear-gradient(180deg, #3e3930 0 2px, transparent 2px 5px); }
+    @keyframes tv-pan { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(-41%, 0, 0); } }
+    @keyframes tv-roll { from { transform: translate3d(0, -100%, 0); } to { transform: translate3d(0, 340%, 0); } }
+
+    /* cartaz de jogo inventado na parede (fica atrás das coisas) */
+    .poster {
+      left: 25%; bottom: 12px; z-index: 0; width: 118px; padding: 6px 6px 8px; rotate: 1.5deg;
+      background: var(--paper); box-shadow: 0 3px 0 rgb(0 0 0 / 0.45), 6px 14px 20px rgb(0 0 0 / 0.4);
+    }
+    .poster__art {
+      display: block; padding: 14px 18px 10px;
+      background:
+        radial-gradient(circle at 18px 12px, var(--amber) 0 1px, transparent 1.5px),
+        radial-gradient(circle at 80px 30px, var(--ink) 0 1px, transparent 1.5px),
+        radial-gradient(circle at 54px 8px, var(--ink) 0 1px, transparent 1.5px),
+        linear-gradient(180deg, #1b2a3c, var(--deep));
+    }
+    .poster__art svg { display: block; width: 100%; height: auto; }
+    .poster__title { display: block; padding: 6px 4px 0; font: 1.35rem/0.85 var(--font-display); color: var(--paper-ink); text-align: center; }
+    .poster__sub { display: block; margin-top: 3px; font: 700 0.6rem/1 var(--font-body); letter-spacing: 0.08em; text-transform: uppercase; color: var(--paper-muted); text-align: center; }
+    .poster__tape { position: absolute; top: -7px; width: 30px; height: 14px; background: rgb(214 192 128 / 0.85); }
+    .poster__tape--l { left: -8px; rotate: -32deg; } .poster__tape--r { right: -8px; rotate: 28deg; }
+
+    /* fitas VHS deitadas, troféu e planta */
+    .vhs-stack { right: 25%; width: 124px; z-index: 1; }
+    .vhs {
+      position: relative; display: block; height: 24px; margin-top: 1px;
+      background: linear-gradient(180deg, #333134, #161517);
+      box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.14), 0 2px 0 rgb(0 0 0 / 0.5);
+    }
+    .vhs:nth-child(1) { width: 114px; margin-left: 8px; rotate: -2deg; }
+    .vhs:nth-child(2) { width: 120px; margin-left: 2px; }
+    .vhs:nth-child(3) { width: 118px; }
+    .vhs__label {
+      position: absolute; left: 12%; top: 4px; bottom: 4px; width: 60%; padding-left: 5px; overflow: hidden;
+      background: var(--paper); color: var(--paper-ink); font: 0.75rem/16px var(--font-hand); white-space: nowrap;
+    }
+    .trophy { right: 16%; width: 60px; z-index: 1; filter: drop-shadow(0 3px 0 rgb(0 0 0 / 0.5)); }
+    .plant { right: 8%; width: 86px; z-index: 1; filter: drop-shadow(0 3px 0 rgb(0 0 0 / 0.5)); }
+    .trophy svg, .plant svg { display: block; width: 100%; height: auto; }
+
+    @media (max-width: 759px) {
+      .scenery { height: 112px; }
+      .sign { left: 60%; top: 4px; }
+      .sign__board { font-size: 2rem; padding: 6px 16px 2px; }
+      .tv { left: 6px; transform: scale(0.62); transform-origin: bottom left; }
+      .plant { right: 8px; width: 50px; }
+      .poster, .vhs-stack, .trophy { display: none; }
+    }
+
+    /* ---------- Móvel: montantes, coroa, rodapé ---------- */
+    .cabinet__body {
+      position: relative; padding: 38px 22px 52px;
+      background:
+        /* riscos e marcas de uso nos montantes */
+        linear-gradient(84deg, transparent 0 46%, rgb(255 225 190 / 0.18) 47% 48%, transparent 49%) 6px 40% / 14px 60px no-repeat,
+        linear-gradient(97deg, transparent 0 46%, rgb(255 225 190 / 0.14) 47% 48%, transparent 49%) calc(100% - 4px) 72% / 16px 80px no-repeat,
+        var(--grain-v) 0 0 / 160px 640px,
+        linear-gradient(90deg, var(--wood-1), var(--wood-4) 5px, var(--wood-3) 14px, var(--wood-2) 22px,
+          var(--wood-2) calc(100% - 22px), var(--wood-3) calc(100% - 14px), var(--wood-4) calc(100% - 5px), var(--wood-1));
+    }
+    @media (max-width: 759px) { .cabinet__body { padding: 32px 9px 44px; } }
+    /* sombra do móvel no carpete */
+    .cabinet__body::before {
+      content: ''; position: absolute; z-index: -1; left: -4%; right: -4%; top: calc(100% - 6px); height: 46px; pointer-events: none;
+      background: radial-gradient(ellipse 50% 100% at 50% 0%, rgb(0 0 0 / 0.75), transparent 100%);
+    }
+
+    .cabinet__crown, .cabinet__base { position: absolute; left: -10px; right: -10px; z-index: 1; pointer-events: none; }
+    /* coroa: tampo saliente com quina clara, moldura côncava e testeira com veio */
+    .cabinet__crown {
+      top: 0; height: 38px;
+      background:
+        linear-gradient(180deg, var(--wood-5) 0 1px, #e0a970 1px 2px, var(--wood-4) 2px 7px, var(--wood-1) 7px 9px,
+          var(--wood-2) 9px 12px, transparent 12px calc(100% - 3px), rgb(0 0 0 / 0.35) calc(100% - 3px)),
+        linear-gradient(103deg, transparent 0 48%, rgb(255 225 190 / 0.2) 48.5% 49%, transparent 49.5%) 62% 16px / 70px 14px no-repeat,
+        var(--specks) 0 0 / 180px 180px,
+        var(--grain-h) -120px -30px / 640px 160px,
+        linear-gradient(180deg, var(--wood-4), var(--wood-3));
+      box-shadow: 0 4px 0 rgb(0 0 0 / 0.35);
+    }
+    /* rodapé do móvel: testeira + recuo escuro do pé */
+    .cabinet__base {
+      bottom: 0; height: 52px;
+      background:
+        linear-gradient(180deg, var(--wood-5) 0 1px, var(--wood-4) 1px 3px, transparent 3px calc(100% - 14px),
+          var(--wood-1) calc(100% - 14px) calc(100% - 12px), #1a110b calc(100% - 12px)),
+        var(--grain-h) -300px -90px / 640px 160px,
+        linear-gradient(180deg, var(--wood-3), var(--wood-2));
+    }
+    @media (max-width: 759px) { .cabinet__crown { height: 32px; left: -4px; right: -4px; } .cabinet__base { height: 44px; left: -4px; right: -4px; } }
+
+    /* queda da luz para as bordas do móvel (máx. 0.3 de escuro: etiquetas seguem legíveis) */
+    .cabinet__light {
+      position: absolute; inset: 0 -10px; z-index: 3; pointer-events: none;
+      background:
+        radial-gradient(ellipse 62% 52% at 50% 38%, rgb(255 205 160 / 0.07), transparent 70%),
+        radial-gradient(ellipse 82% 76% at 50% 42%, transparent 52%, rgb(12 7 4 / 0.3) 100%);
+    }
+
+    /* estantes vizinhas cortadas pela borda (só PC) */
+    .neighbor { display: none; }
+    @media (min-width: 760px) {
+      .neighbor {
+        display: block; position: absolute; top: 172px; bottom: 0; width: 620px; z-index: -1; pointer-events: none;
+        background:
+          linear-gradient(rgb(8 5 3 / 0.6), rgb(8 5 3 / 0.6)),
+          var(--neighbor) 0 38px / 480px 250px repeat-y,
+          linear-gradient(180deg, var(--wood-3), var(--wood-2));
+        box-shadow: inset 0 38px 0 var(--wood-2);
+      }
+      .neighbor--l { right: calc(100% + 30px); background-position: 0 0, 20px 38px, 0 0; }
+      .neighbor--r { left: calc(100% + 30px); }
+    }
+
+    /* desgaste no móvel: fita crepe velha, digital, poeira (as capas não levam nada) */
+    .wear { position: absolute; z-index: 2; pointer-events: none; }
+    .wear--tape { width: 46px; height: 16px; background: linear-gradient(180deg, rgb(205 178 112 / 0.82), rgb(186 158 92 / 0.82)); }
+    .wear--tape-a { left: 6px; top: 58%; rotate: 78deg; }
+    .wear--tape-b { right: 32%; top: 9px; rotate: -4deg; width: auto; height: auto; padding: 2px 10px 1px; font: 0.8rem/1.2 var(--font-hand); color: var(--paper-ink); white-space: nowrap; }
+    .wear--print {
+      right: -4px; top: 34%; width: 26px; height: 34px; rotate: 18deg; border-radius: 50%;
+      background: repeating-radial-gradient(ellipse 50% 60% at 50% 60%, transparent 0 2px, rgb(255 236 210 / 0.1) 2px 3px);
+      -webkit-mask: radial-gradient(ellipse at 50% 60%, #000 40%, transparent 70%);
+      mask: radial-gradient(ellipse at 50% 60%, #000 40%, transparent 70%);
+    }
+    @media (max-width: 759px) { .wear--print, .wear--tape-a { display: none; } }
+
+    /* ---------- Prateleira 3D ---------- */
+    .rack {
+      position: relative; z-index: 1;
+      list-style: none; padding: 0; margin: 0;
+      display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+      background: var(--deep);
+      box-shadow: 0 0 0 2px var(--wood-1);
+    }
+    @media (min-width: 760px) { .rack { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+
+    /* Cada nicho é uma caixa 3D com ponto de fuga único por fileira (as tábuas emendam sem degrau).
+       --gx continua o veio da tábua de uma coluna para a outra; --gy/--shade variam por fileira. */
+    .rack__slot {
+      --vx: 100%; --gx: 0px; --gy: 0px; --shade: 0;
+      --seam: linear-gradient(transparent, transparent);
+      --scratch: linear-gradient(transparent, transparent);
+      container-type: inline-size;
+      position: relative; display: flex; flex-direction: column; min-width: 0;
+    }
+    .rack__slot:nth-child(2n) { --vx: 0%; --gx: -100cqw; }
+    .rack__slot:nth-child(6n + 3), .rack__slot:nth-child(6n + 4) { --gy: -52px; --shade: 0.1; }
+    .rack__slot:nth-child(6n + 5), .rack__slot:nth-child(6n + 6) { --gy: -104px; --shade: 0.05; }
+    .rack__slot:nth-child(6n + 4) { --seam: linear-gradient(90deg, rgb(0 0 0 / 0.55) 0 1px, rgb(255 220 180 / 0.16) 1px 2px, transparent 2px); }
+    @media (min-width: 760px) {
+      .rack__slot:nth-child(n) { --gx: 0px; --gy: 0px; --shade: 0; --seam: linear-gradient(transparent, transparent); }
+      .rack__slot:nth-child(4n + 1) { --vx: 200%; }
+      .rack__slot:nth-child(4n + 2) { --vx: 100%; --gx: -100cqw; }
+      .rack__slot:nth-child(4n + 3) { --vx: 0%; --gx: -200cqw; }
+      .rack__slot:nth-child(4n + 4) { --vx: -100%; --gx: -300cqw; }
+      .rack__slot:nth-child(12n + 5), .rack__slot:nth-child(12n + 6),
+      .rack__slot:nth-child(12n + 7), .rack__slot:nth-child(12n + 8) { --gy: -52px; --shade: 0.1; }
+      .rack__slot:nth-child(12n + 9), .rack__slot:nth-child(12n + 10),
+      .rack__slot:nth-child(12n + 11), .rack__slot:nth-child(12n + 12) { --gy: -104px; --shade: 0.05; }
+      .rack__slot:nth-child(12n + 7) { --seam: linear-gradient(90deg, rgb(0 0 0 / 0.55) 0 1px, rgb(255 220 180 / 0.16) 1px 2px, transparent 2px); }
+    }
+    /* uma tábua riscada de vez em quando */
+    .rack__slot:nth-child(9n + 5) { --scratch: linear-gradient(172deg, transparent 0 40%, rgb(255 230 200 / 0.22) 41% 43%, transparent 44%); }
+    .rack__slot:hover, .rack__slot:focus-within { z-index: 2; }
+    .rack__slot--ghost.is-pc-only { display: none; }
+    @media (min-width: 760px) { .rack__slot--ghost.is-pc-only { display: flex; } }
+
+    .rack__bay { --D: 30cqw; position: relative; perspective: 900px; perspective-origin: var(--vx) var(--vy, 35%); }
+    /* sombra de contato da tábua de cima + fita de LED + o brilho que ela solta no ar */
+    .rack__bay::after {
+      content: ''; position: absolute; z-index: 2; left: 0; right: 0; top: 0; height: 46px; pointer-events: none;
+      background:
+        linear-gradient(180deg, rgb(0 0 0 / 0.6) 0 3px, transparent 3px),
+        linear-gradient(90deg, transparent 2%, var(--led) 2% 98%, transparent 98%) 0 4px / 100% 2px no-repeat,
+        linear-gradient(180deg, transparent 6px, rgb(var(--led-glow) / 0.2) 6px, rgb(var(--led-glow) / 0.06) 24px, transparent 46px);
+    }
+    /* mão-francesa de metal nas pontas da fileira */
+    .rack__bay::before {
+      content: none; position: absolute; z-index: 2; top: 7px; width: 14px; height: 18px; pointer-events: none;
+      background: radial-gradient(circle at 4px 4px, #2b2d30 0 1.5px, transparent 2px), linear-gradient(135deg, var(--metal-hi), var(--metal-lo));
+    }
+    .rack__slot:nth-child(2n + 1) .rack__bay::before { content: ''; left: 0; clip-path: polygon(0 0, 100% 0, 0 100%); }
+    .rack__slot:nth-child(2n) .rack__bay::before { content: ''; right: 0; clip-path: polygon(0 0, 100% 0, 100% 100%); background-position: calc(100% - 0px) 0, 0 0; }
+    @media (min-width: 760px) {
+      .rack__slot:nth-child(n) .rack__bay::before { content: none; }
+      .rack__slot:nth-child(4n + 1) .rack__bay::before { content: ''; left: 0; right: auto; clip-path: polygon(0 0, 100% 0, 0 100%); }
+      .rack__slot:nth-child(4n) .rack__bay::before { content: ''; right: 0; left: auto; clip-path: polygon(0 0, 100% 0, 100% 100%); }
+    }
+
+    /* o plano da cena fica na frente da caixa: só a caixa recebe clique */
+    .rack__scene { position: relative; transform-style: preserve-3d; padding: 30px 11% 0; pointer-events: none; }
+    .rack__scene .case { pointer-events: auto; }
+    .rack__face { position: absolute; display: block; pointer-events: none; }
+
+    /* parede do fundo: quente junto do LED, fria e escura no fundo (nunca preto chapado) */
+    .rack__wall {
+      inset: 0; transform: translateZ(calc(var(--D) * -1));
+      background:
+        linear-gradient(180deg, rgb(0 0 0 / 0.5), transparent 16%),
+        radial-gradient(ellipse 90% 62% at 50% 0%, rgb(var(--led-glow) / 0.3), transparent 76%),
+        var(--specks) 0 0 / 180px 180px,
+        linear-gradient(180deg, #4c3324, #2e2420 46%, #1f1c22);
+    }
+    /* sombra macia que a caixa projeta na parede (gradiente fixo, sem blur) */
+    .rack__wall::after {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(ellipse 36% 38% at 55% 66%, rgb(10 7 8 / 0.62), transparent 100%);
+    }
+    .rack__slot--ghost .rack__wall::after { display: none; }
+    /* teto = fundo da tábua de cima; o LED fica preso na quina da frente */
+    .rack__ceil {
+      top: 0; left: 0; right: 0; height: var(--D);
+      transform-origin: top; transform: rotateX(-90deg);
+      background:
+        linear-gradient(180deg, var(--led) 0 2px, rgb(var(--led-glow) / 0.35) 2px 5px, transparent 5px),
+        var(--grain-h) var(--gx) var(--gy) / 640px 160px,
+        linear-gradient(180deg, #3e2a1d, #1d150f);
+    }
+    /* chão = topo da tábua: veio contínuo, poeira assentada, quina clara na frente */
+    .rack__floor {
+      bottom: 0; left: 0; right: 0; height: var(--D);
+      transform-origin: bottom; transform: rotateX(90deg);
+      background:
+        linear-gradient(0deg, var(--wood-5) 0 2px, transparent 2px),
+        radial-gradient(ellipse 50% 40% at 52% 62%, rgb(0 0 0 / 0.4), transparent 100%),
+        var(--specks) 0 0 / 180px 180px,
+        var(--seam),
+        var(--grain-h) var(--gx) var(--gy) / 640px 160px,
+        linear-gradient(rgb(0 0 0 / var(--shade)), rgb(0 0 0 / var(--shade))),
+        linear-gradient(180deg, #5d402b, var(--wood-3) 45%, var(--wood-4) 88%);
+    }
+    /* sombra dura da caixa no chão */
+    .rack__floor::after {
+      content: ''; position: absolute; left: 12%; right: 9%; bottom: 36%; height: 22%;
+      background: rgb(18 13 11 / 0.7);
+    }
+    .rack__slot--ghost .rack__floor::after, .rack__slot--ghost .rack__floor { background-image: none; }
+    .rack__slot--ghost .rack__floor {
+      background:
+        linear-gradient(0deg, var(--wood-5) 0 2px, transparent 2px),
+        var(--specks) 0 0 / 180px 180px,
+        var(--grain-h) var(--gx) var(--gy) / 640px 160px,
+        linear-gradient(180deg, #5d402b, var(--wood-3) 45%, var(--wood-4) 88%);
+    }
+    /* laterais do móvel, só nas pontas da fileira */
+    .rack__side { display: none; top: 0; bottom: 0; width: var(--D); background:
+        var(--grain-h) 0 0 / 640px 160px,
+        linear-gradient(90deg, #3a2719, #5a3c28); }
+    .rack__side--l { left: 0; transform-origin: left; transform: rotateY(90deg); }
+    .rack__side--r { right: 0; transform-origin: right; transform: rotateY(-90deg); background:
+        var(--grain-h) 0 0 / 640px 160px,
+        linear-gradient(270deg, #3a2719, #5a3c28); }
+    .rack__slot:nth-child(2n + 1) .rack__side--l, .rack__slot:nth-child(2n) .rack__side--r { display: block; }
+    @media (min-width: 760px) {
+      .rack__slot:nth-child(n) .rack__side { display: none; }
+      .rack__slot:nth-child(4n + 1) .rack__side--l, .rack__slot:nth-child(4n) .rack__side--r { display: block; }
+    }
+
+    /* A caixa tem o próprio ponto de vista (lombada sempre à mostra) e entra no nicho
+       como um plano em pé no meio da tábua. */
+    .rack__stage {
+      position: relative; transform: translateZ(calc(var(--D) * -0.45));
+      perspective: 640px; perspective-origin: -40% -30%;
+    }
+    .rack__spacer { display: block; aspect-ratio: 3 / 4; }
+
+    /* divisória de plástico entre gêneros: atrás da caixa, só a aba aparece */
+    .divider {
+      position: absolute; left: -5%; bottom: 0; width: 44%; height: calc(100% + 24px); z-index: 0;
+      background: linear-gradient(100deg, rgb(255 255 255 / 0.3), transparent 34%), var(--tone);
+      box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.25);
+      clip-path: polygon(0 0, 74% 0, 80% 24px, 100% 24px, 100% 100%, 0 100%);
+    }
+    .divider span {
+      position: absolute; top: 6px; left: 7px;
+      font: 700 0.75rem/1 var(--font-body); letter-spacing: 0.08em; color: var(--deep);
+    }
+    .divider--acao { --tone: rgb(182 240 60 / 0.86); }
+    .divider--coop { --tone: rgb(255 195 107 / 0.88); }
+
+    /* Frente da tábua: grossa, quina chanfrada com realce, veio contínuo, parafuso na emenda. */
+    .rack__plank {
+      position: relative; z-index: 1; height: 26px;
+      background:
+        linear-gradient(180deg, var(--wood-5) 0 1px, #e0a970 1px 2px, var(--wood-4) 2px 4px, rgb(0 0 0 / 0.22) 4px 5px, transparent 5px calc(100% - 2px), rgb(0 0 0 / 0.4) calc(100% - 2px)),
+        var(--scratch),
+        var(--seam),
+        var(--grain-h) var(--gx) calc(var(--gy) - 24px) / 640px 160px,
+        linear-gradient(rgb(0 0 0 / var(--shade)), rgb(0 0 0 / var(--shade))),
+        linear-gradient(180deg, var(--wood-4), var(--wood-3));
+    }
+    /* nó da madeira de vez em quando */
+    .rack__slot:nth-child(5n + 2) .rack__plank::after,
+    .rack__slot:nth-child(7n + 4) .rack__plank::after {
+      content: ''; position: absolute; left: 44%; top: 8px; width: 26px; height: 10px; border-radius: 50%;
+      background: radial-gradient(ellipse, #2b1a10 0 20%, rgb(58 38 24 / 0.6) 42%, transparent 70%);
+    }
+    .rack__slot:nth-child(7n + 4) .rack__plank::after { left: 66%; width: 16px; }
+    /* parafuso na emenda */
+    .rack__slot:nth-child(6n + 4) .rack__plank::before { content: ''; }
+    @media (min-width: 760px) {
+      .rack__slot:nth-child(n) .rack__plank::before { content: none; }
+      .rack__slot:nth-child(12n + 7) .rack__plank::before { content: ''; }
+    }
+    .rack__plank::before {
+      position: absolute; left: 6px; top: 10px; width: 7px; height: 7px; border-radius: 50%;
+      background: linear-gradient(45deg, transparent 44%, #3c3f43 44% 56%, transparent 56%), radial-gradient(circle, #d3d6d8, #74787d);
+      box-shadow: 0 1px 0 rgb(0 0 0 / 0.5);
+    }
+
+    /* etiqueta de pistola de preço colada na tábua */
+    .gun {
+      position: absolute; top: 5px; z-index: 1; padding: 1px 6px 0;
+      background: var(--paper); color: var(--stamp); font: 0.95rem/15px var(--font-display); letter-spacing: 0.04em;
+      box-shadow: inset 2px 0 0 var(--stamp), 0 1px 0 rgb(0 0 0 / 0.4); rotate: -2deg;
+    }
+
+    /* Trilho metálico com a etiqueta de papel encaixada (no lugar do bloco marrom). */
+    .rack__rail {
+      flex: 1; position: relative; z-index: 1; display: flex; padding: 6px 7px 8px;
+      background:
+        linear-gradient(180deg, var(--metal-hi) 0 1px, var(--metal) 1px 4px, var(--metal-lo) 4px 5px, var(--metal-dk) 5px 6px, transparent 6px),
+        linear-gradient(0deg, var(--metal-lo) 0 1px, var(--metal) 1px 5px, var(--metal-hi) 5px 6px, var(--metal-dk) 6px 8px, transparent 8px),
+        linear-gradient(180deg, #4a4d51, #2c2e31);
+      box-shadow: inset 0 -2px 0 rgb(0 0 0 / 0.5);
+    }
+    .rack__label {
+      flex: 1; position: relative; min-width: 0; padding: 6px 9px 7px;
+      background: var(--paper); color: var(--paper-ink);
+      box-shadow: inset 0 0 0 1px rgb(42 29 23 / 0.14);
+    }
+    /* capinha de plástico do trilho */
+    .rack__label::after {
+      content: ''; position: absolute; inset: 0; pointer-events: none;
+      background: linear-gradient(180deg, rgb(255 255 255 / 0.45) 0 1px, transparent 1px 58%, rgb(255 255 255 / 0.1) 58% 64%, transparent 64%);
+    }
+    .rack__name { font-size: 1rem; line-height: 1.2; color: var(--paper-ink); overflow-wrap: anywhere; text-wrap: balance; }
+    .rack__by, .rack__meta { font-size: 0.8rem; line-height: 1.3; color: var(--paper-muted); }
+    .rack__by { margin-top: 2px; }
+    @media (hover: hover) { .rack__slot:hover .rack__name { color: var(--stamp); } }
+    @media (max-width: 759px) {
+      .rack__rail { padding: 6px 5px 8px; }
+      .rack__label { padding: 5px 7px 6px; }
+      .rack__name { font-size: 0.95rem; }
+    }
+
+    /* ---------- Adesivos agrupados nos cantos do móvel (decoração, aria-hidden) ---------- */
+    .cluster { position: absolute; z-index: 2; width: 150px; height: 90px; pointer-events: none; }
+    .cluster--tl { left: -12px; top: 2px; }
+    .cluster--tr { right: -10px; top: 4px; width: 120px; }
+    .cluster--br { right: 24px; bottom: 2px; width: 180px; }
+    .decal {
+      position: absolute; display: block; pointer-events: none;
+      rotate: var(--r, -4deg);
+      filter: drop-shadow(0 2px 0 rgb(0 0 0 / 0.55));
+    }
+    .decal svg { display: block; width: 100%; height: auto; }
+    .decal--px { width: var(--w, 50px); }
+    /* adesivo de texto: recorte branco em volta e uma ponta descolando */
+    .decal--txt {
+      padding: 5px 10px 3px; font: 1.5rem/1 var(--font-display); letter-spacing: 0.05em;
+      white-space: nowrap; box-shadow: 0 0 0 3px var(--paper);
+      clip-path: polygon(-4px -4px, calc(100% + 4px) -4px, calc(100% + 4px) calc(100% - 8px), calc(100% - 8px) calc(100% + 4px), -4px calc(100% + 4px));
+    }
+    .decal--txt::after {
+      content: ''; position: absolute; right: -4px; bottom: -4px; width: 12px; height: 12px;
+      background: linear-gradient(135deg, #d9ceb0 50%, transparent 50%);
+    }
+    .decal--1up { background: var(--lime); color: var(--deep); }
+    .decal--gg { background: var(--orange); color: var(--deep); font-size: 1.9rem; }
+    .decal--zerei { background: var(--pink); color: var(--deep); }
+    .decal--xp { background: var(--deep); color: var(--lime); }
+    .decal--press { background: var(--paper); color: var(--stamp); font-size: 1.05rem; box-shadow: 0 0 0 3px var(--paper), inset 0 0 0 2px var(--stamp); }
+    /* fita crepe escrita à mão */
+    .decal--tape {
+      padding: 4px 12px 3px; white-space: nowrap; filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.4));
+      background: linear-gradient(180deg, rgb(232 216 168 / 0.92), rgb(212 192 140 / 0.92));
+      color: var(--paper-ink); font: 1rem/1.2 var(--font-hand);
+      clip-path: polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%);
+    }
+    @media (max-width: 759px) {
+      .cluster { scale: 0.78; }
+      .cluster--tl { transform-origin: top left; left: -6px; }
+      .cluster--br { transform-origin: bottom right; right: 4px; }
+      .cluster--tr { display: none; }
+    }
+
+    /* ---------- Caixa fechada (espessura 3D) — igual à v1 ---------- */
+    .case {
+      --ry: 18deg; --t: 15cqw;
+      position: relative; display: block; width: 100%; aspect-ratio: 3 / 4;
+      padding: 0; border: 0; background: none; color: inherit; cursor: pointer; font: inherit;
+      transform-style: preserve-3d; transform-origin: 50% 100%;
+      transform: translateY(var(--lift, 0px)) translateZ(var(--tz, 0px))
+                 rotateX(var(--tilt-x, 0deg)) rotateY(calc(var(--ry) + var(--tilt-y, 0deg)));
+      transition: transform 280ms cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    @media (min-width: 760px) { .case { --ry: 24deg; } }
+    @media (hover: hover) { .case:hover { --ry: 0deg; --tz: 34px; --lift: -6px; } }
+    /* toque no celular: endireita na hora, sem depender de hover */
+    @media (hover: none) { .case:active { --ry: 0deg; --tz: 18px; --lift: -3px; transition-duration: 120ms; } }
+    .case:focus-visible { --ry: 0deg; --tz: 34px; --lift: -6px; outline: 3px solid var(--lime); outline-offset: 4px; }
+
+    .case__face { position: absolute; display: block; backface-visibility: hidden; }
+    .case__front { inset: 0; }
+    .case__front .cover { display: block; box-shadow: none; height: 100%; }
+    /* luz do LED batendo no topo da frente (é luz da loja, não muda a capa) */
+    .case__front::before {
+      content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+      background: linear-gradient(180deg, rgb(255 160 90 / 0.24), rgb(255 160 90 / 0.06) 22%, transparent 42%);
+    }
+    /* brilho do plástico: o da v1 + um reflexo que segue o ponteiro (só PC) */
+    .case__front::after {
+      content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+      background:
+        radial-gradient(circle at var(--sx, 50%) var(--sy, 0%), rgb(255 255 255 / var(--sa, 0)), transparent 48%),
+        linear-gradient(110deg, rgb(255 255 255 / 0.12), transparent 32%);
+      box-shadow: inset 0 0 0 2px rgb(0 0 0 / 0.35);
+    }
+    .case__front .price, .case__front .tag, .case__front .stamp, .case__front .note { z-index: 2; }
+    .case__front .tag { left: 0; }
+
+    .case__spine {
+      top: 0; bottom: 0; right: 100%; width: var(--t);
+      transform-origin: right center; transform: rotateY(-90deg);
+      display: flex; align-items: center; justify-content: center; overflow: hidden;
+      font: calc(var(--t) * 0.62) / 1 var(--font-display);
+      background: linear-gradient(90deg,
+        hsl(var(--hue) 36% 18%), hsl(var(--hue) 42% 30%) 45%, hsl(var(--hue) 36% 20%));
+    }
+    .case__spine span {
+      writing-mode: vertical-rl; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      max-height: 90%; color: var(--ink); letter-spacing: 0.04em;
+    }
+    .case__side {
+      top: 0; bottom: 0; left: 100%; width: var(--t);
+      transform-origin: left center; transform: rotateY(90deg);
+      background: hsl(var(--hue) 30% 12%);
+    }
+    .case__top {
+      left: 0; right: 0; bottom: 100%; height: var(--t);
+      transform-origin: center bottom; transform: rotateX(90deg);
+      background: linear-gradient(90deg, hsl(var(--hue) 34% 34%), hsl(var(--hue) 30% 24%));
+    }
+    /* o topo da caixa fica na sombra da tábua de cima */
+    .case__top::after { content: ''; position: absolute; inset: 0; background: rgb(0 0 0 / 0.32); }
+
+    /* Celular: caixa maior que a capa plana de hoje (160 px a 390): menos recuo e menos giro. */
+    @media (max-width: 759px) {
+      .rack__bay { --D: 24cqw; }
+      .rack__scene { padding: 26px 2% 0 3%; }
+      .rack__stage { transform: translateZ(calc(var(--D) * -0.3)); }
+      .case { --ry: 11deg; }
+    }
+
+    /* Parallax no celular: a parede anda mais devagar que as caixas, preso à rolagem.
+       Só onde existe animation-timeline; fora disso nada muda. */
+    @supports (animation-timeline: view()) {
+      @media (max-width: 759px) and (prefers-reduced-motion: no-preference) {
+        .store__room { animation: par-wall linear both; animation-timeline: view(); }
+        .rack__stage { animation: par-box linear both; animation-timeline: view(); }
+      }
+    }
+    @keyframes par-wall { from { translate: 0 -40px; } to { translate: 0 40px; } }
+    @keyframes par-box { from { translate: 0 5px; } to { translate: 0 -5px; } }
+
+    @media (prefers-reduced-motion: reduce) {
+      .case { transition: none; }
+      .tv__feed, .tv__roll, .mote { animation: none; }
+      .tv__roll, .store__dust { display: none; }
+    }
+  </style>
+  <!-- regra que o parallax do PC atualiza (um seletor, sem mexer em 50 estilos inline) -->
+  <style id="par">.rack__stage {}</style>
+</head>
+<body>
+  <main class="mock">
+    <div class="mock__head">
+      <div class="page-head"><h1>Estante</h1><p class="muted" id="count"></p></div>
+      <p class="mock-switch" id="switch"></p>
+    </div>
+
+    <section class="store" id="store">
+      <div class="store__room" id="room" aria-hidden="true"></div>
+      <div class="store__floor" aria-hidden="true"><div class="store__carpet"></div></div>
+      <div class="store__inner">
+        <div class="cabinet" id="cabinet">
+          <div class="scenery" id="scenery" aria-hidden="true"></div>
+          <div class="neighbor neighbor--l" aria-hidden="true"></div>
+          <div class="neighbor neighbor--r" aria-hidden="true"></div>
+          <div class="cabinet__body" id="body">
+            <span class="cabinet__crown" aria-hidden="true"></span>
+            <ul class="rack" id="rack" aria-label="Estante do clube"></ul>
+            <span class="cabinet__base" aria-hidden="true"></span>
+            <span class="wear wear--tape wear--tape-a" aria-hidden="true"></span>
+            <span class="wear wear--tape wear--tape-b" aria-hidden="true">devolver rebobinado</span>
+            <span class="wear wear--print" aria-hidden="true"></span>
+            <span class="cabinet__light" aria-hidden="true"></span>
+          </div>
+        </div>
+      </div>
+      <div class="store__beam" aria-hidden="true"></div>
+      <div class="store__dust" id="dust" aria-hidden="true"><span class="mote mote--a"></span><span class="mote mote--b"></span><span class="mote mote--c"></span></div>
+      <div class="store__vignette" aria-hidden="true"></div>
+    </section>
+  </main>
+
+  <script type="module">
+    // Mock: dados falsos e "artes" horizontais em SVG (imitam o background_image do RAWG).
+    const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+
+    const ART = [
+      ['#1d3b53', '#f4a259', '#2b2d42'], ['#3d1c2e', '#ff7a1a', '#120d0b'],
+      ['#0f3d3e', '#b6f03c', '#1a1411'], ['#2c2a4a', '#ff3d6e', '#4f518c'],
+      ['#4a3a30', '#ffc36b', '#2a1d17'], null,
+    ];
+    function fakeArt(colors, seed) {
+      const [sky, sun, hill] = colors;
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360">
+        <rect width="640" height="360" fill="${sky}"/>
+        <circle cx="${200 + (seed * 70) % 300}" cy="120" r="64" fill="${sun}"/>
+        <path d="M0 260 L120 180 L240 250 L380 150 L520 240 L640 190 L640 360 L0 360Z" fill="${hill}"/>
+        <rect x="${80 + (seed * 53) % 400}" y="200" width="36" height="90" fill="${sun}" opacity=".7"/>
+      </svg>`;
+      return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+    }
+
+    const NAMES = ['Corredor Sem Fim', 'Fazendinha do Vale', 'Torre dos Ecos', 'Kart da Firma',
+      'Masmorra 64', 'Detetive de Pijama', 'O Último Ônibus', 'Pássaros Brabos'];
+    const PEOPLE = ['Yuri', 'Bia', 'Caio', 'Duda', 'Léo', 'Mari'];
+
+    function spineHue(name) {
+      let h = 0;
+      for (const ch of name) h = (h * 31 + ch.codePointAt(0)) >>> 0;
+      return h % 360;
+    }
+
+    // ---------- Pixel art própria (só quadradinhos). Nada de logo, personagem ou marca.
+    const PIX = {
+      heart: { rows: ['.XX...XX.', 'XwXX.XXXX', 'XXXXXXXXX', 'XXXXXXXXX', '.XXXXXXX.', '..XXXXX..', '...XXX...', '....X....'],
+        colors: { X: '#ff3d6e', w: '#f6efe4' } },
+      coin: { rows: ['..XXXX..', '.XXXXXX.', 'XXwDXXXX', 'XXXDXXXX', 'XXXDXXXX', 'XXXDXXXX', '.XXXXXX.', '..XXXX..'],
+        colors: { X: '#ffc36b', D: '#b4741f', w: '#f6efe4' } },
+      dpad: { rows: ['...XXX...', '...XDX...', '...XXX...', 'XXXXXXXXX', 'XDXXXXXDX', 'XXXXXXXXX', '...XXX...', '...XDX...', '...XXX...'],
+        colors: { X: '#2a2320', D: '#cdbfae' } },
+      floppy: { rows: ['XXXXXXXX.', 'XXLLLLXXX', 'XXLLDLXXX', 'XXLLLLXXX', 'XXXXXXXXX', 'XPPPPPPPX', 'XPDDDDPPX', 'XPPPPPPPX', 'XXXXXXXXX'],
+        colors: { X: '#ff7a1a', L: '#cdbfae', D: '#2a1d17', P: '#f4ecd2' } },
+      potion: { rows: ['...XX...', '...XX...', '..DDDD..', '.XXXXXX.', 'XXwXXXXX', 'XwXXXXXX', 'XXXXXXXX', '.XXXXXX.'],
+        colors: { X: '#b6f03c', D: '#4a3a30', w: '#f6efe4' } },
+    };
+    const TROPHY = { rows: [
+      'YY.YYYYYY.YY', 'Y..YwYYYDY.Y','Y.YwYYYYDY.Y', '.YYwYYYYDYY.', '...YYYYDY...', '....YYDY....',
+      '.....YD.....', '.....YD.....', '....YYYD....', '...BBBBBB...', '...BwwwwB...', '..BBBBBBBB..'],
+      colors: { Y: '#ffc36b', D: '#b4741f', w: '#f6efe4', B: '#4a3a30' } };
+    const PLANT = { rows: [
+      '......L.......', '.....LG...L...', '..L..GG..LG...', '..GL.GD.LGG...', '...GGGDGGD..L.', 'L...GDGDG..LG.',
+      'GG..GGDGG.GG..', '.GGGGDGDGGGD..', '..GGDGGDGGD...', '...GGDGGDG....', '....GGDGG.....', '..RRRRRRRRRR..',
+      '..RSSSSSSSSR..', '...PPPPPPPP...', '...PPwPPPPP...', '...PPPPPPPP...', '....PPPPPP....', '....PPPPPP....'],
+      colors: { L: '#9ccc4a', G: '#6f9e35', D: '#3f6b25', R: '#d9733a', S: '#2a1d17', P: '#b5562a', w: '#e8a070' } };
+    // o "herói" do cartaz inventado: um pão fugindo da padaria
+    const BREAD = { rows: [
+      '...OOOOOO...', '..OoOoOoOO..', '.OOOOOOOOOO.', 'OOkOOOOOkOOO', 'OOOOOOOOOOOO', '.OOOkkkkOOO.',
+      '..OOOOOOOO..', '...l....l...', '..ll....ll..'],
+      colors: { O: '#c9772f', o: '#e8a85a', k: '#120d0b', l: '#f6efe4' } };
+
+    function pixelSvg({ rows, colors }, outline = true) {
+      const w = rows[0].length, h = rows.length;
+      const by = {};
+      rows.forEach((row, y) => [...row].forEach((c, x) => { if (c !== '.') (by[c] ??= []).push(`M${x} ${y}h1v1h-1z`); }));
+      const all = Object.values(by).flat().join('');
+      // contorno de papel (o "recorte" do adesivo) por baixo, cores por cima
+      const cut = outline ? `<path d="${all}" fill="#f4ecd2" stroke="#f4ecd2" stroke-width="1.6" stroke-linejoin="miter"/>` : '';
+      const fills = Object.entries(by).map(([c, d]) => `<path d="${d.join('')}" fill="${colors[c]}"/>`).join('');
+      return `<svg viewBox="-1 -1 ${w + 2} ${h + 2}" shape-rendering="crispEdges" aria-hidden="true">${cut}${fills}</svg>`;
+    }
+    const TXT = { '1up': '1UP', gg: 'GG', zerei: 'ZEREI!', xp: '+50 XP', press: 'PRESS START' };
+
+    function decal(kind, style) {
+      if (PIX[kind]) return `<span class="decal decal--px" style="${style}">${pixelSvg(PIX[kind])}</span>`;
+      if (TXT[kind]) return `<span class="decal decal--txt decal--${kind}" style="${style}">${TXT[kind]}</span>`;
+      return `<span class="decal decal--tape" style="${style}">${esc(kind)}</span>`;
+    }
+    // Adesivos agrupados: 3 ou 4 sobrepostos em cantos escolhidos, não espalhados.
+    const cluster = (pos, items) => `<div class="cluster cluster--${pos}" aria-hidden="true">${items.map(([k, s]) => decal(k, s)).join('')}</div>`;
+
+    // Faces fixas do nicho.
+    const faces = () => `<span class="rack__face rack__wall" aria-hidden="true"></span><span class="rack__face rack__ceil" aria-hidden="true"></span><span class="rack__face rack__floor" aria-hidden="true"></span><span class="rack__face rack__side rack__side--l" aria-hidden="true"></span><span class="rack__face rack__side rack__side--r" aria-hidden="true"></span>`;
+
+    // Divisória de gênero e etiqueta de pistola: decoração determinística pelo índice.
+    const divider = (i) => i % 7 === 2 ? '<span class="divider divider--acao" aria-hidden="true"><span>AÇÃO</span></span>'
+      : i % 7 === 5 ? '<span class="divider divider--coop" aria-hidden="true"><span>COOP</span></span>' : '';
+    const GUN = ['2,99', '1,99', '3,50'];
+    const gun = (i) => i % 5 === 1 ? `<span class="gun" style="left:${24 + ((i * 29) % 46)}%">${GUN[i % GUN.length]}</span>` : '';
+
+    function caseSlot(i) {
+      const name = NAMES[i % NAMES.length] + (i >= NAMES.length ? ` ${Math.floor(i / NAMES.length) + 1}` : '');
+      const colors = ART[i % ART.length];
+      const url = colors ? fakeArt(colors, i) : '';
+      const score = (6 + ((i * 37) % 40) / 10).toFixed(1).replace('.', ',');
+      const img = url ? `<img src="${url}" alt="" loading="lazy" decoding="async">` : '';
+      return `
+        <li class="rack__slot">
+          <div class="rack__bay"><div class="rack__scene">
+            ${faces()}
+            <div class="rack__stage">
+              ${divider(i)}
+              <button type="button" class="case" aria-haspopup="dialog" aria-label="Abrir a caixa de ${esc(name)}" style="--hue:${spineHue(name)}">
+                <span class="case__face case__front">
+                  <span class="cover">${img}<span class="cover__blank" ${url ? 'hidden' : ''}>${esc(name)}</span></span>
+                  <span class="price">${score}</span>
+                  <span class="tag">Fase ${i + 1}</span>
+                </span>
+                <span class="case__face case__spine" aria-hidden="true"><span>${esc(name)}</span></span>
+                <span class="case__face case__side" aria-hidden="true"></span>
+                <span class="case__face case__top" aria-hidden="true"></span>
+              </button>
+            </div>
+          </div></div>
+          <div class="rack__plank" aria-hidden="true">${gun(i)}</div>
+          <div class="rack__rail">
+            <div class="rack__label">
+              <h3 class="rack__name">${esc(name)}</h3>
+              <p class="rack__by">sugestão de ${PEOPLE[i % PEOPLE.length]}</p>
+              <p class="rack__meta">Nota média ${score} · ${2 + (i % 5)} notas</p>
+            </div>
+          </div>
+        </li>`;
+    }
+
+    // Completa a última tábua com espaços vazios: 4 por tábua no PC, 2 no celular.
+    function ghosts(n) {
+      const pc = (4 - (n % 4)) % 4;
+      const mobile = n % 2;
+      return Array.from({ length: pc }, (_, i) => `
+        <li class="rack__slot rack__slot--ghost ${i >= mobile ? 'is-pc-only' : ''}" aria-hidden="true">
+          <div class="rack__bay"><div class="rack__scene">${faces()}<div class="rack__stage"><span class="rack__spacer"></span></div></div></div>
+          <div class="rack__plank"></div>
+          <div class="rack__rail"></div>
+        </li>`).join('');
+    }
+
+    const params = new URLSearchParams(location.search);
+    const n = Math.min(Number(params.get('n')) || 6, 80);
+    const cam = params.get('cam') === '1';
+    document.getElementById('switch').innerHTML = `
+      <a class="btn btn--sm" href="?n=6">6 caixas</a>
+      <a class="btn btn--sm" href="?n=50">50 caixas (teste de fluidez)</a>
+      <a class="btn btn--sm" href="?n=${n}${cam ? '' : '&cam=1'}">${cam ? 'Câmera normal' : 'Experimento: câmera no meio'}</a>`;
+    document.getElementById('rack').innerHTML = Array.from({ length: n }, (_, i) => caseSlot(i)).join('') + ghosts(n);
+    document.getElementById('count').textContent = `${n} jogos zerados pelo clube`;
+
+    // Cenário do topo: placa, TV, cartaz, fitas, troféu e planta.
+    document.getElementById('scenery').innerHTML = `
+      <div class="poster"><span class="poster__tape poster__tape--l"></span><span class="poster__tape poster__tape--r"></span>
+        <span class="poster__art">${pixelSvg(BREAD, false)}</span>
+        <span class="poster__title">FUGA DA PADARIA</span><span class="poster__sub">1 a 2 jogadores</span></div>
+      <div class="sign"><span class="sign__board">ZERADOS</span></div>
+      <div class="tv"><span class="tv__ears"></span><span class="tv__body">
+        <span class="tv__screen"><span class="tv__feed" style="background-image:url('${fakeArt(ART[1], 3)}')"></span><span class="tv__roll"></span></span>
+        <span class="tv__panel"><span class="tv__knob"></span><span class="tv__knob"></span><span class="tv__grille"></span></span>
+      </span></div>
+      <div class="vhs-stack"><span class="vhs"><span class="vhs__label">festa 98</span></span><span class="vhs"><span class="vhs__label">não gravar!!</span></span><span class="vhs"><span class="vhs__label">zerado 2x</span></span></div>
+      <span class="trophy">${pixelSvg(TROPHY, false)}</span>
+      <span class="plant">${pixelSvg(PLANT, false)}</span>`;
+
+    // Adesivos agrupados nos cantos do móvel.
+    document.getElementById('body').insertAdjacentHTML('beforeend',
+      cluster('tl', [['gg', 'left:8px;top:6px;--r:-9deg'], ['heart', 'left:56px;top:-4px;--r:7deg;--w:52px'],
+        ['não sopra a fita', 'left:14px;top:46px;--r:-3deg'], ['coin', 'left:104px;top:4px;--r:-12deg;--w:38px']]) +
+      cluster('tr', [['floppy', 'right:50px;top:-8px;--r:-8deg;--w:42px'], ['1up', 'right:8px;top:2px;--r:7deg'], ['xp', 'right:-28px;top:66px;--r:-86deg']]) +
+      cluster('br', [['press', 'right:60px;bottom:10px;--r:-3deg'], ['dpad', 'right:10px;bottom:4px;--r:9deg;--w:50px'],
+        ['potion', 'right:150px;bottom:2px;--r:-10deg;--w:40px'], ['save aqui', 'right:24px;bottom:44px;--r:5deg']]));
+
+    const fine = matchMedia('(hover: hover) and (pointer: fine) and (min-width: 760px)').matches;
+    const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // Tilt leve + reflexo que segue o ponteiro, só no PC e sem reduced-motion.
+    // Mede o palco (não a caixa girada).
+    if (fine && !calm) {
+      const rack = document.getElementById('rack');
+      let current = null, last = null, frame = 0;
+      const reset = (el) => ['--tilt-x', '--tilt-y', '--sx', '--sy', '--sa'].forEach((p) => el.style.removeProperty(p));
+      rack.addEventListener('pointermove', (e) => {
+        const btn = e.target.closest('.case');
+        if (current && current !== btn) reset(current);
+        current = btn; last = e;
+        if (!btn || frame) return;
+        frame = requestAnimationFrame(() => {
+          frame = 0;
+          if (!current) return;
+          const r = current.parentElement.getBoundingClientRect();
+          const x = (last.clientX - r.left) / r.width - 0.5;
+          const y = (last.clientY - r.top) / r.height - 0.5;
+          current.style.setProperty('--tilt-y', `${(x * 12).toFixed(2)}deg`);
+          current.style.setProperty('--tilt-x', `${(-y * 8).toFixed(2)}deg`);
+          current.style.setProperty('--sx', `${((x + 0.5) * 100).toFixed(1)}%`);
+          current.style.setProperty('--sy', `${((y + 0.5) * 100).toFixed(1)}%`);
+          current.style.setProperty('--sa', '0.2');
+        });
+      });
+      rack.addEventListener('pointerleave', () => { if (current) reset(current); current = null; });
+
+      // Parallax em camadas pelo ponteiro: a parede vai com o olho, as caixas vão contra,
+      // o móvel fica parado (âncora). Só transform: nada de layout.
+      const room = document.getElementById('room');
+      const dust = document.getElementById('dust');
+      const poster = document.querySelector('.poster');
+      const stageRule = document.getElementById('par').sheet.cssRules[0].style;
+      let px = 0, py = 0, pframe = 0;
+      addEventListener('pointermove', (e) => {
+        px = e.clientX / innerWidth - 0.5; py = e.clientY / innerHeight - 0.5;
+        if (pframe) return;
+        pframe = requestAnimationFrame(() => {
+          pframe = 0;
+          room.style.transform = `translate3d(${(px * 18).toFixed(1)}px, ${(py * 10).toFixed(1)}px, 0)`;
+          poster.style.translate = `${(px * 12).toFixed(1)}px ${(py * 6).toFixed(1)}px`;
+          stageRule.translate = `${(px * -5).toFixed(1)}px ${(py * -3).toFixed(1)}px`;
+          dust.style.transform = `translate3d(${(px * -24).toFixed(1)}px, ${(py * -12).toFixed(1)}px, 0)`;
+        });
+      }, { passive: true });
+    }
+
+    // Experimento ?cam=1: um ponto de fuga só, no meio do móvel inteiro. Fileiras acima da
+    // linha dos olhos mostram a parte de baixo da tábua; abaixo, o tampo.
+    if (cam) {
+      const rack = document.getElementById('rack');
+      const place = () => {
+        const eye = rack.offsetHeight / 2;
+        for (const slot of rack.children) {
+          const bay = slot.firstElementChild;
+          if (!bay || !slot.offsetParent) continue;
+          const vy = ((eye - slot.offsetTop) / bay.offsetHeight) * 100;
+          slot.style.setProperty('--vy', `${Math.max(-220, Math.min(320, vy)).toFixed(1)}%`);
+        }
+      };
+      place();
+      new ResizeObserver(place).observe(rack);
+    }
+  </script>
+</body>
+</html>
