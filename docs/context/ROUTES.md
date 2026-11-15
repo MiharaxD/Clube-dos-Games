@@ -86,7 +86,9 @@
 - **Ir direto para:** `package.json`, `firebase.json` (hosting `dist`, portas dos emuladores),
   `.env.example`, `index.html` (camadas da cena, preload das fontes, meta og/twitter da prévia de link com URL
   absoluta do Hosting), `public/og.jpg` (1200x630, TV + console + quadro; gerada de uma página temporária com
-  `tv()` e `mountMesa` 'encerrada' + Edge headless, refazer se a cena mudar muito). Deploy só com pedido explícito (README §13).
+  `tv()` e `mountMesa` 'encerrada' + Edge headless, refazer se a cena mudar muito). Deploy só com pedido explícito (README §13). **Cuidado:** o `.env.local` daqui é o do emulador (`demo-clube`);
+  pro deploy, buildar com as `VITE_FIREBASE_*` reais vindas de `npx firebase apps:sdkconfig web --project clube` no
+  ambiente do comando e `VITE_USE_EMULATORS=false` (variável do shell vence o `.env.local`), e conferir que o bundle não tem `demo-clube`.
 
 ## Mini-mapa
 | Arquivo | Papel |
