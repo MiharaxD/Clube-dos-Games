@@ -5,6 +5,7 @@ import { anim, calma, espera, ENTRA_RAPIDO, GRAVIDADE, NA_TELA, SAI } from '../l
 import { placeLights } from '../lib/scene.js';
 import { contratoHtml, mesaSection, mountMesa } from './mesa.js';
 import { neonSign } from './parts.js';
+import { ligaTv } from '../lib/rickroll.js';
 
 const TITULO = 'Bem-vindo à locadora';
 const TEXTO = 'Cada um sugere um jogo, a gente vota, todo mundo joga e depois conversa.';
@@ -14,7 +15,7 @@ const CEU = 'translate3d(0, -1500px, 0)';
 export function renderLogin(root, { entrar }) {
   const alvos = [
     { obj: 'prancheta-obj', label: 'Entrar com Google: assinar o contrato de sócio', popup: false },
-    { obj: 'tv-obj', label: 'Olhar a TV de perto', popup: false },
+    { obj: 'tv-obj', label: 'Ligar a TV', popup: false },
     { obj: 'console-obj', label: 'Mexer no controle', popup: false },
   ];
   root.innerHTML = `
@@ -58,20 +59,10 @@ export function renderLogin(root, { entrar }) {
     placeLights();
   })();
 
-  // ---------------------------------------------------------- TV: vem pra perto e dá uma volta
-  let girando = false;
-  botao('tv-obj').addEventListener('click', async () => {
-    if (girando || sec.dataset.ocupado) return;
-    girando = true;
-    const m = mola('tv-obj');
-    await anim(m, [
-      { transform: 'none' },
-      { transform: 'translate3d(-40px, -90px, 160px) rotateY(0deg)', offset: 0.2, easing: 'linear' },
-      { transform: 'translate3d(-40px, -90px, 160px) rotateY(-360deg)', offset: 0.8 },
-      { transform: 'none' },
-    ], { duration: 2600, easing: NA_TELA });
-    placeLights();
-    girando = false;
+  // ---------------------------------------------------------- TV: pulo, chiado e... (src/lib/rickroll.js)
+  botao('tv-obj').addEventListener('click', () => {
+    if (sec.dataset.ocupado) return;
+    ligaTv(objeto('tv-obj').querySelector('.tvm__vidro'), mola('tv-obj'));
   });
 
   // ---------------------------------------------------------- videogame: o controle dá uma voadinha
@@ -103,8 +94,10 @@ export function renderLogin(root, { entrar }) {
     modal.setAttribute('aria-labelledby', 'contrato-titulo');
     modal.innerHTML = `<div class="modal__fundo"></div>
       <div class="prancheta prancheta--foco">${contratoHtml('contrato-titulo')}</div>
-      <p class="contrato__status" role="status">Assina lá na janelinha do Google. A gente espera.</p>`;
+      <p class="contrato__status" role="status">Assina lá na janelinha do Google. Fechou sem querer? Clica no botão de novo.</p>`;
     document.body.append(modal);
+    // o botão do contrato em evidência também funciona (se a janelinha fechou e nada aconteceu)
+    modal.querySelector('[data-reentrar]').addEventListener('click', () => tenta());
     const papel = modal.querySelector('.prancheta--foco');
     const fundo = modal.querySelector('.modal__fundo');
     const status = modal.querySelector('.contrato__status');
@@ -135,18 +128,25 @@ export function renderLogin(root, { entrar }) {
     foco = { volta };
   }
 
-  botao('prancheta-obj').addEventListener('click', async (e) => {
-    if (foco || sec.dataset.ocupado) return;
-    const gatilho = e.currentTarget;
-    const login = entrar(); // abre o popup já, dentro do clique
-    abreContrato();
-    const ok = await login;
+  // Cada clique abre o popup na hora (bloqueador de popup). Só a última tentativa decide:
+  // abrir de novo cancela a anterior, que volta false e não pode mandar o contrato pra mesa.
+  let tentativa = 0;
+  const gatilho = botao('prancheta-obj');
+  async function tenta() {
+    const n = ++tentativa;
+    const ok = await entrar();
     // deu errado ou desistiu: o contrato volta pra mesa (deu certo: o main.js chama sai())
-    if (!ok && foco) {
+    if (!ok && n === tentativa && foco) {
       await foco.volta();
       if (gatilho.isConnected) gatilho.focus({ preventScroll: true });
     }
+  }
+  gatilho.addEventListener('click', () => {
+    if (foco || sec.dataset.ocupado) return;
+    tenta();
+    abreContrato();
   });
+
 
   // ---------------------------------------------------------- saída: contrato volta, tudo voa, a mesa some
   async function sai() {

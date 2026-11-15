@@ -11,7 +11,8 @@
   `coverPalette`, `priceTag`, `stamp`, `sticker`, `stateChip`, `phaseSteps`, avatar), `src/views/rack.js`
   (prateleira 3D: `rackHtml`, `nicho`, `caseHtml`, `postit`, `vitrine`, `bindTilt`), `src/views/caixinha.js`
   (`Estojo`, `openReading`), `src/views/mesa.js` (`caixa()`, layouts PC/celular por fase, inclusive `login`; `mountMesa`),
-  `src/lib/motion.js` (motor WAAPI + `rolaNaMao`), `src/lib/scene.js` (luz nasce de `data-luz="tv|abajur|neon"`;
+  `src/lib/motion.js` (motor WAAPI + `rolaNaMao`), `src/lib/rickroll.js` (easter egg de toda TV: clique →
+  pulo, chiado em canvas + ruído WebAudio, vídeo `public/rickroll.webm` (AV1/Opus); TV comum liga por `[data-tv-liga]`), `src/lib/scene.js` (luz nasce de `data-luz="tv|abajur|neon"`;
   `placeLights` após cada render), `src/lib/icons.js`. Fontes em `public/fonts/` (licenças em `LICENSE.md`).
 - **Testes:** `npm run build`; detector: `impeccable detect --json index.html src`
   (script em `~/.claude/plugins/cache/impeccable/.../scripts/impeccable`).
@@ -62,7 +63,8 @@
   `preparaRevelar`), `src/views/login.js` (cena: queda, cliques, contrato em evidência, `sai()`),
   `src/firebase.js` (init por env + conexão com emuladores), rules `isAdmin`/`isApproved`.
 - **Cuidados:** admin = uid em `config/admins.uids` (só pelo console). Popup bloqueado cai em redirect (aí não há contrato
-  em evidência). Contrato fica em evidência até o `onAuthStateChanged`; o main chama `sai()` antes da tela seguinte.
+  em evidência). Contrato fica em evidência até o `onAuthStateChanged`, com o botão dele
+  reabrindo o popup (só a última tentativa decide se o contrato volta pra mesa); o main chama `sai()` antes da tela seguinte.
 
 ## Integrações externas
 - **RAWG:** `src/lib/rawg.js` + `bindRawg` em `phases/suggest.js`; mapeamento de plataformas em

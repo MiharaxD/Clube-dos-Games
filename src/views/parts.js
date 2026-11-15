@@ -94,9 +94,10 @@ export function tv({ osd = '', title = '', line = '', art = '' } = {}) {
         ${line ? `<span class="tv__linha">· ${esc(line)} ·</span>` : ''}
       </div>`;
   // 3D: .tv-palco gira TV + rack juntos; cada um é uma caixa de faces (frente no fluxo, lados/topo/tubo girados).
-  return `<div class="mesa-tv" aria-hidden="true">
-    <span class="tv__brilho"></span>
-    <div class="tv-palco">
+  // a TV é decorativa (aria-hidden); o único pedaço interativo é o botão que liga o easter egg
+  return `<div class="mesa-tv">
+    <span class="tv__brilho" aria-hidden="true"></span>
+    <div class="tv-palco" aria-hidden="true">
       <div class="tv">
         <i class="tv__lado tv__lado--u"></i><i class="tv__lado tv__lado--l"></i><i class="tv__lado tv__lado--r"></i>
         <div class="tv__tubo"><i class="tv__lado--u"></i><i class="tv__lado--l"></i><i class="tv__lado--r"></i><i class="tv__tubo-fundo"></i></div>
@@ -113,7 +114,8 @@ export function tv({ osd = '', title = '', line = '', art = '' } = {}) {
         <div class="movel-tv__corpo"><div class="movel-tv__nicho"><span class="console"></span></div></div>
       </div>
     </div>
-    <div class="poeira"><span class="cisco cisco--a"></span><span class="cisco cisco--b"></span><span class="cisco cisco--c"></span></div>
+    <div class="poeira" aria-hidden="true"><span class="cisco cisco--a"></span><span class="cisco cisco--b"></span><span class="cisco cisco--c"></span></div>
+    <button class="tv__liga" type="button" data-tv-liga><span class="sr-only">Ligar a TV</span></button>
   </div>`;
 }
 

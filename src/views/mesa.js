@@ -159,7 +159,7 @@ export function contratoHtml(idTitulo = '') {
       <span class="contrato__clausula">1. Sugerir um jogo por rodada.</span>
       <span class="contrato__clausula">2. Votar nos jogos dos outros (no seu não, calma).</span>
       <span class="contrato__clausula">3. Jogar e aparecer na resenha.</span>
-      <span class="contrato__botao">Entrar com Google</span>
+      ${idTitulo ? '<button class="contrato__botao" type="button" data-reentrar>Entrar com Google</button>' : '<span class="contrato__botao">Entrar com Google</span>'}
       <span class="contrato__assina"><span>x</span></span>
     </span>`;
 }

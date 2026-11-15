@@ -9,6 +9,7 @@ import { avatar, neonSign } from './views/parts.js';
 import { placeLights, startScene } from './lib/scene.js';
 import { anim, SAI } from './lib/motion.js';
 import { renderLogin } from './views/login.js';
+import { ligaTvsDoSite } from './lib/rickroll.js';
 import { renderRound } from './views/round.js';
 import { renderShelf } from './views/shelf.js';
 import { renderStats } from './views/stats.js';
@@ -180,6 +181,7 @@ async function route() {
 // ------------------------------------------------------------ início
 
 startScene();
+ligaTvsDoSite();
 
 if (missingEnv.length) {
   renderConfigError();

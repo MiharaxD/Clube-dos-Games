@@ -198,3 +198,18 @@
 }
 .console::before { content: ''; position: absolute; left: 30%; right: 30%; top: 5px; height: 3px; background: #121114; }
 .console::after { content: ''; position: absolute; right: 8%; top: 8px; width: 4px; height: 4px; border-radius: 50%; background: var(--stamp); }
+
+/* ---------- Easter egg das TVs (src/lib/rickroll.js): chiado e vídeo dentro do vidro ---------- */
+/* ficam abaixo do reflexo/scanlines (z 2/3) pra continuar parecendo tubo */
+.tv-chiado, .tv-video {
+  position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; border-radius: inherit; pointer-events: none;
+}
+.tv-chiado { image-rendering: pixelated; }
+.tv-video { object-fit: cover; background: #000; }
+.tv-ligada :is(.tv__cartaz, .tv__arte, .tvm__osd, .tvm__titulo, .tvm__texto) { visibility: hidden; }
+/* botão que liga a TV comum: cobre a TV (sem o rack), fora da cadeia 3D */
+.tv__liga {
+  position: absolute; z-index: 3; left: 0; right: 0; top: 64px; height: 62%; min-height: var(--toque);
+  padding: 0; border: 0; background: transparent; cursor: pointer;
+}
+.tv__liga:focus-visible { outline: 3px solid var(--teal); outline-offset: 4px; }
