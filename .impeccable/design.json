@@ -564,8 +564,7 @@
       "Do garantir 44px mínimos em todo alvo de toque e 4,5:1 em todo texto (medido com a cena renderizada).",
       "Do confirmar ações destrutivas dentro da página, numa ficha de papel abaixo do botão.",
       "Do deixar a faixa de fases como o único indicador de tempo da rodada.",
-      "Do desligar movimento e efeitos com prefers-reduced-motion e prefers-contrast.",
-      "Do manter no rodapé o aviso de clube sem fins comerciais e sem afiliação a fabricantes, estúdios e plataformas."
+      "Do desligar movimento e efeitos com prefers-reduced-motion e prefers-contrast."
     ],
     "donts": [
       "Don't usar window.confirm, alert ou modais do navegador.",

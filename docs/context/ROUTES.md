@@ -6,11 +6,11 @@
   carimbo, adesivo, casca, telas soltas), `rack.css` (prateleira 3D, estojo, post-it, ticket, etiqueta VOTADO,
   tela Estante), `caixinha.css` (modal do estojo, manual, CD, formulário da sugestão), `round.css` (grade da
   rodada, faixa de pano, mesa 3D, calendário, quadro de cortiça, balcão), `stats.css`, `pages.css` (perfil,
-  Balcão/admin, roleta), `motion.css` (reduced-motion/contraste, sempre por último). Seções por comentário
+  Balcão/admin, roleta), `login.css` (cena do login: TV/prancheta/videogame na mesa), `motion.css` (reduced-motion/contraste, sempre por último). Seções por comentário
   `/* ---------- Nome ---------- */`. JS visual: `src/views/parts.js` (`neonSign`, `tv`, `cover`/`genericCover`/
   `coverPalette`, `priceTag`, `stamp`, `sticker`, `stateChip`, `phaseSteps`, avatar), `src/views/rack.js`
   (prateleira 3D: `rackHtml`, `nicho`, `caseHtml`, `postit`, `vitrine`, `bindTilt`), `src/views/caixinha.js`
-  (`Estojo`, `openReading`), `src/views/mesa.js` (`caixa()`, layouts PC/celular, `mountMesa`),
+  (`Estojo`, `openReading`), `src/views/mesa.js` (`caixa()`, layouts PC/celular por fase, inclusive `login`; `mountMesa`),
   `src/lib/motion.js` (motor WAAPI + `rolaNaMao`), `src/lib/scene.js` (luz nasce de `data-luz="tv|abajur|neon"`;
   `placeLights` após cada render), `src/lib/icons.js`. Fontes em `public/fonts/` (licenças em `LICENSE.md`).
 - **Testes:** `npm run build`; detector: `impeccable detect --json index.html src`
@@ -40,8 +40,8 @@
   `src/lib/util.js` (`withBusy`). Frase obrigatória: "esse é seu, calma" (`phases/vote.js`).
 
 ## Telas / rotas
-- **Ir direto para:** `src/main.js` (array `ROUTES`, hash routing, casca/nav, telas soltas `solo()`: login,
-  espera, carregando, erro) → a tela em `src/views/`: `round.js` (carrega a rodada, cabeçalho/ficha/TV de
+- **Ir direto para:** `src/main.js` (array `ROUTES`, hash routing, casca/nav, telas soltas `solo()`: espera,
+  carregando, erro; login é `src/views/login.js`) → a tela em `src/views/`: `round.js` (carrega a rodada, cabeçalho/ficha/TV de
   sugerindo/votando, balcão do admin) que delega para `phases/suggest.js` | `phases/vote.js` |
   `phases/play.js` (jogando/encerrada: monta a página inteira com a mesa); `shelf.js`, `stats.js`,
   `profile.js`, `admin.js`; `roulette.js` (sorteio de empate).
@@ -58,9 +58,11 @@
 - **Arquivo grande:** `firestore.rules` (~300 linhas) → grep `match /` para achar a coleção.
 
 ## Autenticação / permissões / admin
-- **Ir direto para:** `src/main.js` (`onAuthStateChanged`, `renderLogin`, `renderPending`),
+- **Ir direto para:** `src/main.js` (`onAuthStateChanged`, `entrarComGoogle`, `renderPending`, fade pós-login
+  `preparaRevelar`), `src/views/login.js` (cena: queda, cliques, contrato em evidência, `sai()`),
   `src/firebase.js` (init por env + conexão com emuladores), rules `isAdmin`/`isApproved`.
-- **Cuidados:** admin = uid em `config/admins.uids` (só pelo console). Popup bloqueado cai em redirect.
+- **Cuidados:** admin = uid em `config/admins.uids` (só pelo console). Popup bloqueado cai em redirect (aí não há contrato
+  em evidência). Contrato fica em evidência até o `onAuthStateChanged`; o main chama `sai()` antes da tela seguinte.
 
 ## Integrações externas
 - **RAWG:** `src/lib/rawg.js` + `bindRawg` em `phases/suggest.js`; mapeamento de plataformas em
@@ -72,7 +74,9 @@
 
 ## Build / config / deploy
 - **Ir direto para:** `package.json`, `firebase.json` (hosting `dist`, portas dos emuladores),
-  `.env.example`, `index.html` (camadas da cena + preload das fontes locais). Deploy só com pedido explícito (README §13).
+  `.env.example`, `index.html` (camadas da cena, preload das fontes, meta og/twitter da prévia de link com URL
+  absoluta do Hosting), `public/og.jpg` (1200x630, TV + console + quadro; gerada de uma página temporária com
+  `tv()` e `mountMesa` 'encerrada' + Edge headless, refazer se a cena mudar muito). Deploy só com pedido explícito (README §13).
 
 ## Mini-mapa
 | Arquivo | Papel |

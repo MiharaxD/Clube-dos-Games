@@ -26,6 +26,11 @@ const LAYOUTS = {
     pc: { W: 1040, H: 560, cy: 300, cam: -26, mesa: [1000, 440], lamp: [-150, -185, 0], quadro: [-305, -40, 16], caso: [40, 40, -4], console: [300, 0, -12], esc: { quadro: 1, caso: 1, console: 1 }, nota: [130, 175], marca: [-130, 165] },
     cel: { W: 600, H: 640, cy: 330, cam: -30, mesa: [580, 560], lamp: [40, -250, 0], quadro: [-150, -150, 14], caso: [-60, 150, -4], console: [160, 60, -18], esc: { quadro: 0.78, caso: 0.85, console: 0.8 }, nota: [60, 250], marca: [-240, 240] },
   },
+  // Login: mesa vazia; caem o videogame (esquerda), a TV (direita) e a prancheta do contrato (meio).
+  login: {
+    pc: { W: 1040, H: 600, cy: 330, cam: -24, mesa: [1000, 440], console: [-300, -20, 16], tv: [280, -50, -16], prancheta: [-10, 90, 0], esc: { console: 0.95, tv: 1, prancheta: 1 } },
+    cel: { W: 520, H: 640, cy: 330, cam: -38, mesa: [500, 560], console: [-140, -190, 16], tv: [100, -170, -12], prancheta: [0, 150, 0], esc: { console: 0.6, tv: 0.78, prancheta: 0.8 } },
+  },
 };
 
 // ------------------------------------------------------------ peças
@@ -34,16 +39,19 @@ function mesaHtml(L, nota) {
   const [W, D] = L.mesa;
   const ponto = (x, z) => `left:${x + W / 2}px;top:${z + D / 2}px`;
   const sombra = ([x, z], w, d, de) => `<span class="decal decal--sombra" data-de="${de}" style="${ponto(x, z)};width:${w}px;height:${d}px"></span>`;
-  const [lx, lz] = L.lamp;
+  const [lx, lz] = L.lamp ?? [0, 0];
   const decals = [
-    `<span class="decal decal--luz" data-de="abajur-obj" style="${ponto(lx + 180, lz + 120)};width:${W * 0.75}px;height:${D * 1.1}px"></span>`,
+    L.lamp ? `<span class="decal decal--luz" data-de="abajur-obj" style="${ponto(lx + 180, lz + 120)};width:${W * 0.75}px;height:${D * 1.1}px"></span>` : '',
+    L.tv ? `<span class="decal decal--luz decal--luz-tv" style="${ponto(L.tv[0] - 60, L.tv[1] + 160)};width:${W * 0.7}px;height:${D}px"></span>` : '',
     L.cal ? sombra(L.cal, 200 * L.esc.cal, 110 * L.esc.cal, 'cal-obj') : '',
     L.quadro ? sombra(L.quadro, 360 * L.esc.quadro, 110 * L.esc.quadro, 'quadro-obj') : '',
-    sombra(L.caso, 190 * L.esc.caso, 60 * L.esc.caso, 'caso-obj'),
+    L.caso ? sombra(L.caso, 190 * L.esc.caso, 60 * L.esc.caso, 'caso-obj') : '',
     L.console ? sombra(L.console, 280 * L.esc.console, 220 * L.esc.console, 'console-obj') : '',
     L.controle ? sombra(L.controle, 150 * L.esc.console, 90 * L.esc.console, 'controle-obj') : '',
-    sombra(L.lamp, 90, 40, 'abajur-obj'),
-    `<span class="decal decal--marca" style="${ponto(...(L.marca ?? [lx + 70, lz + 70]))};width:58px;height:58px"></span>`,
+    L.tv ? sombra(L.tv, 340 * L.esc.tv, 250 * L.esc.tv, 'tv-obj') : '',
+    L.prancheta ? sombra(L.prancheta, 240 * L.esc.prancheta, 90 * L.esc.prancheta, 'prancheta-obj') : '',
+    L.lamp ? sombra(L.lamp, 90, 40, 'abajur-obj') : '',
+    L.lamp ? `<span class="decal decal--marca" style="${ponto(...(L.marca ?? [lx + 70, lz + 70]))};width:58px;height:58px"></span>` : '',
     nota ? `<span class="decal decal--nota" style="${ponto(...L.nota)}">${esc(nota)}</span>` : '',
   ].join('');
   const pernas = [[-1, -1], [1, -1], [-1, 1], [1, 1]].map(([a, b]) =>
@@ -131,12 +139,47 @@ function quadroHtml(pages) {
     + `<div class="quadro3d">${caixa({ w: 320, h: 244, t: 16, y: 24, cls: 'm-quadro', f: face })}</div>`;
 }
 
+// TV de tubo da mesa do login: carcaça + tubo atrás; o vidro repete o texto da tela (aria-hidden,
+// o texto de verdade fica num h1/p escondido na seção).
+function tvHtml(titulo, texto) {
+  const frente = `<span class="tvm__caixa"><span class="tvm__moldura"><span class="tvm__vidro" data-luz="tv">
+      <span class="tvm__osd">CANAL 3</span><span class="tvm__titulo">${esc(titulo)}</span><span class="tvm__texto">${esc(texto)}</span>
+      <span class="tvm__rolo"></span></span></span>
+    <span class="tvm__painel"><span class="tvm__botao"></span><span class="tvm__botao"></span><span class="tvm__grade"></span></span></span>`;
+  return caixa({ w: 330, h: 250, t: 230, cls: 'm-tv', faces: 'fulrb', f: frente })
+    + caixa({ w: 230, h: 170, t: 120, y: 34, z: -175, cls: 'm-tubo', faces: 'ulrb' })
+    + '<div class="tvm__antena"></div>';
+}
+
+// Conteúdo do contrato (usado na prancheta 3D e na prancheta em evidência).
+export function contratoHtml(idTitulo = '') {
+  return `<span class="contrato__clipe"></span>
+    <span class="contrato__papel">
+      <span class="contrato__titulo"${idTitulo ? ` id="${idTitulo}" tabindex="-1"` : ''}>Contrato de sócio</span>
+      <span class="contrato__clausula">1. Sugerir um jogo por rodada.</span>
+      <span class="contrato__clausula">2. Votar nos jogos dos outros (no seu não, calma).</span>
+      <span class="contrato__clausula">3. Jogar e aparecer na resenha.</span>
+      <span class="contrato__botao">Entrar com Google</span>
+      <span class="contrato__assina"><span>x</span></span>
+    </span>`;
+}
+
+// Prancheta apoiada num cavalete, inclinada pra câmera.
+function pranchetaHtml() {
+  return `<div class="prancheta3d"><div class="prancheta3d__tras"></div><div class="prancheta prancheta3d__frente">${contratoHtml()}</div></div>`;
+}
+
+// Videogame do login: console + controle ao lado (o controle voa no clique, por isso .voo).
+function videogameHtml() {
+  return consoleHtml() + `<div class="controle-pos"><div class="voo">${controleHtml()}</div></div>`;
+}
+
 // ------------------------------------------------------------ montagem
 
 // opts: { fase: 'jogando'|'encerrada', game, front, mini, pages, nota, alvos: [{ obj, label, attr }] }
 export function mesaSection(opts) {
   const alvos = opts.alvos.map((a) =>
-    `<button class="alvo" type="button" data-obj="${a.obj}" ${a.attr ?? ''} aria-haspopup="dialog"><span class="sr-only">${a.label}</span></button>`).join('');
+    `<button class="alvo" type="button" data-obj="${a.obj}" ${a.attr ?? ''} ${a.popup === false ? '' : 'aria-haspopup="dialog"'}><span class="sr-only">${a.label}</span></button>`).join('');
   return `<section class="mesa-sec" aria-labelledby="mesa-titulo">
     <h2 class="sr-only" id="mesa-titulo">A mesa da rodada</h2>
     <div class="palco-wrap">
@@ -162,11 +205,13 @@ export function mountMesa(section, opts) {
     palco.style.height = `${L.H}px`;
     mundo.style.top = `${L.cy}px`;
     mundo.style.setProperty('--cam', `${L.cam}deg`);
-    let html = mesaHtml(L, opts.nota) + obj('abajur-obj', L.lamp, 1, abajurHtml());
+    let html = mesaHtml(L, opts.nota) + (L.lamp ? obj('abajur-obj', L.lamp, 1, abajurHtml()) : '');
     if (L.cal) html += obj('cal-obj', L.cal, L.esc.cal, calHtml(opts.mini));
     if (L.quadro) html += obj('quadro-obj', L.quadro, L.esc.quadro, quadroHtml(opts.pages ?? []));
-    html += obj('caso-obj', L.caso, L.esc.caso, casoHtml(opts.game.name, opts.front));
-    if (L.console) html += obj('console-obj', L.console, L.esc.console, consoleHtml());
+    if (L.caso) html += obj('caso-obj', L.caso, L.esc.caso, casoHtml(opts.game.name, opts.front));
+    if (L.console) html += obj('console-obj', L.console, L.esc.console, L.tv ? videogameHtml() : consoleHtml());
+    if (L.tv) html += obj('tv-obj', L.tv, L.esc.tv, tvHtml(opts.tvTitulo, opts.tvTexto));
+    if (L.prancheta) html += obj('prancheta-obj', L.prancheta, L.esc.prancheta, pranchetaHtml());
     if (L.controle) html += obj('controle-obj', L.controle, L.esc.console, controleHtml());
     mesa.innerHTML = html;
     escala();
@@ -186,12 +231,16 @@ export function mountMesa(section, opts) {
     'cal-obj': ['[data-cal-frente]'],
     'caso-obj': ['.m-estojo > .f', '.coroa'],
     'quadro-obj': ['.m-quadro > .f'],
+    'console-obj': ['.m-console', '.controle3d .camada'],
+    'tv-obj': ['.m-tv > .f', '.m-tv > .u'],
+    'prancheta-obj': ['.prancheta3d__frente'],
   };
   function posicionaAlvos() {
     const base = wrap.getBoundingClientRect();
     wrap.querySelectorAll('.alvo').forEach((alvo) => {
       const o = mesa.querySelector(`#${alvo.dataset.obj}`);
-      const els = (PECAS[alvo.dataset.obj] ?? ['.bx']).map((s) => o?.querySelector(s)).filter(Boolean);
+      const pecas = PECAS[alvo.dataset.obj];
+      const els = pecas ? pecas.flatMap((s) => [...(o?.querySelectorAll(s) ?? [])]) : [o?.querySelector('.bx')].filter(Boolean);
       if (!els.length) return;
       const rs = els.map((e) => e.getBoundingClientRect());
       const l = Math.min(...rs.map((r) => r.left));
@@ -252,6 +301,7 @@ export function mountMesa(section, opts) {
 
   return {
     mesa,
+    alinha: posicionaAlvos,
     remonta: (novo) => {
       Object.assign(opts, novo);
       monta();

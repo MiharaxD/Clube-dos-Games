@@ -7,6 +7,8 @@ import { esc, toast } from './lib/util.js';
 import { icon } from './lib/icons.js';
 import { avatar, neonSign } from './views/parts.js';
 import { placeLights, startScene } from './lib/scene.js';
+import { anim, SAI } from './lib/motion.js';
+import { renderLogin } from './views/login.js';
 import { renderRound } from './views/round.js';
 import { renderShelf } from './views/shelf.js';
 import { renderStats } from './views/stats.js';
@@ -20,18 +22,13 @@ const session = { user: null, member: null, isAdmin: false, members: [] };
 
 // ------------------------------------------------------------ telas soltas
 
-// Aviso fixo do rodapé (DESIGN.md): clube sem fins comerciais e sem afiliação.
-const FOOTER = `<footer class="rodape"><p>Clube de amigos, sem fins comerciais; não é afiliado a nenhuma fabricante, estúdio ou plataforma; marcas pertencem a seus titulares.</p></footer>`;
-
-
 // Tela solta: o letreiro aceso na parede e uma ficha de papel embaixo (sem barra de navegação).
 function solo(body, { heading = false } = {}) {
   const sign = heading ? `<h1 class="marca">${neonSign()}</h1>` : `<div class="marca">${neonSign()}</div>`;
   root.innerHTML = `
     <div class="solo">
       <div class="solo__card">${sign}${body}</div>
-    </div>
-    ${FOOTER}`;
+    </div>`;
   placeLights();
 }
 
@@ -45,37 +42,44 @@ function renderConfigError() {
     </section>`);
 }
 
-function renderLogin() {
-  solo(`
-    <section class="ficha" aria-labelledby="solo-title">
-      <span class="ficha__stamp">Só sócios</span>
-      <h2 class="ficha__title" id="solo-title">Bem-vindo à locadora</h2>
-      <p class="ficha__socio">Carteirinha de sócio</p>
-      <p class="ficha__todo">Cada um sugere um jogo, a gente vota, todo mundo joga e depois conversa.</p>
-      <div class="actions"><button class="btn btn--primary" id="login">Entrar com Google</button></div>
-    </section>`, { heading: true });
-  const button = root.querySelector('#login');
-  button.addEventListener('click', async () => {
-    button.disabled = true;
-    try {
-      await signInWithPopup(auth, googleProvider);
-    } catch (error) {
-      // Navegadores embutidos (ex.: o do WhatsApp) bloqueiam popup: tenta por redirecionamento.
-      if (error?.code === 'auth/popup-blocked') {
-        await signInWithRedirect(auth, googleProvider);
-        return;
-      }
-      // Fechar o popup não é erro de verdade.
-      if (error?.code !== 'auth/popup-closed-by-user' && error?.code !== 'auth/cancelled-popup-request') {
-        console.error(error);
-        toast('Não deu pra entrar. Tenta de novo?', 'error');
-      }
-      button.disabled = false;
+// Login: a cena da mesa (src/views/login.js). Resolve true se entrou, false se desistiu/falhou.
+async function entrarComGoogle() {
+  try {
+    await signInWithPopup(auth, googleProvider);
+    return true;
+  } catch (error) {
+    // Navegadores embutidos (ex.: o do WhatsApp) bloqueiam popup: tenta por redirecionamento.
+    if (error?.code === 'auth/popup-blocked') {
+      await signInWithRedirect(auth, googleProvider);
+      return false;
     }
-  });
+    // Fechar o popup não é erro de verdade.
+    if (error?.code !== 'auth/popup-closed-by-user' && error?.code !== 'auth/cancelled-popup-request') {
+      console.error(error);
+      toast('Não deu pra entrar. Tenta de novo?', 'error');
+    }
+    return false;
+  }
+}
+
+// Depois da cena do login sair, a tela seguinte aparece com um fade (no máximo 1,5 s de espera vazia).
+let revelar = null;
+function preparaRevelar() {
+  root.style.opacity = '0';
+  let feito = false;
+  const revela = () => {
+    if (feito) return;
+    feito = true;
+    revelar = null;
+    anim(root, [{ opacity: 0, transform: 'translateY(12px)' }, { opacity: 1, transform: 'none' }], { duration: 420, easing: SAI })
+      .then(() => { root.style.transform = ''; root.style.opacity = ''; placeLights(); });
+  };
+  setTimeout(revela, 1500);
+  revelar = revela;
 }
 
 function renderPending() {
+  revelar?.();
   solo(`
     <section class="ficha" aria-labelledby="solo-title">
       <span class="ficha__stamp">Em análise</span>
@@ -98,6 +102,7 @@ function renderLoading(message = 'Rebobinando a fita…') {
 }
 
 function renderBootError() {
+  revelar?.();
   solo(`
     <div class="empty" role="alert">
       <strong>Fita travou</strong>
@@ -136,8 +141,7 @@ function renderShell(active) {
         <button class="btn btn--ghost btn--icon" id="logout" title="Sair">${icon('logout')}<span class="sr-only">Sair</span></button>
       </div>
     </header>
-    <main id="main" tabindex="-1"></main>
-    ${FOOTER}`;
+    <main id="main" tabindex="-1"></main>`;
   root.querySelector('#logout').addEventListener('click', () => signOut(auth));
   return root.querySelector('#main');
 }
@@ -170,6 +174,7 @@ async function route() {
   }
   // a luz da cena nasce dos objetos que a tela desenhou (TV, abajur, letreiro)
   placeLights();
+  revelar?.();
 }
 
 // ------------------------------------------------------------ início
@@ -180,13 +185,23 @@ if (missingEnv.length) {
   renderConfigError();
 } else {
   renderLoading();
+  let cenaLogin = null;
   onAuthStateChanged(auth, async (user) => {
     window.removeEventListener('hashchange', route);
     if (!user) {
-      renderLogin();
+      cenaLogin = renderLogin(root, { entrar: entrarComGoogle });
       return;
     }
-    renderLoading();
+    if (cenaLogin) {
+      // acabou de entrar: contrato volta pra mesa, tudo voa, e a próxima tela aparece suave
+      const cena = cenaLogin;
+      cenaLogin = null;
+      await cena.sai();
+      root.innerHTML = '';
+      preparaRevelar();
+    } else {
+      renderLoading();
+    }
     try {
       session.user = user;
       const [adminUids, existing] = await Promise.all([getAdminUids(), getMember(user.uid)]);

@@ -27,7 +27,7 @@
   Capas continuam as da RAWG (3:4); sem imagem, caixa genérica por código. **Capa enviada do aparelho:**
   comprimida no cliente (corte 3:4, 300x400, JPEG 0.8, ~20–60 KB) e guardada como data URL no documento do
   jogo no Firestore (sem Storage, que é pago); exige campo novo + limite de tamanho nas rules ao implementar. **Logos, consoles, jogos e personagens
-  reais são liberados** (projeto pessoal entre amigos, sem fins comerciais); manter o aviso de não afiliação no rodapé.
+  reais são liberados** (projeto pessoal entre amigos, sem fins comerciais). **Sem aviso de não afiliação no rodapé** (dono pediu para tirar).
 - **Confirmações dentro da página** (`confirmInline`), nunca `window.confirm`.
 - **Migração visual sem campo novo:** elemento de mock sem campo no modelo fica de fora (ver STATE). Mapeamentos
   adotados: resenha do quadro = comentário da nota (`ratings`); "Fase N" = número da rodada (h1, canal da TV);

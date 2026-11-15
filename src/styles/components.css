@@ -34,11 +34,6 @@
   .nav { justify-self: end; }
 }
 
-.rodape {
-  max-width: var(--max); margin: 0 auto; padding: 0 var(--gutter) 40px;
-  color: var(--muted); font-size: 0.875rem;
-}
-
 main { display: block; max-width: var(--max); margin: auto; padding: 28px var(--gutter) 64px; }
 @media (min-width: 760px) { main { padding-top: 40px; } }
 

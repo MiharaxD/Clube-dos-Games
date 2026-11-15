@@ -492,7 +492,6 @@ Bloco ink com texto deep em Atkinson 700, centralizado a 16px da base, com sombr
 - **Do** confirmar ações destrutivas dentro da página, numa ficha de papel abaixo do botão.
 - **Do** deixar a faixa de fases como o único indicador de tempo da rodada.
 - **Do** desligar movimento e efeitos com prefers-reduced-motion e prefers-contrast.
-- **Do** manter no rodapé o aviso de clube sem fins comerciais e sem afiliação a fabricantes, estúdios e plataformas.
 
 ### Don't:
 - **Don't** usar window.confirm, alert ou modais do navegador.

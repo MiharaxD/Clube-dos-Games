@@ -309,8 +309,7 @@ sobre cartão sólido. Grão, scanlines e vinheta reduzem mais: **medir na pági
   Projeto pessoal entre amigos, sem fins comerciais. Isso é escolha do dono, e este dossiê não faz análise jurídica.
   Fica só o bom senso: se um titular pedir para tirar algo, tira; se o site virar público de verdade ou comercial,
   rever esta seção.
-- **Aviso no rodapé (recomendado, barato):** "Clube de amigos, sem fins comerciais; não é afiliado a nenhuma
-  fabricante, estúdio ou plataforma; marcas pertencem a seus titulares."
+- **Aviso no rodapé:** recomendado em geral, mas o dono pediu para não ter no site.
 - **Imagens:** as 6 referências do dono podem inspirar à vontade; a 5 tem marca d'água de banco de imagens (não
   embutir essa). Preferir desenhar em CSS/SVG a embutir foto: é mais leve e combina com a cena. Fotos CC BY-SA exigem
   atribuição e mesma licença.

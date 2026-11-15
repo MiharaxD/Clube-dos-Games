@@ -1,0 +1,127 @@
+/* ==========================================================================
+   Login: a mesa 3D do quarto (motor em mesa.js) recebe, caindo do céu, o videogame,
+   a TV de tubo com o texto de boas-vindas e a prancheta do contrato (o botão de entrar).
+   Mesma regra da mesa: nada de filtro/blend/opacity em quem tem filhos 3D.
+   ========================================================================== */
+
+/* ---------- Página ---------- */
+.login {
+  min-height: 100dvh; display: grid; align-content: center; gap: 4px;
+  width: min(100%, 1120px); margin: 0 auto; padding: 28px var(--gutter) 16px;
+}
+.login > .marca { grid-area: auto; width: min(280px, 64%); justify-self: center; }
+.login .mesa-sec { grid-area: auto; min-width: 0; }
+.login .palco-wrap { max-width: 1040px; }
+/* enquanto cai (e na saída) os botões ficam fora: estariam no lugar errado */
+.caindo .alvo { visibility: hidden; }
+.prancheta3d, .controle-pos, .voo { position: absolute; left: 0; top: 0; transform-style: preserve-3d; }
+
+/* ---------- TV de tubo da mesa ---------- */
+.m-tv > .f {
+  display: block; padding: 16px; border-radius: 6px;
+  background: linear-gradient(180deg, #a3977f, #857964 45%, #5d5444);
+  box-shadow: inset 0 2px 0 rgb(255 240 215 / 0.28), inset 0 -3px 0 rgb(12 6 9 / 0.35);
+}
+.m-tv > .u { background: linear-gradient(0deg, #b3a68c, #968a72 70%, #7d725e); }
+.m-tv > .l { background: linear-gradient(90deg, #7a6f5b, #8a7f69); }
+.m-tv > .r { background: linear-gradient(90deg, #655b4a, #4f4739); }
+.m-tubo > .u { background: linear-gradient(0deg, #6a6050, #4e463b); }
+.m-tv > .b { background: #5d5444; }
+.m-tubo > .b { background: repeating-linear-gradient(90deg, transparent 0 9px, rgb(12 6 9 / 0.3) 9px 12px) 50% 40% / 50% 30% no-repeat, #3b352d; }
+.m-tubo > .l, .m-tubo > .r {
+  background: repeating-linear-gradient(90deg, transparent 0 7px, rgb(12 6 9 / 0.35) 7px 9px) 30% 30% / 60% 40% no-repeat,
+              linear-gradient(90deg, #4f473b, #3b352d);
+}
+.tvm__caixa { display: grid; grid-template-columns: 1fr 34px; gap: 12px; height: 100%; }
+.tvm__moldura { display: block; padding: 10px; border-radius: 12% / 15%; background: #221d19; box-shadow: inset 0 0 0 2px #3b332b; }
+.tvm__vidro {
+  position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  height: 100%; padding: 14px 14px 10px; overflow: hidden; border-radius: 9% / 12%; text-align: center; color: #e8f6ff;
+  background: radial-gradient(ellipse 75% 70% at 50% 45%, #1d5c56, #103a39 55%, #0a2022);
+  box-shadow: inset 0 0 26px 6px rgb(6 14 14 / 0.7);
+}
+/* reflexo + scanlines só no vidro (sem filhos 3D aqui dentro) */
+.tvm__vidro::before {
+  content: ''; position: absolute; inset: 0; z-index: 2; pointer-events: none;
+  background: radial-gradient(ellipse 22% 12% at 18% 14%, rgb(255 210 150 / 0.16), transparent 70%),
+              radial-gradient(ellipse at 50% 50%, transparent 55%, rgb(232 246 255 / 0.10) 100%);
+}
+.tvm__vidro::after {
+  content: ''; position: absolute; inset: 0; z-index: 3; pointer-events: none;
+  background: repeating-linear-gradient(to bottom, transparent 0 1px, rgb(6 14 14 / 0.14) 1px 2px);
+}
+.tvm__osd { position: absolute; top: 8px; left: 14px; color: #8fe6db; font: 400 13px/1 var(--f-placa); letter-spacing: 0.08em; }
+.tvm__titulo {
+  position: relative; z-index: 1; display: block; margin-top: 6px; font: 400 36px/0.9 var(--f-placa); letter-spacing: 0.04em; text-wrap: balance;
+  text-shadow: -1px 0 rgb(255 40 80 / 0.55), 1px 0 rgb(40 220 255 / 0.55);
+}
+.tvm__texto {
+  position: relative; z-index: 1; display: block; padding-top: 8px; border-top: 2px solid rgb(143 230 219 / 0.6);
+  font: 400 15px/1.25 var(--f-mao); color: #d6f5f0; text-wrap: balance;
+}
+.tvm__rolo {
+  position: absolute; left: 0; right: 0; top: 0; height: 30%; z-index: 1; pointer-events: none;
+  background: linear-gradient(180deg, transparent, rgb(232 246 255 / 0.07), transparent);
+  animation: tv-rolo 8s linear infinite;
+}
+.tvm__painel { display: flex; flex-direction: column; align-items: center; gap: 10px; padding-top: 8px; }
+.tvm__botao { width: 24px; height: 24px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #6d665a, #2b2722 70%); box-shadow: 0 2px 0 rgb(12 6 9 / 0.5); }
+.tvm__grade { flex: 1; width: 28px; margin-bottom: 6px; background: repeating-linear-gradient(180deg, #3e3930 0 2px, transparent 2px 5px); }
+/* antena: recorte plano em cima da carcaça */
+.tvm__antena {
+  position: absolute; left: -32px; top: -14px; width: 64px; height: 14px; border-radius: 30px 30px 0 0;
+  background: linear-gradient(180deg, #3a332b, #221d19);
+  transform: translate3d(0, -250px, -40px);
+}
+.tvm__antena::before, .tvm__antena::after {
+  content: ''; position: absolute; bottom: 60%; left: 50%; width: 3px; height: 110px; transform-origin: bottom center;
+  background: linear-gradient(180deg, #8a8070 0 4px, #5a5246 4px);
+}
+.tvm__antena::before { transform: rotate(-28deg); }
+.tvm__antena::after { transform: rotate(24deg); }
+.decal--luz-tv { background: radial-gradient(closest-side, rgb(70 195 181 / 0.22), rgb(70 195 181 / 0.08) 50%, transparent); }
+
+/* ---------- Videogame: o controle fica na frente do console ---------- */
+.controle-pos { transform: translate3d(70px, 0, 175px) rotateY(-18deg); }
+
+/* ---------- Prancheta do contrato (3D na mesa e 2D em evidência: mesma cara) ---------- */
+.prancheta {
+  position: relative; display: block; padding: 26px 12px 12px; border-radius: 8px;
+  background: linear-gradient(160deg, #8a5a36, #6b4329 60%, #573520);
+  box-shadow: inset 0 0 0 2px rgb(12 6 9 / 0.35), inset 0 2px 0 rgb(255 220 180 / 0.2);
+}
+.contrato__clipe {
+  position: absolute; left: 50%; top: -8px; width: 42%; height: 30px; translate: -50% 0; border-radius: 6px 6px 3px 3px;
+  background: linear-gradient(180deg, #d7d3cc, #9c978f 55%, #6f6a63); box-shadow: 0 2px 0 rgb(12 6 9 / 0.5);
+}
+.contrato__clipe::after { content: ''; position: absolute; left: 30%; right: 30%; top: 7px; height: 6px; border-radius: 3px; background: #4a4640; }
+.contrato__papel {
+  display: flex; flex-direction: column; gap: 6px; padding: 12px 12px 10px;
+  background: var(--paper); color: var(--paper-ink); font: 400 12px/1.3 var(--f-dati); box-shadow: 0 2px 0 rgb(12 6 9 / 0.35);
+}
+.contrato__titulo { display: block; font: 400 24px/1 var(--f-placa); letter-spacing: 0.05em; }
+.contrato__titulo:focus { outline: none; }
+.contrato__clausula { display: block; color: var(--paper-muted); }
+.contrato__botao {
+  display: block; margin-top: 4px; padding: 9px 8px; border-radius: 4px; text-align: center;
+  background: var(--paper-ink); color: var(--paper); font: 700 14px/1.2 var(--f-texto);
+}
+.contrato__assina { display: flex; align-items: end; gap: 6px; height: 22px; border-bottom: 2px solid var(--paper-ink); font: 400 16px/1 var(--f-mao); }
+
+/* na mesa: apoiada num cavalete, inclinada pra trás */
+.prancheta3d__frente, .prancheta3d__tras {
+  position: absolute; left: -105px; top: -280px; width: 210px; height: 280px; transform-origin: 50% 100%; backface-visibility: hidden;
+}
+.prancheta3d__frente { transform: translateZ(36px) rotateX(14deg); }
+.prancheta3d__tras { transform: translateZ(-36px) rotateX(-14deg) rotateY(180deg); border-radius: 8px; background: linear-gradient(180deg, #5a3a26, #3f2819); }
+/* hover/foco no botão: a prancheta acende um pouco o papel */
+#prancheta-obj.ativo .contrato__botao { background: var(--stamp); }
+
+/* em evidência: na frente de tudo enquanto o Google pergunta */
+.modal--contrato { z-index: 120; gap: 16px; align-content: center; }
+.modal--contrato .modal__fundo { position: fixed; }
+.prancheta--foco { position: relative; width: min(100%, 340px); transform-origin: 50% 50%; rotate: -1.2deg; }
+.prancheta--foco .contrato__papel { gap: 8px; padding: 16px; font-size: 15px; }
+.prancheta--foco .contrato__titulo { font-size: 34px; }
+.prancheta--foco .contrato__botao { padding: 12px; font-size: 1rem; }
+.contrato__status { position: relative; max-width: 30ch; color: var(--ink); text-align: center; font: 400 1.15rem/1.3 var(--f-mao); }
