@@ -192,9 +192,12 @@ html { scrollbar-gutter: stable; }
 .mchip input:checked + span::before { border-color: var(--amber); background: var(--amber); }
 .mchip input:focus-visible + span { outline: 3px solid var(--paper-ink); outline-offset: 2px; }
 
+/* formulário: em tela baixa (celular pequeno, teclado aberto) os botões ficavam cortados; agora o modal rola
+   e só centraliza quando sobra espaço (safe center) */
+.modal--form { overflow-x: hidden; overflow-y: auto; place-items: safe center; }
 /* ---------- Modal de leitura: estojo à esquerda (abre pra esquerda), comentários à direita ---------- */
 .modal--leitura { overflow-x: hidden; overflow-y: auto; place-items: start center; }
-.modal--leitura .modal__fundo { position: fixed; }
+.modal--leitura .modal__fundo, .modal--form .modal__fundo { position: fixed; }
 /* tamanho folgado: o manual (pitch + fatos + plataformas) precisa caber sem rolar por dentro */
 .modal--leitura .modal__palco { --w: min(86vw, calc((100dvh - 250px) * 0.75)); padding: 8px 0 24px; }
 .leitura { display: flex; flex-direction: column; align-items: center; gap: 28px; width: 100%; }

@@ -27,7 +27,7 @@
   na cadeia 3D (prateleira, estojo, mesa, TV); parallax da parede/TV é laço rAF suavizado em `scene.js`,
   sem transição CSS (reiniciar transição por pointermove fazia o fundo piscar); rolagem dentro de `preserve-3d` usa `rolaNaMao`; cliques na mesa 3D
   são botões `.alvo` reposicionados por `mountMesa`; modais (caixinha, calendário, quadro) ficam fora do `#app`
-  (que fica `inert`) e o roteador os remove ao trocar de tela; botão sobre papel precisa de ancestral
+  (que fica `inert`) e o roteador os remove ao trocar de tela; a tampa da caixinha NÃO confia em `backface-visibility` (falha no WebKit/iPhone: filhos com transform vazam espelhados): `Estojo.trocaFaces` alterna `visibility` frente/verso durante o giro; `.app` tem `overflow-x: clip` (carpete e mesa em perspectiva alargavam a página no celular); o modal do formulário rola em tela baixa; botão sobre papel precisa de ancestral
   `.ficha`/`.confirm`/`.papel`; classes de mesa 3D com nome genérico (`.abajur`, `.capa`) vão escopadas.
   Mudou regra visual → atualizar `DESIGN.md` (e `Estetica/DOSSIE.md` se for direção) e regenerar `.impeccable/design.json`.
 - **Mocks (referência, já portados):** `.impeccable/mocks/rodada-{sugerindo,votando,jogando,encerrada}.html`,
