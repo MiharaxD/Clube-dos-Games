@@ -70,9 +70,21 @@ function wallParallax() {
     frame = requestAnimationFrame(() => {
       frame = 0;
       wall.style.transform = `translate3d(${(px * 18).toFixed(1)}px, ${(py * 10).toFixed(1)}px, 0)`;
+      // a TV 3D gira um pouco com o mesmo olhar (ver .tv-palco em scene.css)
+      for (const p of document.querySelectorAll('.tv-palco')) {
+        p.style.setProperty('--olho-x', px.toFixed(3));
+        p.style.setProperty('--olho-y', py.toFixed(3));
+      }
     });
   }, { passive: true });
-  calma.addEventListener('change', () => calma.matches && wall.style.removeProperty('transform'));
+  calma.addEventListener('change', () => {
+    if (!calma.matches) return;
+    wall.style.removeProperty('transform');
+    for (const p of document.querySelectorAll('.tv-palco')) {
+      p.style.removeProperty('--olho-x');
+      p.style.removeProperty('--olho-y');
+    }
+  });
 }
 
 let started = false;

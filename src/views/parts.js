@@ -93,22 +93,27 @@ export function tv({ osd = '', title = '', line = '', art = '' } = {}) {
         <span class="tv__fase">${esc(title)}</span>
         ${line ? `<span class="tv__linha">· ${esc(line)} ·</span>` : ''}
       </div>`;
+  // 3D: .tv-palco gira TV + rack juntos; cada um é uma caixa de faces (frente no fluxo, lados/topo/tubo girados).
   return `<div class="mesa-tv" aria-hidden="true">
-    <div class="tv">
-      <span class="tv__brilho"></span>
-      <span class="tv__antena"></span>
-      <div class="tv__caixa">
-        <div class="tv__moldura">
-          <div class="tv__vidro" data-luz="tv">${arte}${cartaz}<span class="tv__rolo"></span></div>
+    <span class="tv__brilho"></span>
+    <div class="tv-palco">
+      <div class="tv">
+        <i class="tv__lado tv__lado--u"></i><i class="tv__lado tv__lado--l"></i><i class="tv__lado tv__lado--r"></i>
+        <div class="tv__tubo"><i class="tv__lado--u"></i><i class="tv__lado--l"></i><i class="tv__lado--r"></i><i class="tv__tubo-fundo"></i></div>
+        <span class="tv__antena"></span>
+        <div class="tv__caixa">
+          <div class="tv__moldura">
+            <div class="tv__vidro" data-luz="tv">${arte}${cartaz}<span class="tv__rolo"></span></div>
+          </div>
+          <div class="tv__painel"><span class="tv__botao"></span><span class="tv__botao"></span><span class="tv__grade"></span></div>
         </div>
-        <div class="tv__painel"><span class="tv__botao"></span><span class="tv__botao"></span><span class="tv__grade"></span></div>
+      </div>
+      <div class="movel-tv">
+        <i class="movel-tv__tampo"></i><i class="movel-tv__lado movel-tv__lado--l"></i><i class="movel-tv__lado movel-tv__lado--r"></i>
+        <div class="movel-tv__corpo"><div class="movel-tv__nicho"><span class="console"></span></div></div>
       </div>
     </div>
     <div class="poeira"><span class="cisco cisco--a"></span><span class="cisco cisco--b"></span><span class="cisco cisco--c"></span></div>
-    <div class="movel-tv">
-      <span class="movel-tv__tampo"></span>
-      <div class="movel-tv__corpo"><div class="movel-tv__nicho"><span class="console"></span></div></div>
-    </div>
   </div>`;
 }
 

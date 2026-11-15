@@ -374,6 +374,7 @@ Dois regimes. **Objetos** (papelão e papel apoiados na prateleira) projetam som
 
 ### A cena (luz e filme)
 Camadas irmãs da interface, `position: fixed/absolute; inset: 0; pointer-events: none; aria-hidden`, da mais funda para a mais alta: **parede** (fundo e, opcional, xadrez escuro de baixíssimo contraste) → **poça de luz** (gradientes radiais locais: TV teal alta e à direita, abajur âmbar baixo e à esquerda; queda ~1/d², `screen`) → **brilho do letreiro** (halo rosa só em volta do letreiro) → **grão** (SVG `feTurbulence` como imagem estática, ≤ 8%) → **vinheta** (cantos 35–60%). A interface fica acima, fora de qualquer blend, em superfícies sólidas.
+- TV de tubo é objeto CSS 3D (carcaça, tubo do CRT atrás e rack com tampo, girados ~26° para o centro da página; no PC acompanha o olhar com o parallax da parede). Brilho e poeira ficam fora da cadeia 3D.
 - Tela de TV (vencedor e fase jogando): vidro abaulado (raio ~9%/12%), vinheta interna, reflexo, **scanlines só ali** (6–15%), brilho teal local, conteúdo com a arte do jogo da rodada ou um cartaz "FASE N · nome".
 - Orçamento: no máximo 3 camadas de blend em tela cheia no PC e 2 no celular (preferir 1 camada com vários gradientes); só `transform` e `opacity` animam; nada de animar `box-shadow`, `text-shadow`, `filter` ou blur.
 - Halo ou grão atrás de texto: ≤ 15%. Meça o contraste na página renderizada.
@@ -385,7 +386,7 @@ Camadas irmãs da interface, `position: fixed/absolute; inset: 0; pointer-events
 
 **The Texto Sólido Rule.** Texto de interface nunca fica sobre halo forte, grão, scanline ou vinheta: vive em painel, papel, etiqueta ou parede quase lisa. Efeitos só na cena e dentro do vidro da TV.
 
-**The Sem Filtro no 3D Rule.** Luz, glow, grão e vinheta nunca são pai nem o próprio elemento da prateleira 3D: `opacity < 1`, `filter`, `mix-blend-mode`, `isolation`, `mask` e `clip-path` numa cadeia `preserve-3d` achatam o 3D.
+**The Sem Filtro no 3D Rule.** Luz, glow, grão e vinheta nunca são pai nem o próprio elemento da prateleira 3D (nem da TV 3D): `opacity < 1`, `filter`, `mix-blend-mode`, `isolation`, `mask` e `clip-path` numa cadeia `preserve-3d` achatam o 3D.
 
 **The Movimento Opcional Rule.** Respiração da TV, poeira, lava e parallax são lentos e sutis (flicker nunca acima de 3 vezes por segundo, ciclo ≥ 5 s) e desligam com `prefers-reduced-motion`; `prefers-contrast: more` remove grão, scanlines e aberração. Carimbo batendo e roleta também desligam.
 

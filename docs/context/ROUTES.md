@@ -2,7 +2,7 @@
 
 ## Visual / estilos / tema
 - **Ir direto para:** `src/styles.css` (só `@import`s, em ordem) → `src/styles/`: `base.css` (fontes, tokens
-  em `:root`), `scene.css` (cena, letreiro, TV), `components.css` (botões, campos, painel, ficha, faixa, capa,
+  em `:root`), `scene.css` (cena, letreiro, TV 3D + rack), `components.css` (botões, campos, painel, ficha, faixa, capa,
   carimbo, adesivo, casca, telas soltas), `rack.css` (prateleira 3D, estojo, post-it, ticket, etiqueta VOTADO,
   tela Estante), `caixinha.css` (modal do estojo, manual, CD, formulário da sugestão), `round.css` (grade da
   rodada, faixa de pano, mesa 3D, calendário, quadro de cortiça, balcão), `stats.css`, `pages.css` (perfil,
@@ -22,7 +22,7 @@
   com clima, dúvida de direitos de imagem/fonte. **Não leia** para lógica, dados, rules, bugs, build, nem para
   ajuste já coberto pelo `DESIGN.md`. Ordem: `DESIGN.md` → `DOSSIE.md` (só a seção do assunto; grep nos `##`).
 - **Cuidados:** capa sempre 3:4; alvos ≥ 44px; texto só sobre superfície sólida; nada de filtro/blend/opacidade
-  na cadeia 3D (prateleira, estojo, mesa); rolagem dentro de `preserve-3d` usa `rolaNaMao`; cliques na mesa 3D
+  na cadeia 3D (prateleira, estojo, mesa, TV); rolagem dentro de `preserve-3d` usa `rolaNaMao`; cliques na mesa 3D
   são botões `.alvo` reposicionados por `mountMesa`; modais (caixinha, calendário, quadro) ficam fora do `#app`
   (que fica `inert`) e o roteador os remove ao trocar de tela; botão sobre papel precisa de ancestral
   `.ficha`/`.confirm`/`.papel`; classes de mesa 3D com nome genérico (`.abajur`, `.capa`) vão escopadas.
