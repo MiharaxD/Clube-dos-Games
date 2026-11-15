@@ -1,8 +1,8 @@
 // Easter egg das TVs: clicou, a TV dá um pulo, o vidro chia (estática branca + som de chiado)
-// e do nada entra o vídeo (public/rickroll.webm). Clicar de novo desliga. Vale pra toda TV do site.
+// e do nada entra o vídeo (public/rickroll.mp4). Clicar de novo desliga. Vale pra toda TV do site.
 import { anim, calma, SAI } from './motion.js';
 
-const VIDEO = '/rickroll.webm';
+const VIDEO = '/rickroll.mp4';
 const CHIADO_MS = 1300;
 
 // Som de chiado: ruído branco curtinho pelo WebAudio (sem arquivo).

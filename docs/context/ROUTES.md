@@ -13,7 +13,7 @@
   (`Estojo`, `openReading` com mural de recados em sugerindo/votando), `src/views/tema.js` (flâmula do tema da
   rodada acima da prateleira; admin clica e edita), `src/views/mesa.js` (`caixa()`, layouts PC/celular por fase, inclusive `login`; `mountMesa`),
   `src/lib/motion.js` (motor WAAPI + `rolaNaMao`), `src/lib/rickroll.js` (easter egg de toda TV: clique →
-  pulo, chiado em canvas + ruído WebAudio, vídeo `public/rickroll.webm` (AV1/Opus); TV comum liga por `[data-tv-liga]`), `src/lib/scene.js` (luz nasce de `data-luz="tv|abajur|neon"`;
+  pulo, chiado em canvas + ruído WebAudio, vídeo `public/rickroll.mp4` (H.264/AAC, toca em celular); TV comum liga por `[data-tv-liga]`), `src/lib/scene.js` (luz nasce de `data-luz="tv|abajur|neon"`;
   `placeLights` após cada render), `src/lib/icons.js`. Fontes em `public/fonts/` (licenças em `LICENSE.md`).
 - **Testes:** `npm run build`; detector: `impeccable detect --json index.html src`
   (script em `~/.claude/plugins/cache/impeccable/.../scripts/impeccable`).
