@@ -8,6 +8,8 @@ import { ENTRA_RAPIDO, NA_TELA, SAI, anim, calma, entrar, espera, rolaNaMao, sum
 import { coverPalette, memberName } from './parts.js';
 
 const $ = (root, sel) => root.querySelector(sel);
+// Abrindo, a tampa passa de 90° em 0,12 + (94/184)·0,88 do giro (4° de antecipação, depois até −180°).
+const PASSA_90 = 0.12 + (94 / 184) * 0.88;
 
 // Monta o modal fora do #app (o app fica inert enquanto a caixinha está aberta).
 export class Estojo {
@@ -117,6 +119,7 @@ export class Estojo {
     return Promise.all([
       // antecipação: a tampa destrava (4deg pra dentro) antes de girar na dobradiça
       anim(this.tampa, [{ transform: 'translateZ(2px) rotateY(0deg)' }, { transform: 'translateZ(2px) rotateY(4deg)', offset: 0.12 }, { transform: 'translateZ(2px) rotateY(-180deg)' }], { duration: 760, easing: NA_TELA }),
+      ...this.trocaFaces(true, PASSA_90, 760, NA_TELA),
       anim(this.corpo, [{ transform: 'translateX(0px)' }, { transform: `translateX(${x}px)` }], { duration: 760, easing: NA_TELA }),
       anim(this.sombra, [{ transform: 'none' }, { transform: `translateX(${x - w / 2}px) scaleX(2)` }], { duration: 760, easing: NA_TELA }),
     ]);
@@ -129,9 +132,24 @@ export class Estojo {
     this.verso.inert = true;
     return Promise.all([
       anim(this.tampa, [{ transform: 'translateZ(2px) rotateY(-180deg)' }, { transform: 'translateZ(2px) rotateY(0deg)' }], { duration: dur, easing }),
+      ...this.trocaFaces(false, 0.5, dur, easing),
       anim(this.corpo, [{ transform: `translateX(${x}px)` }, { transform: 'translateX(0px)' }], { duration: dur, easing }),
       anim(this.sombra, [{ transform: `translateX(${x - w / 2}px) scaleX(2)` }, { transform: 'none' }], { duration: dur, easing }),
     ]);
+  }
+
+
+  // Só a face voltada pra gente aparece. O backface-visibility sozinho falha no WebKit (iPhone): filhos
+  // com transform (carimbo, etiqueta, manual inclinado) vazam espelhados, e a capa aparecia "por trás" do manual.
+  // Então a visibilidade troca por animação, na mesma duração/easing da tampa, no instante em que ela passa de 90°.
+  // `abrindo`: a frente some e o verso aparece; `quando` = ponto (0–1) do giro em que a tampa fica de lado.
+  trocaFaces(abrindo, quando, duration, easing) {
+    const antes = quando - 0.0001;
+    const troca = (el, sumindo) => {
+      const [de, pra] = sumindo ? ['visible', 'hidden'] : ['hidden', 'visible'];
+      return anim(el, [{ visibility: de, offset: 0 }, { visibility: de, offset: antes }, { visibility: pra, offset: quando }, { visibility: pra, offset: 1 }], { duration, easing });
+    };
+    return [troca(this.frente, abrindo), troca(this.verso, !abrindo)];
   }
 
   // O CD arranca girando e segue rodando devagar enquanto a caixinha está aberta.

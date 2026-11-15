@@ -44,6 +44,9 @@
 }
 /* a interface fica acima, fora de qualquer blend */
 .app { position: relative; z-index: 10; }
+/* nada de dentro da interface alarga a página (carpete e mesa em perspectiva passam da borda: o body clip não basta
+   no celular, o navegador aumenta a largura da tela). Os modais ficam fora do #app, então não são cortados. */
+.app { overflow-x: clip; }
 
 /* ---------- Letreiro de neon (o único neon do sistema) ---------- */
 .neon { display: block; width: 100%; height: auto; overflow: visible; }

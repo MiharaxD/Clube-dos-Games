@@ -80,6 +80,15 @@ export async function ligaTv(vidro, pula) {
   video.src = VIDEO;
   video.playsInline = true;
   video.preload = 'auto';
+  // Celular só deixa o vídeo tocar se o play() nascer do toque. Como ele só entra depois do chiado
+  // (timer, fora do toque), destravamos aqui: play mudo + pausa; depois o play() com som é liberado.
+  video.muted = true;
+  video.play().then(() => {
+    if (video.isConnected) return; // já entrou na TV: não mexe
+    video.pause();
+    video.currentTime = 0;
+    video.muted = false;
+  }, () => { video.muted = false; });
   const paraChiado = chiar(vidro, CHIADO_MS);
   await new Promise((r) => setTimeout(r, CHIADO_MS));
   paraChiado();

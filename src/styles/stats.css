@@ -75,6 +75,8 @@
   box-shadow: var(--sh-adesivo); opacity: 0; pointer-events: none; transition: opacity 120ms ease-out;
 }
 .lombada:hover::after { opacity: 1; }
+/* sem mouse não há hover; e a etiqueta nowrap, centrada na lombada, estourava a largura da tela */
+@media (hover: none) { .lombada::after { display: none; } }
 .gen__n {
   align-self: center; min-width: 1.6ch; text-align: right; color: var(--ink);
   font: 400 2.2rem/1 var(--f-placa); font-variant-numeric: tabular-nums;

@@ -114,6 +114,8 @@ button.flamula__pano:focus-visible { outline: none; }
 .chao {
   position: absolute; z-index: -1; left: 50%; top: calc(100% - 34px); width: 100vw; height: 170px; translate: -50% 0;
   perspective: 420px; pointer-events: none;
+  /* o carpete em perspectiva cresce além da tela (−133px…+133px no celular) e alargava a página: recorta na caixa */
+  overflow: clip;
   -webkit-mask: linear-gradient(180deg, #000 50%, transparent); mask: linear-gradient(180deg, #000 50%, transparent);
 }
 .chao::before {
