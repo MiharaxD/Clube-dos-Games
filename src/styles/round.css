@@ -80,6 +80,7 @@
   background: var(--paper); color: var(--paper-ink); rotate: -1.2deg; text-align: center;
   font: 400 1.15rem/1.3 var(--f-mao); box-shadow: 0 3px 6px rgb(12 6 9 / 0.45);
 }
+.falta .btn { margin: 8px 0 4px; font-family: var(--f-texto); }
 .falta::before {
   content: ''; position: absolute; left: 50%; top: -9px; width: 70px; height: 18px; translate: -50% 0; rotate: 3deg;
   background: rgb(243 230 216 / 0.38);
@@ -279,11 +280,12 @@
 .info__por { color: var(--muted); }
 .info__por b { color: var(--ink); }
 .info__desc { margin-top: 14px; max-width: 68ch; }
-.fatos { list-style: none; margin: 22px 0 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 12px; }
-@media (min-width: 560px) { .fatos { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-@media (min-width: 1000px) { .fatos { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
-.fato { padding: 8px 10px 6px; background: var(--paper); color: var(--paper-ink); box-shadow: 0 4px 0 var(--deep); rotate: -0.8deg; }
-.fato:nth-child(even) { rotate: 0.6deg; }
+/* escopo .info: o stats.css também usa .fatos/.fato (curiosidades) e vem depois no cascade */
+.info .fatos { list-style: none; margin: 22px 0 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 12px; }
+@media (min-width: 560px) { .info .fatos { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 1000px) { .info .fatos { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.info .fato { padding: 8px 10px 6px; background: var(--paper); color: var(--paper-ink); box-shadow: 0 4px 0 var(--deep); rotate: -0.8deg; }
+.info .fato:nth-child(even) { rotate: 0.6deg; }
 .fato__rot { display: block; color: var(--paper-muted); font: 700 0.75rem/1.3 var(--f-texto); letter-spacing: 0.06em; text-transform: uppercase; }
 .fato__val { display: block; margin-top: 2px; font: 400 1.6rem/1 var(--f-placa); letter-spacing: 0.05em; font-variant-numeric: tabular-nums; }
 .info__bloco { margin-top: 24px; }

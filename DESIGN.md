@@ -428,7 +428,7 @@ Firmes e de contorno, como botões de balcão.
 Fundo deep, borda fórmica de 2px, 4px de raio, 44px de altura (textarea a partir de 96px). Rótulo em Atkinson 700 acima, ajuda em muted. Hover: borda no beiço. Focus: contorno âmbar de 3px com offset de 1px. Erro: contador estourado e mensagens em rosa 700.
 
 ### Navigation
-Links em Atkinson 600 a 0.95rem, muted, 44px de altura, 4px de raio. Hover ganha o fundo da prateleira e texto ink; a página atual é um bloco âmbar com texto deep.
+Links em Atkinson 600 a 0.95rem, muted, 44px de altura, 4px de raio. Hover ganha o fundo da prateleira e texto ink; a página atual é um bloco âmbar com texto deep. Antes da barra, o link "Pular pro conteúdo" (âmbar) só aparece com foco de teclado.
 
 ### Letreiro do clube
 O logo é um letreiro de neon rosa "CLUBE DOS JOGOS" em SVG próprio (um traço contínuo por letra, núcleo quase branco, glow em 2 a 3 camadas, tubo apagado, grampos e fio atrás), `role="img"` com `aria-label`. É o único neon do sistema. Pisca no máximo uma letra a cada 20–40 s, só por `opacity`, e não pisca em reduced-motion. Variantes por estado ("VOTAÇÃO ABERTA", "JOGANDO") só por texto.
@@ -437,7 +437,9 @@ O logo é um letreiro de neon rosa "CLUBE DOS JOGOS" em SVG próprio (um traço 
 Quatro blocos iguais em Label caixa alta sobre a prateleira (0.85rem no PC), com no mínimo 8px de respiro lateral no texto. Concluída: ink riscado em teal (2px). Atual: âmbar com texto deep. Futura: muted. Onde os quatro não cabem numa linha com esse respiro (celular abaixo de 440px; PC estreito em que a faixa divide a linha com a TV), viram uma grade 2×2 lida em Z, sem encolher a letra.
 
 ### Ficha do sócio
-Papel creme girado -0.6deg com sombra de ficha, título em Bebas, texto em Special Elite, a próxima ação em letra de marcador e um carimbo vermelho de status no canto superior direito (borda de 3px, -6deg). É onde a pessoa lê o que falta ela fazer.
+Papel creme girado -0.6deg com sombra de ficha, título em Bebas, texto em Special Elite, a próxima ação em letra de marcador e um carimbo vermelho de status no canto superior direito (borda de 3px, -6deg). É onde a pessoa lê o que falta ela fazer, e o botão primário (paper-ink) logo abaixo leva até onde isso acontece
+(abrir a caixinha da sugestão, ir aos tickets, ao slider de nota, ao calendário ou ao quadro); na mesa 3D o mesmo botão
+fica no bilhete "o que falta". "Copiar mensagem" é só do admin.
 
 ### Prateleira 3D (sugerindo, votando, estante)
 O móvel de madeira com nichos em perspectiva (um ponto de fuga por coluna; 2 colunas no celular, 4 no PC) e, em cima,
@@ -449,7 +451,8 @@ cai, e a etiqueta VOTADO cola na capa; o canhoto que sobra desfaz. O próprio jo
 
 ### Caixinha
 Clicar na capinha tira o estojo do nicho num arco até o centro; a tampa destrava e gira na dobradiça; o **manual** (papel)
-fica no verso e o **CD** gira na bandeja. Leitura: o manual traz pitch, ano, gênero, duração, modo, preço e plataformas.
+fica no verso e o **CD** gira na bandeja. Leitura: o manual traz pitch, ano, gênero, duração, modo, preço e plataformas
+(cabem sem rolar por dentro); na votação a caixinha tem "Votar nesse" / "Votado · desfazer" (menos no jogo da própria pessoa).
 Sugestão: a caixinha vira o formulário em dois passos (capa: nome + imagem; manual: o resto); ao finalizar a tampa fecha,
 tarja e preço aparecem, o carimbo SEU bate e a caixa volta pro nicho.
 

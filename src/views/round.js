@@ -70,11 +70,13 @@ export async function renderRound(main, ctx) {
   const balcao = session.isAdmin && data.isLatest ? adminPanel(data) : '';
   const steps = phaseSteps(round.status);
   const next = todo(data);
+  const cta = next.cta ? `<button class="btn btn--primary" type="button" data-cta="${next.cta.action}">${esc(next.cta.label)}</button>` : '';
 
   // ---------- jogando/encerrada: a mesa (faixa de pano no lugar do h1)
   if (round.status === 'jogando' || round.status === 'encerrada') {
-    renderPlay(main, data, ctx, { steps, todo: next.main, announce, balcao });
+    renderPlay(main, data, ctx, { steps, todo: next.main, cta, announce, balcao });
     if (balcao) bindAdmin(main, data, ctx);
+    bindCta(main);
     return;
   }
 
@@ -94,7 +96,8 @@ export async function renderRound(main, ctx) {
         <p class="ficha__todo">${next.main}</p>
         ${next.extra ? `<p class="ficha__resto">${next.extra}</p>` : ''}
         <div class="actions">
-          <button class="btn" type="button" id="announce">${icon('copy')} Copiar mensagem pro grupo</button>
+          ${cta}
+          ${session.isAdmin ? `<button class="btn" type="button" id="announce">${icon('copy')} Copiar mensagem pro grupo</button>` : ''}
         </div>
       </section>
       ${tv({ osd: `CH ${channel}`, title: `Fase ${round.number}`, line: round.status === 'sugerindo' ? 'Sugestões' : 'Votação' })}
@@ -102,12 +105,45 @@ export async function renderRound(main, ctx) {
     </div>
     ${balcao}`;
 
-  main.querySelector('#announce').addEventListener('click', announce);
+  main.querySelector('#announce')?.addEventListener('click', announce);
   if (balcao) bindAdmin(main, data, ctx);
 
   const phase = main.querySelector('#phase');
   if (round.status === 'sugerindo') renderSuggest(phase, data, ctx);
   else renderVote(phase, data, ctx);
+  bindCta(main);
+}
+
+// Botão principal da ficha / do bilhete: leva (ou abre) o lugar onde a ação da fase acontece,
+// que fica várias telas abaixo no celular.
+function bindCta(main) {
+  main.querySelector('[data-cta]')?.addEventListener('click', (event) => {
+    const suave = calma.matches ? 'auto' : 'smooth';
+    const por = (sel) => main.querySelector(sel);
+    switch (event.currentTarget.dataset.cta) {
+      case 'form': { // abre a caixinha da sugestão (a vaga ou o estojo do próprio sócio)
+        const slot = por('#slot-meu');
+        slot?.scrollIntoView({ block: 'center' });
+        slot?.querySelector('[data-add], [data-edit]')?.click();
+        break;
+      }
+      case 'votar': { // foca o primeiro ticket ainda não votado
+        const ticket = por('[data-vote][aria-pressed="false"]') ?? por('[data-vote]');
+        ticket?.scrollIntoView({ block: 'center', behavior: suave });
+        ticket?.focus({ preventScroll: true });
+        break;
+      }
+      case 'nota': { // jogando: o slider fica inline na página
+        const campo = por('#score');
+        campo?.scrollIntoView({ block: 'center', behavior: suave });
+        campo?.focus({ preventScroll: true });
+        break;
+      }
+      case 'datas': por('[data-obj="cal-obj"]')?.click(); break;
+      case 'quadro': por('[data-obj="quadro-obj"]')?.click(); break;
+      default:
+    }
+  });
 }
 
 // ------------------------------------------------------------ textos da ficha
@@ -120,34 +156,36 @@ function subtitle({ round, games }) {
 }
 
 // "O que falta você fazer": a próxima ação desta pessoa, nesta fase.
+// cta = { action, label }: o botão principal que leva até onde a pessoa faz isso (ver bindCta).
 function todo({ round, games, uid, myVotes, dateVotes, ratings }) {
-  const line = (main, extra = '') => ({ main, extra });
+  const line = (main, extra = '', cta = null) => ({ main, extra, cta });
 
   if (round.status === 'sugerindo') {
     const mine = games.some((g) => g.id === uid);
     return mine
-      ? line('Sua sugestão já tá na prateleira.', 'Dá pra editar ou trocar até a votação abrir. Sem pressa.')
-      : line('Bota sua sugestão na prateleira.', 'Um jogo por pessoa. Pode fazer com calma, a prateleira fica aberta até o admin abrir a votação.');
+      ? line('Sua sugestão já tá na prateleira.', 'Dá pra editar ou trocar até a votação abrir. Sem pressa.', { action: 'form', label: 'Editar minha sugestão' })
+      : line('Bota sua sugestão na prateleira.', 'Um jogo por pessoa. Pode fazer com calma, a prateleira fica aberta até o admin abrir a votação.', { action: 'form', label: 'Adicionar minha sugestão' });
   }
   if (round.status === 'votando') {
     const others = games.filter((g) => g.id !== uid).length;
     return line(
       'Separa todo jogo que você toparia jogar.',
       `Você separou <strong id="vote-count">${myVotes.size}</strong> de ${others}. Vota quando puder e muda quando quiser, até o admin fechar. Ninguém vê seu voto antes disso.`,
+      others ? { action: 'votar', label: 'Ver os jogos e votar' } : null,
     );
   }
   const hasRating = ratings.some((r) => r.id === uid);
   if (round.status === 'jogando') {
     const hasDates = dateVotes.some((d) => d.id === uid);
     if ((round.dateOptions?.length ?? 0) > 0 && !hasDates && !round.meetingDate) {
-      return line('Falta você: marcar seus dias no calendário da mesa.', 'Toca no calendário.');
+      return line('Falta você: marcar seus dias no calendário da mesa.', 'Toca no calendário.', { action: 'datas', label: 'Marcar meus dias' });
     }
-    if (!hasRating) return line('Joga e depois prega sua resenha no quadro.', 'Dá pra mudar a nota até a rodada fechar e depois também.');
+    if (!hasRating) return line('Joga e depois prega sua resenha no quadro.', 'Dá pra mudar a nota até a rodada fechar e depois também.', { action: 'nota', label: 'Dar minha nota' });
     return line('Tudo certo por aqui.', 'Agora é jogar e trazer assunto pra reunião.');
   }
   return hasRating
     ? line('Rodada encerrada. Valeu! Sua resenha tá no quadro.')
-    : line('Rodada encerrada. Ainda dá tempo da sua resenha: toca no quadro.');
+    : line('Rodada encerrada. Ainda dá tempo da sua resenha: toca no quadro.', '', { action: 'quadro', label: 'Pregar minha resenha' });
 }
 
 // ------------------------------------------------------------ admin

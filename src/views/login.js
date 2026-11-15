@@ -23,10 +23,14 @@ export function renderLogin(root, { entrar }) {
       <div class="marca" aria-hidden="true">${neonSign()}</div>
       <h1 class="sr-only">${TITULO}</h1>
       <p class="sr-only">${TEXTO}</p>
+      <div class="login__entrar" hidden><button class="btn btn--primary btn--grande" type="button" data-entrar>Entrar com Google</button></div>
       ${mesaSection({ alvos })}
     </div>`;
   const tela = root.querySelector('.login');
   const sec = tela.querySelector('.mesa-sec');
+  // Botão de verdade (o da prancheta 3D é pequeno demais no celular). Só aparece depois que tudo pousa.
+  const entrarBox = tela.querySelector('.login__entrar');
+  const entrarBtn = entrarBox.querySelector('[data-entrar]');
   sec.dataset.ocupado = '1';
   const mesa = mountMesa(sec, { fase: 'login', tvTitulo: TITULO, tvTexto: TEXTO, alvos });
   const objeto = (id) => mesa.mesa.querySelector(`#${id}`);
@@ -57,6 +61,9 @@ export function renderLogin(root, { entrar }) {
     delete sec.dataset.ocupado;
     mesa.alinha();
     placeLights();
+    if (!tela.isConnected) return;
+    entrarBox.hidden = false;
+    if (!calma.matches) anim(entrarBox, [{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }], { duration: 360, easing: SAI });
   })();
 
   // ---------------------------------------------------------- TV: pulo, chiado e... (src/lib/rickroll.js)
@@ -132,26 +139,31 @@ export function renderLogin(root, { entrar }) {
   // abrir de novo cancela a anterior, que volta false e não pode mandar o contrato pra mesa.
   let tentativa = 0;
   const gatilho = botao('prancheta-obj');
+  let origem = gatilho; // quem foi clicado: o foco volta pra ele se o login falhar
   async function tenta() {
     const n = ++tentativa;
     const ok = await entrar();
     // deu errado ou desistiu: o contrato volta pra mesa (deu certo: o main.js chama sai())
     if (!ok && n === tentativa && foco) {
       await foco.volta();
-      if (gatilho.isConnected) gatilho.focus({ preventScroll: true });
+      if (origem.isConnected) origem.focus({ preventScroll: true });
     }
   }
-  gatilho.addEventListener('click', () => {
+  gatilho.addEventListener('click', (event) => {
     if (foco || sec.dataset.ocupado) return;
+    origem = event.isTrusted ? gatilho : entrarBtn;
     tenta();
     abreContrato();
   });
+  // o botão de verdade faz o mesmo que clicar na prancheta (o clique sintético mantém o popup liberado)
+  entrarBtn.addEventListener('click', () => gatilho.click());
 
 
   // ---------------------------------------------------------- saída: contrato volta, tudo voa, a mesa some
   async function sai() {
     await chegada;
     if (foco) await foco.volta();
+    entrarBox.hidden = true;
     sec.dataset.ocupado = '1';
     sec.classList.add('caindo'); // esconde os alvos
     const lado = { 'console-obj': -1, 'tv-obj': 1, 'prancheta-obj': 0.2 };

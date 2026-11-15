@@ -115,20 +115,22 @@ function renderBootError() {
 
 // ------------------------------------------------------------ casca + rotas
 
+const TITULO_BASE = 'Clube dos Jogos';
 const ROUTES = [
-  { pattern: /^#\/?$/, view: renderRound, nav: 'rodada' },
-  { pattern: /^#\/rodada\/([\w-]+)$/, view: renderRound, nav: 'rodada' },
-  { pattern: /^#\/estante$/, view: renderShelf, nav: 'estante' },
-  { pattern: /^#\/stats$/, view: renderStats, nav: 'stats' },
-  { pattern: /^#\/perfil$/, view: renderProfile, nav: 'perfil' },
-  { pattern: /^#\/admin$/, view: renderAdmin, nav: 'admin', adminOnly: true },
+  { pattern: /^#\/?$/, view: renderRound, nav: 'rodada', title: 'Rodada' },
+  { pattern: /^#\/rodada\/([\w-]+)$/, view: renderRound, nav: 'rodada', title: 'Rodada' },
+  { pattern: /^#\/estante$/, view: renderShelf, nav: 'estante', title: 'Estante' },
+  { pattern: /^#\/stats$/, view: renderStats, nav: 'stats', title: 'Stats' },
+  { pattern: /^#\/perfil$/, view: renderProfile, nav: 'perfil', title: 'Seu perfil' },
+  { pattern: /^#\/admin$/, view: renderAdmin, nav: 'admin', title: 'Balcão do admin', adminOnly: true },
 ];
 
-function renderShell(active) {
+function renderShell(active, title) {
   const pending = session.members.filter((m) => !m.approved).length;
   const link = (href, key, label) =>
     `<li><a href="${href}" ${active === key ? 'aria-current="page"' : ''}>${label}</a></li>`;
   root.innerHTML = `
+    <a class="pular" href="#main" data-pular>Pular pro conteúdo</a>
     <header class="topo">
       <a class="marca" href="#/" aria-label="Clube dos Jogos, ir para a rodada">${neonSign()}</a>
       <nav class="nav" aria-label="Principal"><ul>
@@ -142,8 +144,13 @@ function renderShell(active) {
         <button class="btn btn--ghost btn--icon" id="logout" title="Sair">${icon('logout')}<span class="sr-only">Sair</span></button>
       </div>
     </header>
-    <main id="main" tabindex="-1"></main>`;
+    <main id="main" tabindex="-1" aria-label="${esc(title)}"></main>`;
   root.querySelector('#logout').addEventListener('click', () => signOut(auth));
+  // href="#main" cairia no roteador por hash: o link só move o foco
+  root.querySelector('[data-pular]').addEventListener('click', (event) => {
+    event.preventDefault();
+    root.querySelector('#main').focus();
+  });
   return root.querySelector('#main');
 }
 
@@ -163,7 +170,10 @@ async function route() {
   document.documentElement.classList.remove('trava');
   root.inert = false;
 
-  const main = renderShell(match.nav);
+  // a casca é refeita a cada rota: título da aba por tela e o foco vai pro conteúdo (senão cairia no body)
+  document.title = `${match.title} · ${TITULO_BASE}`;
+  const main = renderShell(match.nav, match.title);
+  main.focus({ preventScroll: true });
   main.innerHTML = '<p class="loading" role="status">Rebobinando a fita…</p>';
   const params = hash.match(match.pattern).slice(1);
   try {
@@ -191,6 +201,7 @@ if (missingEnv.length) {
   onAuthStateChanged(auth, async (user) => {
     window.removeEventListener('hashchange', route);
     if (!user) {
+      document.title = TITULO_BASE;
       cenaLogin = renderLogin(root, { entrar: entrarComGoogle });
       return;
     }

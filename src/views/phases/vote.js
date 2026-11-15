@@ -60,19 +60,10 @@ export function renderVote(container, data) {
     if (count) count.textContent = myVotes.size;
   };
 
-  rack.addEventListener('click', async (event) => {
-    // capinha: abre a caixinha em modo leitura
-    const abrir = event.target.closest('[data-abrir]');
-    if (abrir) {
-      const slot = abrir.closest('.rack__slot');
-      const game = games.find((g) => g.id === slot.dataset.game);
-      const fonte = slot.querySelector('.case');
-      openReading({ game, members, uid, fonte, gatilho: abrir, front: slot.querySelector('.case__front').innerHTML });
-      return;
-    }
-
-    const ticket = event.target.closest('[data-vote]');
-    if (!ticket || ticket.disabled || ticket.classList.contains('rasgando')) return;
+  // Vota ou desfaz pelo ticket da prateleira (o da caixinha chama a mesma função).
+  // Devolve se o jogo está votado depois da tentativa.
+  const alterna = async (ticket) => {
+    if (!ticket || ticket.disabled || ticket.classList.contains('rasgando')) return undefined;
     const gameId = ticket.dataset.vote;
     const label = ticket.closest('.rack__slot').querySelector('[data-etiqueta]');
     const body = ticket.querySelector('.ticket__corpo');
@@ -82,7 +73,7 @@ export function renderVote(container, data) {
     if (voted) {
       // desfazer: o ticket volta inteiro e a etiqueta sai
       const ok = await withBusy(ticket, () => removeVote(data.round.id, gameId, uid).then(() => true));
-      if (!ok) return;
+      if (!ok) return myVotes.has(gameId);
       myVotes.delete(gameId);
       ticket.setAttribute('aria-pressed', 'false');
       label.hidden = true;
@@ -93,7 +84,7 @@ export function renderVote(container, data) {
       }
       countVotes();
       ticket.focus();
-      return;
+      return false;
     }
 
     // votar: grava enquanto o ticket rasga; se o servidor recusar, o corpo volta
@@ -107,7 +98,7 @@ export function renderVote(container, data) {
     ticket.classList.remove('rasgando');
     if (!ok) {
       if (!calma.matches) body.classList.add('volta');
-      return;
+      return myVotes.has(gameId);
     }
     myVotes.add(gameId);
     ticket.setAttribute('aria-pressed', 'true');
@@ -119,6 +110,21 @@ export function renderVote(container, data) {
     }
     countVotes();
     ticket.focus();
+    return true;
+  };
+
+  rack.addEventListener('click', (event) => {
+    // capinha: abre a caixinha em modo leitura, com o voto ali dentro (menos no jogo da própria pessoa)
+    const abrir = event.target.closest('[data-abrir]');
+    if (abrir) {
+      const slot = abrir.closest('.rack__slot');
+      const game = games.find((g) => g.id === slot.dataset.game);
+      const fonte = slot.querySelector('.case');
+      const votar = game.id === uid ? null : { voted: () => myVotes.has(game.id), toggle: () => alterna(slot.querySelector('[data-vote]')) };
+      openReading({ game, members, uid, fonte, gatilho: abrir, front: slot.querySelector('.case__front').innerHTML, votar });
+      return;
+    }
+    alterna(event.target.closest('[data-vote]'));
   });
 }
 

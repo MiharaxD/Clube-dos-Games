@@ -37,7 +37,8 @@
 
 ## Textos da interface
 - **Ir direto para:** strings ficam inline nas telas (`src/views/**`); ficha "o que falta fazer" em
-  `round.js` (função `todo`); mensagem de anúncio em `src/lib/announce.js`; erros genéricos em
+  `round.js` (função `todo`, que também devolve o `cta` do botão principal; `bindCta` abre a caixinha, foca o
+  ticket/slider ou abre calendário/quadro); mensagem de anúncio em `src/lib/announce.js` (botão de copiar só pro admin); erros genéricos em
   `src/lib/util.js` (`withBusy`). Frase obrigatória: "esse é seu, calma" (`phases/vote.js`).
 
 ## Telas / rotas
@@ -47,7 +48,9 @@
   `phases/play.js` (jogando/encerrada: monta a página inteira com a mesa); `shelf.js`, `stats.js`,
   `profile.js`, `admin.js`; `roulette.js` (sorteio de empate).
 - **Cuidados:** telas recriam `<main>` a cada navegação; listeners ficam no container da tela.
-  Ações chamam `ctx.refresh()` depois de gravar.
+  Ações chamam `ctx.refresh()` depois de gravar. O `route()` põe `document.title` (campo `title` em `ROUTES`),
+  foca o `<main>` e a casca traz o link `.pular`; `href="#main"` cairia no roteador, então o clique é interceptado.
+  `.fatos`/`.fato` existem em `round.css` (escopo `.info`) e em `stats.css`: não remover o escopo.
 
 ## Dados (Firestore) / regras de negócio
 - **Ir direto para:** `src/api.js` (todas as leituras/escritas), `firestore.rules`,
@@ -63,7 +66,8 @@
 
 ## Autenticação / permissões / admin
 - **Ir direto para:** `src/main.js` (`onAuthStateChanged`, `entrarComGoogle`, `renderPending`, fade pós-login
-  `preparaRevelar`), `src/views/login.js` (cena: queda, cliques, contrato em evidência, `sai()`),
+  `preparaRevelar`), `src/views/login.js` (cena: queda, cliques, contrato em evidência, `sai()`, botão `.login__entrar` que só
+  aparece depois da queda e repassa o clique à prancheta),
   `src/firebase.js` (init por env + conexão com emuladores), rules `isAdmin`/`isApproved`.
 - **Cuidados:** admin = uid em `config/admins.uids` (só pelo console). Popup bloqueado cai em redirect (aí não há contrato
   em evidência). Contrato fica em evidência até o `onAuthStateChanged`, com o botão dele

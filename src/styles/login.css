@@ -12,6 +12,10 @@
 .login > .marca { grid-area: auto; width: min(280px, 64%); justify-self: center; }
 .login .mesa-sec { grid-area: auto; min-width: 0; }
 .login .palco-wrap { max-width: 1040px; }
+/* botão de entrar de verdade: no DOM vem antes da mesa (teclado chega nele primeiro), na tela vem depois */
+.login__entrar { order: 3; display: flex; justify-content: center; padding: 8px 0 12px; }
+.login__entrar[hidden] { display: none; }
+.btn--grande { min-height: 52px; padding: 10px 32px; font-size: 1.125rem; }
 /* enquanto cai (e na saída) os botões ficam fora: estariam no lugar errado */
 .caindo .alvo { visibility: hidden; }
 .prancheta3d, .controle-pos, .voo { position: absolute; left: 0; top: 0; transform-style: preserve-3d; }

@@ -1,6 +1,7 @@
 // Caixinha (estojo de plástico) em modal: sai da prateleira num arco, a tampa abre na dobradiça,
 // o manual fica no verso da tampa e o CD gira na bandeja. Portado de rodada-votando.html e
 // rodada-sugerindo.html. Dois usos: leitura (manual do jogo) e formulário (sugestão).
+import { icon } from '../lib/icons.js';
 import { DURATION_LABEL, MODE_LABEL, esc, fmtPrice, imgSrc, coverSrc } from '../lib/util.js';
 import { ENTRA_RAPIDO, NA_TELA, SAI, anim, calma, entrar, espera, rolaNaMao, sumir } from '../lib/motion.js';
 import { coverPalette, memberName } from './parts.js';
@@ -204,13 +205,19 @@ export function readingManual(game, members, uid) {
 
 // Abre a caixinha em modo leitura a partir da capinha (fonte) e devolve quando fechar.
 // front = HTML da frente (cópia da capa); extraActions = botões além de "Fechar a caixinha".
-export async function openReading({ game, members, uid, fonte, gatilho, front, coroa = '', extraActions = '' }) {
+// votar = { voted(), toggle() } (só na votação): botão de votar dentro da caixinha, pra quem leu o manual
+// não precisar fechar e procurar o ticket na prateleira. toggle() devolve se ficou votado.
+const botaoVotar = (votado) => (votado
+  ? `<button class="btn" type="button" data-votar>${icon('check')} Votado · desfazer</button>`
+  : '<button class="btn btn--primary" type="button" data-votar>Votar nesse</button>');
+
+export async function openReading({ game, members, uid, fonte, gatilho, front, coroa = '', extraActions = '', votar = null }) {
   const cx = new Estojo({
     title: esc(game.name),
     front,
     coroa,
     manual: readingManual(game, members, uid),
-    actions: `${extraActions}<button class="btn" type="button" data-fechar>Fechar a caixinha</button>`,
+    actions: `${votar ? botaoVotar(votar.voted()) : ''}${extraActions}<button class="btn" type="button" data-fechar>Fechar a caixinha</button>`,
   });
   cx.setDisc(game.name, coverSrc(game));
   cx.verso.inert = true;
@@ -234,6 +241,17 @@ export async function openReading({ game, members, uid, fonte, gatilho, front, c
     if (e.target.closest('a[href]')) {
       cx.gatilho = null;
       cx.destroy();
+      return;
+    }
+    const botao = e.target.closest('[data-votar]');
+    if (botao) {
+      if (cx.ocupado || botao.disabled) return;
+      botao.disabled = true;
+      votar.toggle().then((votado) => {
+        // refaz o botão com o estado novo e devolve o foco a ele
+        botao.outerHTML = botaoVotar(votado ?? votar.voted());
+        cx.acoes.querySelector('[data-votar]')?.focus();
+      });
       return;
     }
     if (e.target.closest('[data-fechar]')) fecha();

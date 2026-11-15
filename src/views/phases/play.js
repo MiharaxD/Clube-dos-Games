@@ -51,9 +51,9 @@ export function renderPlay(main, data, ctx, extra) {
         <p>Fase ${esc(round.number)} · ${playing ? 'agora é jogar' : 'hora da resenha'}${data.isLatest ? '' : ` · <a href="#/">ir pra rodada atual</a>`}</p>
       </div>
       ${extra.steps}
-      <p class="falta">${extra.todo}</p>
+      <div class="falta papel"><p>${extra.todo}</p>${extra.cta ?? ''}</div>
       ${mesaSection({ alvos })}
-      ${infoSection(data, game, tied)}
+      ${infoSection(data, game, tied, ctx.session.isAdmin)}
       ${resultSection(data)}
     </div>
     ${playing ? `<section class="resenhas" aria-labelledby="quadro-titulo">${boardHtml(data, pages)}</section>` : ''}
@@ -75,7 +75,7 @@ export function renderPlay(main, data, ctx, extra) {
   sec.querySelector('[data-obj="cal-obj"]')?.addEventListener('click', (e) => openCalendar(e.currentTarget, mesa, data, ctx));
   sec.querySelector('[data-obj="quadro-obj"]')?.addEventListener('click', (e) => openBoard(e.currentTarget, mesa, data, ctx, pages));
 
-  main.querySelector('[data-announce]').addEventListener('click', extra.announce);
+  main.querySelector('[data-announce]')?.addEventListener('click', extra.announce);
   if (playing) bindRating(main.querySelector('.resenhas'), data, ctx);
   bindInfo(main, data, ctx);
   bindDates(main, data, ctx);
@@ -85,7 +85,7 @@ export function renderPlay(main, data, ctx, extra) {
 
 // ------------------------------------------------------------ ficha do jogo + placar da votação
 
-function infoSection({ round, members, ranking, me }, game, tied) {
+function infoSection({ round, members, ranking, me }, game, tied, isAdmin) {
   const votes = ranking.find((r) => r.game.id === round.winnerGameId)?.count ?? 0;
   const call = safeUrl(round.callLink);
   const mine = new Set(me?.platforms ?? []);
@@ -93,7 +93,7 @@ function infoSection({ round, members, ranking, me }, game, tied) {
     ['Ano', game.year], ['Gênero', game.genre], ['Duração', DURATION_LABEL[game.duration]], ['Modo', MODE_LABEL[game.mode]],
     ['Preço', Number.isInteger(game.price) ? fmtPrice(game.price) : ''],
     ['Prazo pra jogar', round.deadline ? fmtDay(round.deadline) : 'sem prazo'],
-    ['Reunião', round.meetingDate ? fmtDateTime(round.meetingDate) : 'em votação'],
+    ['Reunião', round.meetingDate ? fmtDateTime(round.meetingDate) : 'data a decidir'],
   ].filter(([, v]) => v !== undefined && v !== null && v !== '');
   const by = memberName(members, game.suggestedBy);
   return `
@@ -117,7 +117,7 @@ function infoSection({ round, members, ranking, me }, game, tied) {
           <h3 class="painel__titulo">Por que jogar</h3>
           <figure class="pitch"><blockquote>${esc(game.pitch)}</blockquote><figcaption>${esc(by)}, quando sugeriu</figcaption></figure>
         </div>` : ''}
-      <div class="info__bloco actions"><button class="btn" type="button" data-announce>${icon('copy')} Copiar mensagem pro grupo</button></div>
+      ${isAdmin ? `<div class="info__bloco actions"><button class="btn" type="button" data-announce>${icon('copy')} Copiar mensagem pro grupo</button></div>` : ''}
     </section>`;
 }
 

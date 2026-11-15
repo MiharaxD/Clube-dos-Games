@@ -35,6 +35,13 @@
 }
 
 main { display: block; max-width: var(--max); margin: auto; padding: 28px var(--gutter) 64px; }
+main:focus { outline: none; } /* recebe foco por código a cada rota; não é controle */
+/* link "pular pro conteúdo": fora da tela até o teclado chegar nele */
+.pular {
+  position: absolute; z-index: 200; left: 16px; top: -100px; padding: 10px 16px; border-radius: var(--r);
+  background: var(--amber); color: var(--deep); font: 700 1rem/1.2 var(--f-texto); text-decoration: none;
+}
+.pular:focus { top: 12px; }
 @media (min-width: 760px) { main { padding-top: 40px; } }
 
 /* cabeçalho de página: h1 + uma linha em muted (sem kicker acima) */
