@@ -53,6 +53,9 @@
 - **Ir direto para:** `src/api.js` (todas as leituras/escritas), `firestore.rules`,
   `tests/firestore.rules.test.js`.
 - **Testes:** `npm run test:rules`.
+- **Capa:** `game.cover` (link da RAWG/colado) ou `game.coverData` (enviada do aparelho, `fotoParaCapa` em
+  `src/lib/util.js`); renderizar sempre por `coverSrc(game)`/`imgSrc()`, nunca `safeUrl(game.cover)` direto.
+  Seletor de capa (Busca/Genérica/Link/Aparelho) em `phases/suggest.js` (`opcoesCapa`).
 - **Cuidados:** mudar campo de documento = mudar `api.js` + `validGame`/`validRound`/etc. nas rules
   + testes, juntos. Voto secreto: durante "votando" membro só lê o próprio voto (por isso
   `getMyVotes` usa getDoc um a um). Voltar status apaga votos/vencedor em `changeStatus` (batch).
@@ -95,6 +98,6 @@
 | `src/styles.css` + `src/styles/*.css` | CSS (entrada + partes) |
 | `src/lib/motion.js` / `scene.js` | motor de movimento / cena |
 | `firestore.rules` | regras de negócio no servidor |
-| `tests/firestore.rules.test.js` | 46 testes das rules |
+| `tests/firestore.rules.test.js` | testes das rules |
 | `PRODUCT.md` / `DESIGN.md` | produto / sistema visual (manda) |
 | `Estetica/DOSSIE.md` | porquê e receitas visuais; só para consulta visual |

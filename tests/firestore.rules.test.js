@@ -299,6 +299,27 @@ describe('(f) segunda sugestão do mesmo usuário na mesma rodada é negada', ()
   });
 });
 
+describe('capa enviada do aparelho (coverData)', () => {
+  const jpeg = (n) => `data:image/jpeg;base64,${'A'.repeat(n)}`;
+
+  it('controle: capa JPEG em data URL dentro do limite é aceita', async () => {
+    await assertSucceeds(setDoc(doc(as('bob'), 'rounds/r-sug/games/bob'), game('bob', { coverData: jpeg(40000) })));
+  });
+
+  it('capa acima de 100 mil caracteres é negada', async () => {
+    await assertFails(setDoc(doc(as('bob'), 'rounds/r-sug/games/bob'), game('bob', { coverData: jpeg(100000) })));
+  });
+
+  it('data URL que não é JPEG é negada', async () => {
+    await assertFails(setDoc(doc(as('bob'), 'rounds/r-sug/games/bob'), game('bob', { coverData: 'data:text/html;base64,PHNjcmlwdD4=' })));
+  });
+
+  it('controle: dono troca a capa enviada por vazio', async () => {
+    await assertSucceeds(updateDoc(doc(as('alice'), 'rounds/r-sug/games/alice'), { coverData: jpeg(100), cover: '' }));
+    await assertSucceeds(updateDoc(doc(as('alice'), 'rounds/r-sug/games/alice'), { coverData: '' }));
+  });
+});
+
 // ---------------------------------------------------------------------------
 describe('voto secreto durante "votando"', () => {
   it('bob não lê o voto do admin', async () => {

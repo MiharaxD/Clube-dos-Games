@@ -160,7 +160,7 @@ service cloud.firestore {
       match /games/{gameId} {
         function validGame(d) {
           return d.keys().hasOnly([
-              'name', 'cover', 'platforms', 'year', 'genre', 'pitch',
+              'name', 'cover', 'coverData', 'platforms', 'year', 'genre', 'pitch',
               'duration', 'mode', 'price', 'suggestedBy', 'rawgId', 'createdAt'
             ])
             && isText(d.name, 1, 100)
@@ -170,6 +170,10 @@ service cloud.firestore {
             && d.price is int && d.price >= 0 && d.price <= 10000
             && isPlatformList(d.platforms)
             && isText(d.get('cover', ''), 0, 500)
+            // capa enviada do aparelho: JPEG em data URL, comprimido no cliente (~20–60 KB)
+            && (d.get('coverData', '') == ''
+              || (d.coverData is string && d.coverData.size() <= 100000
+                  && d.coverData.matches('^data:image/jpeg;base64,[A-Za-z0-9+/=]+$')))
             && isText(d.get('genre', ''), 0, 60)
             && (d.get('year', null) == null || (d.year is int && d.year >= 1950 && d.year <= 2100))
             && (d.get('rawgId', null) == null || d.rawgId is int);

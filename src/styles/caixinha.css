@@ -68,15 +68,33 @@ html { scrollbar-gutter: stable; }
 /* controles da capa: faixas sólidas (texto nunca sobre a arte) */
 .capa-escolha { position: absolute; z-index: 3; left: 0; right: 0; top: 0; margin: 0; padding: 8px 10px 10px; border: 0; background: var(--deep); }
 .capa-escolha legend { float: left; width: 100%; margin-bottom: 6px; padding: 0; color: var(--muted); font: 700 0.8125rem/1.2 var(--f-texto); }
-.capa-escolha__opcoes { clear: both; display: flex; flex-wrap: wrap; gap: 6px; }
-.amostra { position: relative; flex: none; width: 44px; height: 44px; }
-.amostra input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; }
-.amostra > span {
-  display: grid; place-items: center; width: 100%; height: 100%; border: 2px solid var(--edge); border-radius: 4px;
-  background: #2a2630 center / cover; color: var(--ink); font: 700 0.75rem/1 var(--f-texto);
+.capa-escolha__opcoes {
+  /* seletor segmentado: uma faixa só, células iguais, ícone + rótulo visível (sem quebrar linha) */
+  clear: both; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 2px;
+  padding: 2px; border-radius: 6px; background: #2a2630;
 }
-.amostra input:checked + span { border-color: var(--amber); box-shadow: 0 0 0 2px var(--amber); }
-.amostra input:focus-visible + span { outline: 3px solid var(--amber); outline-offset: 3px; }
+.amostra { position: relative; min-width: 0; }
+.amostra input { position: absolute; inset: 0; z-index: 1; margin: 0; opacity: 0; cursor: pointer; }
+.amostra__cara {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  min-height: 52px; padding: 6px 4px; border-radius: 4px; color: var(--muted);
+  transition: background-color 120ms ease-out, color 120ms ease-out;
+}
+.amostra__cara .icon { width: 18px; height: 18px; }
+.amostra__aa { font: 700 16px/18px var(--f-texto); }
+.amostra__mini { width: 15px; height: 20px; border-radius: 2px; background: #0c0609 center / cover; box-shadow: 0 0 0 1px var(--edge); }
+.amostra__rotulo { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 700 0.75rem/1 var(--f-texto); }
+.amostra:hover .amostra__cara { background: #3a3541; color: var(--ink); }
+.amostra input:checked + .amostra__cara { background: var(--amber); color: var(--deep); }
+.amostra input:checked + .amostra__cara .amostra__mini { box-shadow: 0 0 0 1px var(--deep); }
+.amostra input:focus-visible + .amostra__cara { outline: 3px solid var(--amber); outline-offset: 2px; }
+/* opção "Aparelho": botão de enviar + dica */
+.capa-foto { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin-top: 8px; }
+.capa-foto[hidden] { display: none; }
+.capa-foto__btn { display: inline-flex; align-items: center; gap: 6px; min-height: var(--toque); cursor: pointer; }
+.capa-foto__btn .icon { width: 16px; height: 16px; }
+.capa-foto__btn:focus-within { outline: 3px solid var(--amber); outline-offset: 2px; }
+.capa-foto__dica { color: var(--muted); font: 400 0.8125rem/1.3 var(--f-texto); }
 .campo-link, .placa__input {
   width: 100%; min-height: var(--toque); border: 2px solid var(--edge); border-radius: 4px; background: #0c0609; color: var(--ink);
 }

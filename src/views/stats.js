@@ -80,7 +80,7 @@ export async function renderStats(main, { session }) {
     for (const game of gamesPerRound[i]) {
       const key = gameKey(game);
       if (winnerKeys.has(key)) continue;
-      const entry = losers.get(key) ?? { name: game.name, cover: game.cover, times: 0, by: new Set() };
+      const entry = losers.get(key) ?? { name: game.name, cover: game.cover, coverData: game.coverData, times: 0, by: new Set() };
       entry.times += 1;
       entry.by.add(game.suggestedBy);
       losers.set(key, entry);

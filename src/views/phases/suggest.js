@@ -6,7 +6,7 @@ import { icon } from '../../lib/icons.js';
 import { PLATFORMS } from '../../lib/platforms.js';
 import { rawgEnabled, searchGames } from '../../lib/rawg.js';
 import { SAI, anim, calma, entrar, espera, sumir } from '../../lib/motion.js';
-import { DURATION_LABEL, MODE_LABEL, confirmInline, esc, fmtPrice, safeUrl, toast, withBusy } from '../../lib/util.js';
+import { DURATION_LABEL, MODE_LABEL, confirmInline, esc, fmtPrice, fotoParaCapa, safeImgData, safeUrl, toast, withBusy } from '../../lib/util.js';
 import { genericCover, memberName, stamp } from '../parts.js';
 import { Estojo } from '../caixinha.js';
 import { bindTilt, caseHtml, emptyCase, nicho, postit, rackHtml } from '../rack.js';
@@ -72,6 +72,11 @@ function frontHtml() {
       <legend>Imagem da capa</legend>
       <div class="capa-escolha__opcoes" data-opcoes></div>
       <input class="campo-link" name="coverLink" type="url" inputmode="url" placeholder="https://… link da imagem" aria-label="Link da imagem da capa" hidden>
+      <div class="capa-foto" data-foto hidden>
+        <label class="btn btn--sm capa-foto__btn">${icon('upload')}<span data-foto-txt>Escolher imagem</span>
+          <input class="sr-only" type="file" name="coverFile" accept="image/*"></label>
+        <span class="capa-foto__dica" data-foto-dica>Vira capa 3:4 (corta o centro).</span>
+      </div>
     </fieldset>
     <div class="placa">
       <label class="placa__rotulo" for="sg-nome">Nome do jogo</label>
@@ -131,9 +136,13 @@ async function openForm(fonte, gatilho, mine, data, ctx) {
   const btnSec = q('[data-secundario]');
   const btnCancelar = q('[data-cancelar]');
 
-  // estado da capa: 'rawg' (imagem da busca), 'gen' (caixa genérica) ou 'link' (URL colada)
-  const st = { passo: 1, capa: 'gen', rawgCover: '', ocupado: false };
-  if (mine?.cover) {
+  // estado da capa: 'rawg' (imagem da busca), 'gen' (caixa genérica), 'link' (URL colada)
+  // ou 'foto' (enviada do aparelho, comprimida em data URL no próprio doc)
+  const st = { passo: 1, capa: 'gen', rawgCover: '', foto: '', ocupado: false };
+  const fotoBox = q('[data-foto]');
+  const arquivo = f.coverFile;
+  if (safeImgData(mine?.coverData)) Object.assign(st, { capa: 'foto', foto: mine.coverData });
+  else if (mine?.cover) {
     if (mine.rawgId) Object.assign(st, { capa: 'rawg', rawgCover: mine.cover });
     else st.capa = 'link';
     link.value = st.capa === 'link' ? mine.cover : '';
@@ -143,19 +152,31 @@ async function openForm(fonte, gatilho, mine, data, ctx) {
   cx.frente.classList.remove('vestida');
 
   const coverUrl = () => (st.capa === 'rawg' ? safeUrl(st.rawgCover) : st.capa === 'link' ? safeUrl(link.value.trim()) : '');
+  const coverData = () => (st.capa === 'foto' ? safeImgData(st.foto) : '');
 
+  // Seletor segmentado: rádios nativos (setas do teclado) com ícone + rótulo visível.
   function opcoesCapa() {
     const ops = [
-      ...(st.rawgCover ? [{ v: 'rawg', rotulo: 'Capa do jogo (busca)', img: safeUrl(st.rawgCover) }] : []),
-      { v: 'gen', rotulo: 'Capa genérica', txt: 'Aa' },
-      { v: 'link', rotulo: 'Colar link de imagem', txt: 'URL' },
+      ...(st.rawgCover ? [{ v: 'rawg', rotulo: 'Busca', img: safeUrl(st.rawgCover) }] : []),
+      { v: 'gen', rotulo: 'Genérica', txt: 'Aa' },
+      { v: 'link', rotulo: 'Link', ico: 'link' },
+      { v: 'foto', rotulo: 'Aparelho', ico: 'upload', img: safeImgData(st.foto) },
     ];
     if (!ops.some((o) => o.v === st.capa)) st.capa = 'gen';
-    q('[data-opcoes]').innerHTML = ops.map((o) => `
-      <label class="amostra"><input type="radio" name="capa" value="${o.v}" ${o.v === st.capa ? 'checked' : ''}>
-        <span ${o.img ? `style="background-image: url(&quot;${esc(o.img)}&quot;)"` : ''} aria-hidden="true">${o.txt ?? ''}</span><span class="sr-only">${o.rotulo}</span>
-      </label>`).join('');
+    q('[data-opcoes]').innerHTML = ops.map((o) => {
+      const sinal = o.img
+        ? `<span class="amostra__mini" style="background-image: url(&quot;${esc(o.img)}&quot;)"></span>`
+        : o.ico ? icon(o.ico) : `<span class="amostra__aa">${o.txt}</span>`;
+      return `<label class="amostra"><input type="radio" name="capa" value="${o.v}" ${o.v === st.capa ? 'checked' : ''}>
+        <span class="amostra__cara">${sinal}<span class="amostra__rotulo">${o.rotulo}</span></span></label>`;
+    }).join('');
+    mostraCampos();
+  }
+  // campo extra só da opção escolhida (link ou botão de enviar)
+  function mostraCampos() {
     link.hidden = st.capa !== 'link';
+    fotoBox.hidden = st.capa !== 'foto';
+    q('[data-foto-txt]').textContent = st.foto ? 'Trocar imagem' : 'Escolher imagem';
   }
 
   // Repinta a capa da tampa, o rótulo do CD e o nome no manual.
@@ -164,7 +185,7 @@ async function openForm(fonte, gatilho, mine, data, ctx) {
     const capa = q('.tampa__frente > .capa');
     capa.outerHTML = genericCover(nome || 'Seu jogo');
     q('.tampa__frente > .cover__img')?.remove();
-    const url = coverUrl();
+    const url = coverData() || coverUrl();
     if (url) q('.tampa__frente > .capa').insertAdjacentHTML('afterend', `<img class="cover__img" src="${esc(url)}" alt="" onerror="this.remove()">`);
     cx.setDisc(nome || 'Seu jogo', url);
     q('[data-manual-jogo]').textContent = nome || 'Seu jogo';
@@ -204,6 +225,7 @@ async function openForm(fonte, gatilho, mine, data, ctx) {
       name: f.name.value.trim(),
       pitch,
       cover: coverUrl(),
+      coverData: coverData(),
       year,
       genre: f.genre.value.trim(),
       duration: f.duration.value,
@@ -231,6 +253,7 @@ async function openForm(fonte, gatilho, mine, data, ctx) {
   async function avanca() {
     if (!f.name.value.trim()) return falha('Faltou o nome do jogo.', f.name);
     if (st.capa === 'link' && !coverUrl()) return falha('O link da capa precisa começar com http:// ou https://.', link);
+    if (st.capa === 'foto' && !coverData()) return falha('Escolhe a imagem do aparelho (ou outra opção de capa).', arquivo);
     cx.ocupado = true;
     cx.erro.textContent = '';
     q('[data-busca]')?.setAttribute('hidden', '');
@@ -331,9 +354,28 @@ async function openForm(fonte, gatilho, mine, data, ctx) {
   cx.fundo.addEventListener('click', cancela);
   q('[data-opcoes]').addEventListener('change', (e) => {
     st.capa = e.target.value;
-    link.hidden = st.capa !== 'link';
+    mostraCampos();
     if (st.capa === 'link') link.focus();
+    // primeira vez no "Aparelho": já abre o seletor de arquivo (o clique do usuário ainda vale)
+    if (st.capa === 'foto' && !st.foto) arquivo.click();
     pintaCapa();
+  });
+  arquivo.addEventListener('change', async () => {
+    const file = arquivo.files?.[0];
+    arquivo.value = '';
+    if (!file) return;
+    const dica = q('[data-foto-dica]');
+    dica.textContent = 'Encolhendo a imagem…';
+    try {
+      st.foto = await fotoParaCapa(file);
+      st.capa = 'foto';
+      dica.textContent = 'Pronto. Vira capa 3:4 (corta o centro).';
+      opcoesCapa();
+      pintaCapa();
+    } catch (err) {
+      console.error(err);
+      dica.textContent = err?.message === 'nao-imagem' ? 'Isso não é imagem. Tenta um JPG ou PNG.' : 'Não deu pra usar essa imagem. Tenta outra.';
+    }
   });
   link.addEventListener('input', pintaCapa);
   f.name.addEventListener('input', pintaCapa);

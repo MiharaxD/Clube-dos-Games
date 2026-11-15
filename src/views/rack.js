@@ -1,7 +1,7 @@
 // Prateleira 3D (portada de rodada-votando.html): o móvel de madeira com nichos em perspectiva,
 // cada jogo é um estojo de 6 faces em pé, com o post-it embaixo e as ações na frente do móvel.
 // REGRA: nada de filter/opacity/blend/mask/clip-path nos ancestrais da cadeia 3D.
-import { DURATION_LABEL, MODE_LABEL, esc, safeUrl } from '../lib/util.js';
+import { DURATION_LABEL, MODE_LABEL, esc, coverSrc } from '../lib/util.js';
 import { calma } from '../lib/motion.js';
 import { coverPalette, genericCover, priceTag } from './parts.js';
 
@@ -122,7 +122,7 @@ export const nicho = (dentro) =>
 
 // Frente do estojo: capa (imagem da RAWG ou caixa genérica), tarja, etiqueta de preço e o que vier por cima.
 export function caseFront(game, extra = '') {
-  const url = safeUrl(game?.cover);
+  const url = coverSrc(game);
   const img = url ? `<img class="cover__img" src="${esc(url)}" alt="" loading="lazy" onerror="this.remove()">` : '';
   const tag = [DURATION_LABEL[game.duration], MODE_LABEL[game.mode]].filter(Boolean).join(' · ');
   const price = Number.isInteger(game.price) ? priceTag(game.price) : '';

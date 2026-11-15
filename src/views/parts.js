@@ -1,5 +1,5 @@
 // Pedaços de interface repetidos entre telas. Tudo devolve string HTML já escapada.
-import { STATUS_LABEL, STATUS_ORDER, esc, fmtPrice, safeUrl } from '../lib/util.js';
+import { STATUS_LABEL, STATUS_ORDER, esc, fmtPrice, safeUrl, coverSrc } from '../lib/util.js';
 import { icon } from '../lib/icons.js';
 
 // ------------------------------------------------------------ letreiro de neon (logo)
@@ -154,7 +154,7 @@ export function genericCover(name) {
 
 // Capa 3:4 com imagem (RAWG); sem imagem ou se a imagem falhar, fica a caixa genérica por baixo.
 export function cover(game) {
-  const url = safeUrl(game?.cover);
+  const url = coverSrc(game);
   const img = url
     ? `<img class="cover__img" src="${esc(url)}" alt="Capa de ${esc(game.name)}" loading="lazy" onerror="this.remove()">`
     : '';

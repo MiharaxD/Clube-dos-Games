@@ -12,6 +12,38 @@ export function esc(value) {
 }
 
 // Só aceita URLs http(s) para imagens e links (evita "javascript:" etc.).
+// Capa enviada do aparelho: JPEG em data URL (gerada por fotoParaCapa), com o mesmo limite das rules.
+export const CAPA_DATA_MAX = 100000;
+export function safeImgData(value) {
+  const v = String(value ?? '');
+  return v.length <= CAPA_DATA_MAX && /^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(v) ? v : '';
+}
+// Qualquer origem de imagem aceita: link http(s) ou capa enviada.
+export const imgSrc = (value) => safeUrl(value) || safeImgData(value);
+// Capa de um jogo: a enviada do aparelho ganha da URL.
+export const coverSrc = (game) => safeImgData(game?.coverData) || safeUrl(game?.cover);
+
+// Foto do aparelho -> capa 3:4 (corte central, 300x400, JPEG). Sem Storage: vai no doc do jogo.
+export async function fotoParaCapa(file) {
+  if (!file?.type?.startsWith('image/')) throw new Error('nao-imagem');
+  const bmp = await createImageBitmap(file);
+  const W = 300;
+  const H = 400;
+  const escala = Math.max(W / bmp.width, H / bmp.height);
+  const sw = W / escala;
+  const sh = H / escala;
+  const tela = document.createElement('canvas');
+  tela.width = W;
+  tela.height = H;
+  tela.getContext('2d').drawImage(bmp, (bmp.width - sw) / 2, (bmp.height - sh) / 2, sw, sh, 0, 0, W, H);
+  bmp.close?.();
+  for (const q of [0.8, 0.65, 0.5]) {
+    const url = tela.toDataURL('image/jpeg', q);
+    if (url.length <= CAPA_DATA_MAX) return url;
+  }
+  throw new Error('grande-demais');
+}
+
 export function safeUrl(value) {
   try {
     const url = new URL(String(value ?? ''));

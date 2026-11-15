@@ -1,7 +1,7 @@
 // Caixinha (estojo de plástico) em modal: sai da prateleira num arco, a tampa abre na dobradiça,
 // o manual fica no verso da tampa e o CD gira na bandeja. Portado de rodada-votando.html e
 // rodada-sugerindo.html. Dois usos: leitura (manual do jogo) e formulário (sugestão).
-import { DURATION_LABEL, MODE_LABEL, esc, fmtPrice, safeUrl } from '../lib/util.js';
+import { DURATION_LABEL, MODE_LABEL, esc, fmtPrice, imgSrc, coverSrc } from '../lib/util.js';
 import { ENTRA_RAPIDO, NA_TELA, SAI, anim, calma, entrar, espera, rolaNaMao, sumir } from '../lib/motion.js';
 import { coverPalette, memberName } from './parts.js';
 
@@ -58,7 +58,7 @@ export class Estojo {
 
   // CD com o nome (e a arte, se tiver) impressos.
   setDisc(name, cover) {
-    const img = safeUrl(cover);
+    const img = imgSrc(cover);
     this.rotulo.innerHTML = `<span>${esc(name || 'Seu jogo')}</span>`;
     this.rotulo.classList.toggle('com-img', Boolean(img));
     if (img) this.rotulo.style.setProperty('--rotulo-img', `url("${img.replace(/"/g, '%22')}")`);
@@ -212,7 +212,7 @@ export async function openReading({ game, members, uid, fonte, gatilho, front, c
     manual: readingManual(game, members, uid),
     actions: `${extraActions}<button class="btn" type="button" data-fechar>Fechar a caixinha</button>`,
   });
-  cx.setDisc(game.name, game.cover);
+  cx.setDisc(game.name, coverSrc(game));
   cx.verso.inert = true;
   const pecas = [...cx.manual.children];
   pecas.forEach((el) => (el.style.opacity = '0'));

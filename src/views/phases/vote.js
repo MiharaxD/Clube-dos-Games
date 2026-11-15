@@ -161,7 +161,7 @@ async function saveWinner(game, tiedIds, data, ctx) {
   const extra = {
     winnerGameId: game.id,
     // Cópia do vencedor na rodada: a estante e o anúncio não precisam ler os jogos.
-    winner: { name: game.name, cover: game.cover ?? '', suggestedBy: game.suggestedBy },
+    winner: { name: game.name, cover: game.cover ?? '', coverData: game.coverData ?? '', suggestedBy: game.suggestedBy },
   };
   if (tiedIds) extra.tiebreak = { candidates: tiedIds };
   const ok = await withBusy(null, () => changeStatus(data.round, 'jogando', { extra }).then(() => true));
