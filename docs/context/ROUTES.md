@@ -22,7 +22,8 @@
   com clima, dúvida de direitos de imagem/fonte. **Não leia** para lógica, dados, rules, bugs, build, nem para
   ajuste já coberto pelo `DESIGN.md`. Ordem: `DESIGN.md` → `DOSSIE.md` (só a seção do assunto; grep nos `##`).
 - **Cuidados:** capa sempre 3:4; alvos ≥ 44px; texto só sobre superfície sólida; nada de filtro/blend/opacidade
-  na cadeia 3D (prateleira, estojo, mesa, TV); rolagem dentro de `preserve-3d` usa `rolaNaMao`; cliques na mesa 3D
+  na cadeia 3D (prateleira, estojo, mesa, TV); parallax da parede/TV é laço rAF suavizado em `scene.js`,
+  sem transição CSS (reiniciar transição por pointermove fazia o fundo piscar); rolagem dentro de `preserve-3d` usa `rolaNaMao`; cliques na mesa 3D
   são botões `.alvo` reposicionados por `mountMesa`; modais (caixinha, calendário, quadro) ficam fora do `#app`
   (que fica `inert`) e o roteador os remove ao trocar de tela; botão sobre papel precisa de ancestral
   `.ficha`/`.confirm`/`.papel`; classes de mesa 3D com nome genérico (`.abajur`, `.capa`) vão escopadas.

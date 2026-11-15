@@ -59,26 +59,36 @@ function wallParallax() {
   const fino = window.matchMedia('(hover: hover) and (pointer: fine) and (min-width: 760px)');
   const wall = document.getElementById('cena-parede');
   if (!wall) return;
+  // alvo (tx/ty) vem do mouse; o valor desenhado (px/py) persegue o alvo num único laço por quadro.
+  // Sem transição CSS: reiniciar transição a cada pointermove fazia o fundo (camadas de blend) piscar.
+  let tx = 0;
+  let ty = 0;
   let px = 0;
   let py = 0;
   let frame = 0;
+  const desenha = () => {
+    px += (tx - px) * 0.12;
+    py += (ty - py) * 0.12;
+    const parado = Math.abs(tx - px) < 0.001 && Math.abs(ty - py) < 0.001;
+    if (parado) { px = tx; py = ty; }
+    wall.style.transform = `translate3d(${(px * 18).toFixed(2)}px, ${(py * 10).toFixed(2)}px, 0)`;
+    // a TV 3D gira um pouco com o mesmo olhar (ver .tv-palco em scene.css)
+    for (const p of document.querySelectorAll('.tv-palco')) {
+      p.style.setProperty('--olho-x', px.toFixed(4));
+      p.style.setProperty('--olho-y', py.toFixed(4));
+    }
+    frame = parado ? 0 : requestAnimationFrame(desenha);
+  };
   window.addEventListener('pointermove', (e) => {
     if (!fino.matches || calma.matches) return;
-    px = e.clientX / innerWidth - 0.5;
-    py = e.clientY / innerHeight - 0.5;
-    if (frame) return;
-    frame = requestAnimationFrame(() => {
-      frame = 0;
-      wall.style.transform = `translate3d(${(px * 18).toFixed(1)}px, ${(py * 10).toFixed(1)}px, 0)`;
-      // a TV 3D gira um pouco com o mesmo olhar (ver .tv-palco em scene.css)
-      for (const p of document.querySelectorAll('.tv-palco')) {
-        p.style.setProperty('--olho-x', px.toFixed(3));
-        p.style.setProperty('--olho-y', py.toFixed(3));
-      }
-    });
+    tx = e.clientX / innerWidth - 0.5;
+    ty = e.clientY / innerHeight - 0.5;
+    if (!frame) frame = requestAnimationFrame(desenha);
   }, { passive: true });
   calma.addEventListener('change', () => {
     if (!calma.matches) return;
+    cancelAnimationFrame(frame);
+    frame = 0;
     wall.style.removeProperty('transform');
     for (const p of document.querySelectorAll('.tv-palco')) {
       p.style.removeProperty('--olho-x');
