@@ -20,6 +20,17 @@
 - **App assíncrono:** sem tempo real/"ao vivo"; ficha sempre mostra a próxima ação da pessoa.
 - **Admin só aprova** membros (sem recusar/revogar); novos admins pelo console.
 - **Testes:** `node:test` (sem runner extra); emulador sempre em `demo-clube`.
-- **Visual "Locadora de sexta"** escolhido pelo usuário entre dois mocks; fontes via Google Fonts.
+- **Visual definitivo "Sexta no quarto"** (decisão do usuário, a partir do dossiê `Estetica/DOSSIE.md`):
+  quarto gamer retrô às escuras com a locadora mantida nos objetos (etiqueta, ficha, carimbo, capa na prateleira).
+  Rejeitados: vaporwave, Y2K/Frutiger Aero, cyberpunk, terror analógico, pixel em tudo. Paleta P2 (âmbar, rosa,
+  teal); fontes Bebas Neue, Atkinson, Special Elite, Permanent Marker hospedadas no domínio (sem `@fontsource`).
+  Capas continuam as da RAWG (3:4); sem imagem, caixa genérica por código. **Capa enviada do aparelho:**
+  comprimida no cliente (corte 3:4, 300x400, JPEG 0.8, ~20–60 KB) e guardada como data URL no documento do
+  jogo no Firestore (sem Storage, que é pago); exige campo novo + limite de tamanho nas rules ao implementar. **Logos, consoles, jogos e personagens
+  reais são liberados** (projeto pessoal entre amigos, sem fins comerciais); manter o aviso de não afiliação no rodapé.
 - **Confirmações dentro da página** (`confirmInline`), nunca `window.confirm`.
+- **Migração visual sem campo novo:** elemento de mock sem campo no modelo fica de fora (ver STATE). Mapeamentos
+  adotados: resenha do quadro = comentário da nota (`ratings`); "Fase N" = número da rodada (h1, canal da TV);
+  jogando/encerrada trocam o h1 pela faixa de pano; calendário = `dateOptions` + `dateVotes` (dia com 2+ horários
+  vira botões por horário); "Finalizar" da encerrada = abrir a próxima fase (`createRound`).
 - **Git:** um commit por marco/entrega, conferindo que nenhum segredo entrou.

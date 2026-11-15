@@ -15,7 +15,8 @@ import { buildAnnouncement } from '../lib/announce.js';
 import { icon } from '../lib/icons.js';
 import { rankGames } from '../lib/tally.js';
 import { STATUS_LABEL, STATUS_ORDER, confirmInline, copyText, esc, toast, withBusy } from '../lib/util.js';
-import { memberName, phaseSteps } from './parts.js';
+import { ENTRA_RAPIDO, SAI, anim, calma } from '../lib/motion.js';
+import { memberName, phaseSteps, tv } from './parts.js';
 import { renderSuggest } from './phases/suggest.js';
 import { closeVoting, renderVote } from './phases/vote.js';
 import { renderPlay } from './phases/play.js';
@@ -28,7 +29,7 @@ export async function renderRound(main, ctx) {
 
   if (!round) {
     main.innerHTML = params[0]
-      ? `<div class="empty"><strong>Fita não encontrada</strong><p>Essa rodada não existe. <a href="#/">Voltar pra rodada atual</a></p></div>`
+      ? `<div class="empty" role="alert"><strong>Fita não encontrada</strong><p>Essa rodada não existe (ou foi devolvida). <a href="#/">Voltar pra rodada atual</a></p></div>`
       : noRoundYet(session);
     bindCreateRound(main, ctx, 1);
     return;
@@ -55,26 +56,8 @@ export async function renderRound(main, ctx) {
     data.ranking = rankGames(games, votesByGame);
   }
 
-  // ---------- cabeçalho
-  main.innerHTML = `
-    <div class="page-head">
-      <h1>Fase ${esc(round.number)}</h1>
-      <p class="muted">${subtitle(data)}</p>
-    </div>
-    ${data.isLatest ? '' : `<p class="muted" style="margin-bottom:12px">Você está vendo uma rodada antiga. <a href="#/">Ir pra rodada atual</a></p>`}
-    ${phaseSteps(round.status)}
-    <section class="ficha" aria-labelledby="ficha-title">
-      <span class="ficha__stamp">${esc(STATUS_LABEL[round.status])}</span>
-      <h2 class="ficha__title" id="ficha-title">Ficha do sócio</h2>
-      ${todo(data)}
-      <div class="actions">
-        <button class="btn btn--sm" id="announce">${icon('copy')} Copiar mensagem pro grupo</button>
-      </div>
-    </section>
-    <div id="phase"></div>
-    ${session.isAdmin && data.isLatest ? adminPanel(data) : ''}`;
-
-  main.querySelector('#announce').addEventListener('click', async () => {
+  data.me = session.member;
+  const announce = async () => {
     const text = buildAnnouncement({
       round,
       games,
@@ -83,15 +66,48 @@ export async function renderRound(main, ctx) {
       nameOf: (id) => memberName(session.members, id),
     });
     toast((await copyText(text)) ? 'Mensagem copiada. É só colar no grupo.' : 'Não deu pra copiar.', 'ok');
-  });
+  };
+  const balcao = session.isAdmin && data.isLatest ? adminPanel(data) : '';
+  const steps = phaseSteps(round.status);
+  const next = todo(data);
 
-  if (session.isAdmin && data.isLatest) bindAdmin(main, data, ctx);
+  // ---------- jogando/encerrada: a mesa (faixa de pano no lugar do h1)
+  if (round.status === 'jogando' || round.status === 'encerrada') {
+    renderPlay(main, data, ctx, { steps, todo: next.main, announce, balcao });
+    if (balcao) bindAdmin(main, data, ctx);
+    return;
+  }
 
-  // ---------- corpo da fase
+  // ---------- sugerindo/votando: cabeçalho, faixa, ficha, TV e a prateleira
+  const channel = String(round.number).padStart(2, '0');
+  main.innerHTML = `
+    <div class="rodada">
+      <div class="cabeca">
+        <h1>Fase ${esc(round.number)}</h1>
+        <p>${subtitle(data)}${data.isLatest ? '' : ' · <a href="#/">ir pra rodada atual</a>'}</p>
+      </div>
+      ${steps}
+      <section class="ficha" aria-labelledby="ficha-title">
+        <span class="ficha__stamp">${esc(STATUS_LABEL[round.status])}</span>
+        <h2 class="ficha__title" id="ficha-title">Ficha do sócio</h2>
+        <p class="ficha__socio">Sócio: ${esc(session.member?.name ?? '')}</p>
+        <p class="ficha__todo">${next.main}</p>
+        ${next.extra ? `<p class="ficha__resto">${next.extra}</p>` : ''}
+        <div class="actions">
+          <button class="btn" type="button" id="announce">${icon('copy')} Copiar mensagem pro grupo</button>
+        </div>
+      </section>
+      ${tv({ osd: `CH ${channel}`, title: `Fase ${round.number}`, line: round.status === 'sugerindo' ? 'Sugestões' : 'Votação' })}
+      <section class="estante" id="phase"></section>
+    </div>
+    ${balcao}`;
+
+  main.querySelector('#announce').addEventListener('click', announce);
+  if (balcao) bindAdmin(main, data, ctx);
+
   const phase = main.querySelector('#phase');
   if (round.status === 'sugerindo') renderSuggest(phase, data, ctx);
-  else if (round.status === 'votando') renderVote(phase, data, ctx);
-  else renderPlay(phase, data, ctx);
+  else renderVote(phase, data, ctx);
 }
 
 // ------------------------------------------------------------ textos da ficha
@@ -105,8 +121,7 @@ function subtitle({ round, games }) {
 
 // "O que falta você fazer": a próxima ação desta pessoa, nesta fase.
 function todo({ round, games, uid, myVotes, dateVotes, ratings }) {
-  const line = (main, extra = '') =>
-    `<p class="ficha__todo">${main}</p>${extra ? `<p>${extra}</p>` : ''}`;
+  const line = (main, extra = '') => ({ main, extra });
 
   if (round.status === 'sugerindo') {
     const mine = games.some((g) => g.id === uid);
@@ -125,32 +140,54 @@ function todo({ round, games, uid, myVotes, dateVotes, ratings }) {
   if (round.status === 'jogando') {
     const hasDates = dateVotes.some((d) => d.id === uid);
     if ((round.dateOptions?.length ?? 0) > 0 && !hasDates && !round.meetingDate) {
-      return line('Marca as datas que você pode pra reunião.', 'Lá embaixo, na enquete de datas.');
+      return line('Falta você: marcar seus dias no calendário da mesa.', 'Toca no calendário.');
     }
-    if (!hasRating) return line('Joga e depois deixa sua nota.', 'Dá pra mudar a nota até a rodada fechar e depois também.');
+    if (!hasRating) return line('Joga e depois prega sua resenha no quadro.', 'Dá pra mudar a nota até a rodada fechar e depois também.');
     return line('Tudo certo por aqui.', 'Agora é jogar e trazer assunto pra reunião.');
   }
   return hasRating
-    ? line('Rodada encerrada. Valeu!', 'Sua nota tá registrada. Dá uma olhada nas perguntas e comentários.')
-    : line('Rodada encerrada. Ainda dá tempo da sua nota.', 'Lá embaixo, em "Notas".');
+    ? line('Rodada encerrada. Valeu! Sua resenha tá no quadro.')
+    : line('Rodada encerrada. Ainda dá tempo da sua resenha: toca no quadro.');
 }
 
 // ------------------------------------------------------------ admin
 
 function noRoundYet(session) {
   return `
-    <div class="page-head"><h1>Clube dos Jogos</h1></div>
-    <div class="empty">
-      <strong>Prateleira vazia</strong>
-      <p>${session.isAdmin ? 'Ainda não tem nenhuma rodada. Abre a primeira!' : 'Ainda não tem nenhuma rodada. Assim que o admin abrir a primeira, ela aparece aqui.'}</p>
-      ${session.isAdmin ? '<p style="margin-top:12px"><button class="btn btn--primary" id="new-round">Abrir a Fase 1</button></p>' : ''}
+    <div class="rodada rodada--vazia">
+      <div class="cabeca"><h1>Clube dos Jogos</h1><p>Nenhuma fita na locadora ainda.</p></div>
+      ${tv({ osd: 'CH 00', title: 'Sem sinal', line: 'Volte já' })}
+      <div class="empty rodada__vazia">
+        <strong>Prateleira vazia</strong>
+        <p>${session.isAdmin ? 'Ainda não tem nenhuma rodada. Abre a primeira!' : 'Ainda não tem nenhuma rodada. Assim que o admin abrir a primeira, ela aparece aqui.'}</p>
+        ${session.isAdmin ? '<div class="actions actions--center"><button class="btn btn--primary" id="new-round">Abrir a Fase 1</button></div>' : ''}
+      </div>
     </div>`;
 }
 
-function bindCreateRound(main, { refresh }, number) {
+// Finalizar a encerrada: tudo da mesa voa pra cima antes de abrir a próxima fase.
+function voaTudo(main) {
+  const molas = [...main.querySelectorAll('.mesa .obj > .mola')];
+  if (!molas.length || calma.matches) return Promise.resolve();
+  main.querySelector('.mesa-sec').dataset.ocupado = '1';
+  return Promise.all(molas.map((mola, i) => {
+    const giro = (i % 2 ? -1 : 1) * (6 + (i * 5) % 12);
+    return anim(mola, [
+      { transform: 'none', easing: SAI },
+      { transform: 'translateY(6px) scale(1.06, 0.9)', offset: 0.16, easing: 'cubic-bezier(0.3, 0, 0.6, 1)' },
+      { transform: 'translateY(-30px) scale(0.94, 1.1)', offset: 0.3, easing: ENTRA_RAPIDO },
+      { transform: `translateY(-1400px) rotateZ(${giro}deg) scale(0.97, 1.05)` },
+    ], { duration: 900, delay: i * 90 });
+  }));
+}
+
+function bindCreateRound(main, { refresh }, number, { finaliza = false } = {}) {
   main.querySelector('#new-round')?.addEventListener('click', async (event) => {
-    const ok = await withBusy(event.currentTarget, () => createRound(number).then(() => true));
+    const button = event.currentTarget;
+    if (finaliza && !(await confirmInline(button, `Finalizar a rodada? Ela vai pra estante e abre a Fase ${number}.`, 'Finalizar rodada'))) return;
+    const ok = await withBusy(button, () => createRound(number).then(() => true));
     if (ok) {
+      if (finaliza) await voaTudo(main);
       toast(`Fase ${number} aberta!`);
       location.hash = '#/';
       await refresh();
@@ -174,19 +211,19 @@ function adminPanel({ round, games }) {
     buttons.push('<button class="btn btn--danger" data-status="votando">Voltar pra votação</button>');
   }
   if (round.status === 'encerrada') {
-    buttons.push(`<button class="btn btn--primary" id="new-round">Abrir a Fase ${round.number + 1}</button>`);
+    buttons.push(`<button class="btn btn--primary" id="new-round">Finalizar e abrir a Fase ${round.number + 1}</button>`);
     buttons.push('<button class="btn btn--danger" data-status="jogando">Reabrir rodada</button>');
   }
 
   const hint = round.status === 'sugerindo' && games.length < 2
-    ? '<p class="small muted" style="margin-top:8px">Precisa de pelo menos 2 jogos pra abrir a votação.</p>'
+    ? '<p class="balcao__dica">Precisa de pelo menos 2 jogos pra abrir a votação.</p>'
     : '';
 
   return `
-    <section class="panel panel--admin" aria-labelledby="admin-title">
+    <section class="balcao" aria-labelledby="admin-title">
       <h2 class="panel__title" id="admin-title">Balcão do admin</h2>
-      <p class="small muted" style="margin-bottom:10px">Etapa ${i + 1} de 4. Avance quando o grupo já tiver tido tempo.</p>
-      <div class="actions">${buttons.join('')}</div>
+      <p class="balcao__dica">Etapa <b>${i + 1} de 4</b>. Avance quando o grupo já tiver tido tempo.</p>
+      <div class="balcao__acoes">${buttons.join('')}</div>
       ${hint}
       <div id="tie"></div>
     </section>`;
@@ -200,7 +237,7 @@ const CONFIRM_BACK = {
 
 function bindAdmin(main, data, ctx) {
   const { round, games } = data;
-  bindCreateRound(main, ctx, round.number + 1);
+  bindCreateRound(main, ctx, round.number + 1, { finaliza: round.status === 'encerrada' });
 
   main.querySelector('#close-voting')?.addEventListener('click', (event) =>
     closeVoting(main.querySelector('#tie'), data, ctx, event.currentTarget),

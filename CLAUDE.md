@@ -31,7 +31,7 @@ Firestore, Hosting). Node 24.12+. Java 21 só para os emuladores.
 - JS ES modules, sem framework: cada tela é `render(main, ctx)` que monta HTML em template string.
 - Telas nunca chamam o SDK do Firestore direto: só via `src/api.js`.
 - Comentários em pt-BR só nas partes críticas; textos de UI em pt-BR, voz "zoeira de amigos".
-- Visual segue `DESIGN.md` (mundo "Locadora de sexta"); detector: impeccable.
+- Visual segue `DESIGN.md` (mundo "Sexta no quarto"); consulta visual funda só via ROUTES (`Estetica/DOSSIE.md`); detector: impeccable.
 
 ## Protocolo de consulta (antes de qualquer tarefa)
 1. Leia `docs/context/ROUTES.md` e vá direto aos caminhos do tipo de tarefa.

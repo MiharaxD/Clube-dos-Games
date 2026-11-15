@@ -1,0 +1,1683 @@
+<!doctype html>
+<!--
+  Mock estático EM REVISÃO: tela "Rodada", fase 4 (encerrada), no mundo "Sexta no quarto" (DESIGN.md + Estetica/DOSSIE.md).
+  Base: rodada-jogando.html (mesmo motor de caixas 3D, mesma cena). Não é código do app.
+  Faixa de pano "Encerrado" → mesa 3D: quadro de cortiça à esquerda (as resenhas, uma página pregada por comentário,
+  com a foto de quem escreveu), a capinha do jogo no meio, as estatuetas de quem zerou à direita → balcão do admin.
+  O admin finaliza: tudo da mesa voa pra cima, a rodada vai pra estante/stats e a tela volta pra "sugerindo".
+  Atalhos de revisão: ?demo=quadro · ?demo=caixinha · ?demo=estatueta · ?demo=finalizar · ?visao=membro (sem o balcão)
+  · &lento=8 (câmera lenta)
+
+  FONTES: o <link> do Google Fonts abaixo é TEMPORÁRIO, só para o mock (o app hospeda os .woff2 com a licença).
+  DADOS NOVOS (perguntar antes de implementar): páginas do quadro (comentário pós-jogo por membro), "zerou" e a foto
+  do membro. A rodada finalizada reaparece em estante.html (mesa só leitura) e stats.html.
+-->
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mock: Rodada, fase 4 (encerrada)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;600;700;800&family=Bebas+Neue&family=Permanent+Marker&family=Special+Elite&display=swap" rel="stylesheet" />
+  <style>
+    /* ---------- Tokens (DESIGN.md) ---------- */
+    :root {
+      --ground: #140b10; --shelf: #1e1218; --wood: #3b2417; --lip: #6b4a2f; --edge: #7a6153; --deep: #0c0609;
+      --ink: #f3e6d8; --muted: #c9b5a8; --amber: #ffc15e; --pink: #ff5c8a; --teal: #46c3b5;
+      --paper: #f4ecd2; --paper-ink: #2a1d17; --paper-muted: #4f3d33; --stamp: #b3213f;
+
+      --f-placa: 'Bebas Neue', 'Atkinson Hyperlegible Next', sans-serif;
+      --f-texto: 'Atkinson Hyperlegible Next', system-ui, sans-serif;
+      --f-dati: 'Special Elite', 'Atkinson Hyperlegible Next', monospace;
+      --f-mao: 'Permanent Marker', 'Atkinson Hyperlegible Next', cursive;
+
+      --gutter: 16px; --max: 1120px; --toque: 44px;
+      --wood-1: #22140c; --wood-2: #3b2417; --wood-3: #4d3020; --wood-4: #6b4a2f; --wood-5: #8c6646;
+
+      /* veio de madeira: ruído renderizado uma vez como imagem (herdado do V2) */
+      --grain-h: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='640' height='160'><filter id='a' x='0' y='0' width='1' height='1'><feTurbulence type='fractalNoise' baseFrequency='0.0032 0.075' numOctaves='4' seed='9' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.10 0 0 0 0 0.05 0 0 0 0 0.02 1.4 0 0 0 -0.2'/><feComponentTransfer><feFuncA type='table' tableValues='0 0.42 0.04 0.36 0 0.46 0.06 0.32 0 0.4 0.05 0.3 0'/></feComponentTransfer></filter><rect width='640' height='160' filter='url(%23a)'/></svg>");
+      --specks: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='d' x='0' y='0' width='1' height='1'><feTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='1' seed='4' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.86 0 0 0 0 0.82 0 0 0 0 0.74 7 0 0 0 -4.6'/></filter><rect width='180' height='180' filter='url(%23d)' opacity='0.25'/></svg>");
+    }
+
+    /* ---------- Base ---------- */
+    *, *::before, *::after { box-sizing: border-box; }
+    html { color-scheme: dark; background: var(--ground); scrollbar-color: var(--lip) var(--ground); scrollbar-gutter: stable; }
+    html.trava { overflow: hidden; }
+    body {
+      position: relative; margin: 0; min-height: 100vh;
+      color: var(--ink); font: 400 1rem/1.5 var(--f-texto); caret-color: var(--amber);
+      background: var(--ground); overflow-x: clip; -webkit-font-smoothing: antialiased;
+    }
+    ::selection { background: var(--amber); color: var(--deep); }
+    :focus-visible { outline: 3px solid var(--amber); outline-offset: 3px; }
+    h1, h2, h3, p, figure { margin: 0; }
+    .sr { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+
+    /* ---------- A cena: camadas irmãs, atrás da interface ----------
+       Estado de luz "jogando": o abajur da mesa manda (âmbar), o letreiro apoia. Blend em tela cheia: 2. */
+    .cena-parede {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background:
+        radial-gradient(circle at 11px 11px, #0a0507 0 2.3px, rgb(255 230 210 / 0.05) 2.6px 3.1px, transparent 3.4px) 0 0 / 22px 22px,
+        var(--specks) 0 0 / 180px 180px,
+        linear-gradient(180deg, #251a1c, var(--ground) 75%);
+    }
+    .cena-luz {
+      position: absolute; inset: 0; z-index: 1; pointer-events: none; mix-blend-mode: screen;
+      background:
+        radial-gradient(circle var(--lamp-r, 520px) at var(--lamp-x, 20%) var(--lamp-y, 700px),
+          rgb(255 193 94 / 0.34) 0, rgb(255 193 94 / 0.26) 12%, rgb(255 193 94 / 0.16) 25%,
+          rgb(255 193 94 / 0.065) 50%, rgb(255 193 94 / 0.02) 75%, transparent 100%),
+        radial-gradient(ellipse var(--neon-w, 170px) var(--neon-h, 90px) at var(--neon-x, 90px) var(--neon-y, 40px),
+          rgb(255 92 138 / 0.12), rgb(255 92 138 / 0.05) 50%, transparent 100%);
+    }
+    .cena-grao {
+      position: fixed; inset: 0; z-index: 2; pointer-events: none; opacity: 0.08; mix-blend-mode: overlay;
+      background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>") 0 0 / 160px 160px;
+    }
+    .cena-vinheta {
+      position: fixed; inset: 0; z-index: 3; pointer-events: none;
+      background: radial-gradient(ellipse 85% 80% at 50% 42%, transparent 48%, rgb(12 6 9 / 0.5) 100%);
+    }
+    .app { position: relative; z-index: 10; }
+
+    /* ---------- Barra superior ---------- */
+    .topo {
+      max-width: var(--max); margin: 0 auto; padding: 12px var(--gutter) 8px;
+      display: grid; grid-template-columns: 1fr auto; grid-template-areas: "marca avatar" "nav nav";
+      align-items: center; gap: 6px 12px; border-bottom: 2px solid var(--edge);
+    }
+    .marca { grid-area: marca; display: block; width: 158px; }
+    .neon { display: block; width: 100%; height: auto; overflow: visible; }
+    .neon__fio { fill: none; stroke: #2a1a20; stroke-width: 1.6; stroke-linecap: round; }
+    .neon__grampo { fill: #2a1a20; }
+    .neon__apagado { fill: none; stroke: #3e2632; stroke-width: 4.6; stroke-linecap: round; stroke-linejoin: round; }
+    .neon__tubo { fill: none; stroke: var(--pink); stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
+    .neon__nucleo { fill: none; stroke: rgb(255 243 250 / 0.55); stroke-width: 1.1; stroke-linecap: round; stroke-linejoin: round; }
+    .neon__l.apaga { opacity: 0.12; }
+    .nav { grid-area: nav; }
+    .nav ul { list-style: none; margin: 0; padding: 0; display: flex; gap: 4px; overflow-x: auto; }
+    .nav a {
+      display: flex; align-items: center; min-height: var(--toque); padding: 8px 12px; border-radius: 4px;
+      color: var(--muted); font: 600 0.95rem/1.2 var(--f-texto); text-decoration: none; white-space: nowrap;
+      transition: background-color 120ms ease-out, color 120ms ease-out;
+    }
+    .nav a:hover { background: var(--shelf); color: var(--ink); }
+    .nav a[aria-current="page"] { background: var(--amber); color: var(--deep); }
+    .avatar {
+      grid-area: avatar; display: block; width: var(--toque); height: var(--toque); overflow: hidden;
+      border-radius: 50%; border: 3px solid var(--ink);
+    }
+    .avatar svg { display: block; width: 100%; height: 100%; }
+    @media (min-width: 760px) {
+      .topo { grid-template-columns: auto 1fr auto; grid-template-areas: "marca nav avatar"; gap: 20px; padding-top: 14px; }
+      .marca { width: 196px; }
+      .nav { justify-self: end; }
+    }
+
+    /* ---------- Página ---------- */
+    .rodada {
+      max-width: var(--max); margin: 0 auto; padding: 20px var(--gutter) 64px;
+      display: grid; grid-template-columns: minmax(0, 1fr); row-gap: 20px;
+      grid-template-areas: "cabeca" "faixa" "falta" "mesa" "balcao";
+    }
+    @media (min-width: 760px) { .rodada { padding-top: 28px; } }
+
+    /* faixa de pano pendurada: é o h1 da tela (pedido do grupo no lugar de "FASE 4") */
+    .cabeca { grid-area: cabeca; display: flex; flex-direction: column; align-items: center; text-align: center; }
+    .varal {
+      position: relative; width: min(100%, 640px); padding-top: 30px; transform-origin: 50% 0;
+      animation: balanca 7s ease-in-out infinite alternate;
+    }
+    @keyframes balanca { from { transform: rotate(-0.7deg); } to { transform: rotate(0.7deg); } }
+    /* cordinhas e tachinhas na parede */
+    .varal__corda { position: absolute; top: 4px; width: 2px; height: 34px; background: linear-gradient(180deg, #8c6646, #5a3f2a); }
+    .varal__corda::before {
+      content: ''; position: absolute; left: 50%; top: -5px; width: 12px; height: 12px; translate: -50% 0; border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #ffd89a, #c88a2c 55%, #6b4a2f); box-shadow: 0 2px 0 var(--deep);
+    }
+    .varal__corda--e { left: 12%; } .varal__corda--d { right: 12%; }
+    .banner-sombra, .banner {
+      clip-path: polygon(0 0, 100% 0, calc(100% - 26px) 50%, 100% 100%, 0 100%, 26px 50%);
+    }
+    .banner-sombra { position: absolute; left: 0; right: 0; top: 36px; bottom: -6px; background: var(--deep); }
+    .banner {
+      position: relative; padding: 10px 44px; color: var(--paper);
+      /* pano: dobras verticais suaves + bainha costurada */
+      background:
+        repeating-linear-gradient(90deg, transparent 0 70px, rgb(12 6 9 / 0.12) 100px, transparent 130px),
+        linear-gradient(180deg, #c8304f, var(--stamp) 45%, #8d1731);
+      font: 400 clamp(2.6rem, 11vw, 4.6rem)/0.95 var(--f-placa); letter-spacing: 0.06em; text-wrap: balance;
+    }
+    .banner span {
+      display: block; padding: 8px 6px 4px;
+      border-top: 2px dashed rgb(244 236 210 / 0.5); border-bottom: 2px dashed rgb(244 236 210 / 0.5);
+    }
+    .cabeca p { margin-top: 14px; color: var(--muted); }
+
+    .faixa {
+      grid-area: faixa; list-style: none; margin: 0; padding: 0;
+      display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px;
+    }
+    .faixa li {
+      padding: 9px 8px; border-radius: 4px; background: var(--shelf); color: var(--muted); text-align: center;
+      font: 700 0.75rem/1.3 var(--f-texto); letter-spacing: 0.06em; text-transform: uppercase;
+    }
+    .faixa .feita { color: var(--ink); text-decoration: line-through 2px var(--teal); }
+    .faixa [aria-current="step"] { background: var(--amber); color: var(--deep); }
+    /* celular estreito: as 4 etapas não cabem numa linha com respiro, então viram 2×2 (lê-se em Z) */
+    @media (max-width: 439.98px) { .faixa { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (min-width: 760px) { .faixa li { font-size: 0.85rem; } }
+
+    /* o que falta a pessoa fazer: bilhete colado com fita */
+    .falta {
+      grid-area: falta; justify-self: center; position: relative; max-width: 520px; padding: 8px 16px 6px;
+      background: var(--paper); color: var(--paper-ink); rotate: -1.2deg; text-align: center;
+      font: 400 1.15rem/1.3 var(--f-mao); box-shadow: 0 3px 6px rgb(12 6 9 / 0.45);
+    }
+    .falta::before {
+      content: ''; position: absolute; left: 50%; top: -9px; width: 70px; height: 18px; translate: -50% 0; rotate: 3deg;
+      background: rgb(243 230 216 / 0.38);
+    }
+
+    /* ---------- Botões ---------- */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      min-height: var(--toque); padding: 8px 16px; border: 2px solid currentColor; border-radius: 4px;
+      background: transparent; color: var(--ink); font: 700 1rem/1.2 var(--f-texto); cursor: pointer;
+      transition: background-color 120ms ease-out, color 120ms ease-out, border-color 120ms ease-out;
+    }
+    .btn:hover { background: var(--ink); border-color: var(--ink); color: var(--deep); }
+    .btn:active { transform: translateY(1px); }
+    .btn--papel { color: var(--paper-ink); }
+    .btn--papel:hover { background: var(--paper-ink); border-color: var(--paper-ink); color: var(--paper); }
+    .btn--papel-primario { background: var(--paper-ink); border-color: var(--paper-ink); color: var(--paper); }
+    .btn--papel-primario:hover { background: var(--stamp); border-color: var(--stamp); color: var(--paper); }
+
+    /* ---------- A mesa 3D ----------
+       palco (perspectiva + escala) → mundo (câmera) → mesa (pula no impacto) → objetos.
+       Cada objeto: .obj (posição) → .mola (pulinho/hover) → caixas de faces. Nada de filtro, blend,
+       opacity, mask ou clip-path em quem tem filhos 3D (Sem Filtro no 3D Rule). */
+    .mesa-sec { grid-area: mesa; position: relative; }
+    .palco-wrap {
+      position: relative; width: 100%; margin: 0 auto;
+      /* recorta só embaixo (pernas da mesa); em cima fica livre para a estatueta cair "do céu" */
+      clip-path: inset(-2000px -40px 0 -40px);
+    }
+    .palco { position: absolute; left: 0; top: 0; transform-origin: 0 0; perspective: 1700px; perspective-origin: 50% 22%; }
+    .mundo {
+      position: absolute; left: 50%; width: 0; height: 0; transform-style: preserve-3d;
+      transform: rotateX(calc(var(--cam) + var(--pitch, 0deg))) rotateY(var(--yaw, 0deg));
+    }
+    .mesa, .obj, .mola, .bx, .braco, .est__corpo, .quadro3d { position: absolute; left: 0; top: 0; transform-style: preserve-3d; }
+    .obj { transform: translate3d(var(--x), 0, var(--z)) rotateY(var(--ry, 0deg)) scale3d(var(--s, 1), var(--s, 1), var(--s, 1)); }
+    .mola { transition: translate 180ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+    .obj.ativo > .mola { translate: 0 -8px 0; }
+    /* chão: o pé da mesa some no escuro do quarto (camada 2D por cima, decorativa) */
+    .palco-chao {
+      position: absolute; left: -40px; right: -40px; bottom: 0; height: 22%; pointer-events: none;
+      background: linear-gradient(180deg, transparent, rgb(20 11 16 / 0.85) 60%, var(--ground));
+    }
+
+    /* caixa de faces: base no chão do objeto, centrada em x/z; --by sobe a caixa */
+    .bx {
+      left: calc(var(--w) / -2); top: calc(var(--h) * -1); width: var(--w); height: var(--h);
+      transform: translate3d(var(--bx, 0px), calc(var(--by, 0px) * -1), calc(var(--bz, 0px) + var(--t) / 2));
+    }
+    .bx > i { position: absolute; display: block; backface-visibility: hidden; font-style: normal; }
+    .bx > .f { inset: 0; }
+    .bx > .l { top: 0; bottom: 0; right: 100%; width: var(--t); transform-origin: right center; transform: rotateY(-90deg); }
+    .bx > .r { top: 0; bottom: 0; left: 100%; width: var(--t); transform-origin: left center; transform: rotateY(90deg); }
+    .bx > .u { left: 0; right: 0; bottom: 100%; height: var(--t); transform-origin: center bottom; transform: rotateX(90deg); }
+    .bx > .b { inset: 0; transform: translateZ(calc(var(--t) * -1)) rotateY(180deg); }
+
+    /* materiais (luz do abajur vem da esquerda: lado esquerdo mais claro, direito mais escuro) */
+    .m-tampo > .u {
+      background:
+        linear-gradient(90deg, transparent 0 calc(25% - 1px), rgb(12 6 9 / 0.55) calc(25% - 1px) 25%, transparent 25% calc(50% - 1px), rgb(12 6 9 / 0.55) calc(50% - 1px) 50%, transparent 50% calc(75% - 1px), rgb(12 6 9 / 0.55) calc(75% - 1px) 75%, transparent 75%),
+        var(--grain-h) 0 0 / 640px 160px,
+        linear-gradient(180deg, #2a180f, #4a2d1c 55%, #5b3a25);
+    }
+    .m-tampo > .f { background: linear-gradient(180deg, #a07652 0 2px, var(--wood-5) 2px 5px, var(--wood-4) 5px 12px, var(--wood-3) 12px); }
+    .m-tampo > .l { background: linear-gradient(180deg, #8c6646, var(--wood-3)); }
+    .m-tampo > .r { background: var(--wood-1); }
+    .m-saia > .f { background: var(--grain-h) 0 0 / 640px 160px, linear-gradient(180deg, var(--wood-1), var(--wood-2)); }
+    .m-saia > .l { background: var(--wood-2); } .m-saia > .r { background: var(--wood-1); }
+    .m-perna > .f { background: linear-gradient(90deg, var(--wood-2), var(--wood-3) 45%, var(--wood-1)); }
+    .m-perna > .l { background: var(--wood-3); } .m-perna > .r { background: var(--wood-1); }
+
+    /* decalques do tampo: deitados no plano, sem 3D dentro */
+    .decal { position: absolute; translate: -50% -50%; pointer-events: none; }
+    .decal--luz { border-radius: 50%; background: radial-gradient(closest-side, rgb(255 193 94 / 0.30), rgb(255 193 94 / 0.12) 45%, rgb(255 193 94 / 0.03) 75%, transparent); }
+    .decal--sombra { border-radius: 50%; background: radial-gradient(closest-side, rgb(12 6 9 / 0.85), rgb(12 6 9 / 0.45) 55%, transparent); }
+    .decal--poeira { width: 120px; height: 120px; border-radius: 50%; opacity: 0; border: 6px solid rgb(232 214 190 / 0.35); }
+    .decal--marca { border-radius: 50%; border: 5px solid rgb(12 6 9 / 0.35); }
+    .decal--cabo { translate: none; left: 0; top: 0; overflow: visible; }
+    .decal--nota {
+      width: 120px; padding: 6px 8px; background: var(--paper); color: var(--paper-ink); rotate: -7deg; translate: -50% -50%;
+      font: 400 15px/1.2 var(--f-mao); text-align: center; box-shadow: 0 3px 0 rgb(12 6 9 / 0.6);
+    }
+
+    /* abajur: recorte que sempre encara a câmera (billboard); a luz dele é a camada .cena-luz */
+    .abajur {
+      position: absolute; left: -70px; top: -190px; width: 140px; height: 190px; transform-origin: 50% 100%;
+      transform: rotateY(calc(-1 * (var(--ry) + var(--yaw, 0deg)))) rotateX(calc(-1 * (var(--cam) + var(--pitch, 0deg))));
+    }
+    .abajur svg { display: block; width: 100%; height: 100%; overflow: visible; }
+    .abajur__halo {
+      position: absolute; left: 50%; top: 34%; width: 220px; height: 220px; translate: -30% -50%; border-radius: 50%; pointer-events: none;
+      background: radial-gradient(closest-side, rgb(255 216 154 / 0.5), rgb(255 193 94 / 0.16) 45%, transparent);
+      animation: respira 9s ease-in-out infinite alternate;
+    }
+    @keyframes respira { from { opacity: 0.8; } to { opacity: 1; } }
+
+    /* capinha do jogo: estojo em pé (capa genérica por código; no app, a capa da RAWG ou enviada) */
+    .m-estojo > .f { overflow: visible; }
+    .m-estojo > .l {
+      display: flex; align-items: center; justify-content: center; overflow: hidden;
+      background: linear-gradient(90deg, hsl(28 30% 12%), hsl(28 34% 22%) 45%, hsl(28 30% 14%));
+      font: 400 15px/1 var(--f-placa); color: var(--ink); letter-spacing: 0.04em;
+    }
+    .m-estojo > .l span { writing-mode: vertical-rl; white-space: nowrap; }
+    .m-estojo > .r { background: hsl(28 26% 9%); }
+    .m-estojo > .u { background: linear-gradient(90deg, hsl(28 28% 22%), hsl(28 24% 15%)); }
+    .capa {
+      position: absolute; inset: 0; display: block; container-type: inline-size;
+      background:
+        linear-gradient(135deg, transparent 0 56%, var(--risca) 56% 60%, transparent 60% 64%, var(--risca) 64% 68%, transparent 68% 72%, var(--risca) 72% 76%, transparent 76%),
+        var(--capa);
+      box-shadow: inset 0 0 0 2px rgb(12 6 9 / 0.4);
+    }
+    .capa::after {
+      content: ''; position: absolute; inset: 0; pointer-events: none;
+      background: linear-gradient(105deg, rgb(255 193 94 / 0.16), transparent 35%), linear-gradient(110deg, rgb(243 230 216 / 0.08), transparent 30%);
+    }
+    .capa__motivo { position: absolute; left: 22%; top: 16%; width: 56%; height: auto; }
+    .capa__nome {
+      position: absolute; z-index: 1; left: 7%; right: 7%; bottom: 6%; padding: 4px 6px 2px;
+      background: var(--deep); color: var(--ink); font: 400 15cqw/0.95 var(--f-placa); letter-spacing: 0.04em;
+    }
+    .tarja {
+      position: absolute; z-index: 2; left: 0; top: 14%; padding: 2px 8px; background: var(--pink); color: var(--deep);
+      font: 700 12px/1.3 var(--f-texto); letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap;
+    }
+    .preco {
+      position: absolute; z-index: 2; right: -8px; top: -10px; padding: 2px 10px; rotate: 5deg;
+      background: var(--amber); color: var(--deep); font: 400 18px/1.3 var(--f-mao); box-shadow: 0 3px 0 var(--deep); white-space: nowrap;
+    }
+    /* coroinha do vencedor: recorte de metal apoiado no topo do estojo, sempre virado pra câmera */
+    .coroa {
+      position: absolute; left: -36px; top: -48px; width: 72px; height: 48px; transform-origin: 50% 100%;
+      transform: translate3d(var(--cx), calc(var(--cy) * -1), 0)
+                 rotateY(calc(-1 * (var(--ry) + var(--yaw, 0deg)))) rotateX(calc(-1 * (var(--cam) + var(--pitch, 0deg)))) rotateZ(-11deg);
+    }
+    .coroa svg { display: block; width: 100%; height: 100%; overflow: visible; }
+    .carimbo {
+      position: absolute; z-index: 3; left: 50%; top: 52%; padding: 3px 8px; border: 3px solid currentColor;
+      background: rgb(20 11 16 / 0.85); color: var(--amber); white-space: nowrap;
+      font: 800 14px/1.3 var(--f-texto); letter-spacing: 0.12em; text-transform: uppercase;
+      transform: translate(-50%, -50%) rotate(-12deg);
+    }
+
+    /* quadro de cortiça no cavalete: moldura de madeira, cortiça e as páginas pregadas
+       (miniaturas das páginas do modal; o texto de verdade só no modal) */
+    .quadro3d { transform: rotateX(9deg); }
+    .m-quadro > .f {
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 30% 40%, rgb(70 38 16 / 0.55) 0 1px, transparent 1.6px) 0 0 / 7px 9px,
+        radial-gradient(circle at 70% 60%, rgb(255 222 170 / 0.3) 0 0.9px, transparent 1.4px) 3px 2px / 11px 8px,
+        linear-gradient(120deg, #c08d58, #a8743f 50%, #8a5a31);
+      box-shadow: inset 0 0 0 12px var(--wood-4), inset 0 0 0 14px var(--wood-1), inset 0 0 16px 14px rgb(12 6 9 / 0.4);
+    }
+    .m-quadro > .u { background: var(--wood-5); }
+    .m-quadro > .l { background: linear-gradient(180deg, var(--wood-5), var(--wood-3)); }
+    .m-quadro > .r { background: var(--wood-1); }
+    .qm-faixa {
+      position: absolute; left: 50%; top: 18px; translate: -50% 0; rotate: -1.5deg; padding: 2px 12px 0;
+      background: var(--paper); color: var(--paper-ink); font: 400 17px/1.15 var(--f-placa); letter-spacing: 0.12em;
+      box-shadow: 1px 2px 0 rgb(12 6 9 / 0.45);
+    }
+    .qm {
+      position: absolute; width: 62px; height: 76px; padding: 14px 6px 0 9px; rotate: var(--r);
+      background: repeating-linear-gradient(180deg, transparent 0 8px, rgb(70 160 170 / 0.3) 8px 9px) 0 20px / 100% 100% no-repeat, var(--paper);
+      box-shadow: 2px 3px 0 rgb(12 6 9 / 0.45);
+    }
+    .qm::before { content: ''; position: absolute; left: 6px; top: 0; bottom: 0; width: 1px; background: rgb(179 33 63 / 0.4); }
+    .qm__foto { display: block; width: 20px; height: 20px; overflow: hidden; border-radius: 50%; border: 2px solid var(--paper-ink); }
+    .qm__foto svg { display: block; width: 100%; height: 100%; }
+    .qm__rabisco { display: block; width: var(--w); height: 2px; margin-top: 6px; border-radius: 1px; background: rgb(42 29 23 / 0.55); }
+    /* tachinha: cabeça de plástico colorida com brilho e sombra curta na cortiça */
+    .tacha {
+      position: absolute; left: 50%; top: 2px; width: 11px; height: 11px; translate: -50% 0; border-radius: 50%;
+      background: radial-gradient(circle at 34% 32%, rgb(255 255 255 / 0.85) 0 12%, var(--tacha) 32%, color-mix(in srgb, var(--tacha), #0c0609 45%) 100%);
+      box-shadow: 2px 2px 0 rgb(12 6 9 / 0.45);
+    }
+
+    /* estatuetas: pedestal de pedra + boneco de metal; a cabeça é a foto da pessoa (billboard) */
+    .m-pedra > .f { background: linear-gradient(180deg, #3a2c32, #231a1e); }
+    .m-pedra > .u { background: #44343b; } .m-pedra > .l { background: #3a2c32; } .m-pedra > .r { background: #160f12; }
+    .m-metal > .f { background: linear-gradient(90deg, var(--m3), var(--m) 28%, var(--m2) 46%, var(--m) 64%, var(--m3)); }
+    .m-metal > .u { background: var(--m2); }
+    .m-metal > .l { background: linear-gradient(90deg, var(--m), var(--m2)); }
+    .m-metal > .r { background: var(--m3); }
+    .est__pernas > .f { background: linear-gradient(90deg, transparent 47%, var(--m3) 47% 53%, transparent 53%), linear-gradient(90deg, var(--m3), var(--m) 28%, var(--m2) 46%, var(--m) 64%, var(--m3)); }
+    .placa {
+      position: absolute; left: 50%; top: 50%; translate: -50% -50%; padding: 1px 6px 0;
+      background: var(--m); color: var(--deep); font: 400 15px/1 var(--f-placa); letter-spacing: 0.04em;
+      box-shadow: inset 0 0 0 1px var(--m2);
+    }
+    .braco { transform: translate3d(var(--ax), calc(var(--ay) * -1), 0) rotateZ(var(--a)); }
+    .cabeca3d {
+      position: absolute; left: -21px; top: -21px; width: 42px; height: 42px; border-radius: 50%; overflow: hidden;
+      border: 3px solid var(--m); background: var(--m3);
+      transform: translate3d(0, calc(var(--hy) * -1), 0) rotateY(calc(-1 * (var(--ry) + var(--yaw, 0deg)))) rotateX(calc(-1 * (var(--cam) + var(--pitch, 0deg))));
+    }
+    .cabeca3d svg { display: block; width: 100%; height: 100%; }
+    /* volume de esfera: brilho do abajur em cima à esquerda, sombra embaixo à direita */
+    .cabeca3d::after {
+      content: ''; position: absolute; inset: 0; border-radius: 50%;
+      background: radial-gradient(circle at 32% 28%, rgb(255 236 200 / 0.38), transparent 34%), radial-gradient(circle at 50% 50%, transparent 52%, rgb(12 6 9 / 0.55) 100%);
+    }
+    .cisco3d { position: absolute; left: -3px; top: -3px; width: 6px; height: 6px; border-radius: 50%; background: rgb(232 214 190 / 0.8); opacity: 0; }
+
+    /* alvos clicáveis: botões reais por cima dos objetos (fora da cadeia 3D) */
+    .alvo {
+      position: absolute; z-index: 2; min-width: var(--toque); min-height: var(--toque); padding: 0; border: 0; border-radius: 4px;
+      background: transparent; cursor: pointer;
+    }
+
+    .painel__titulo { color: var(--teal); font: 400 1.75rem/1 var(--f-placa); letter-spacing: 0.05em; }
+
+    /* ---------- Placar: versão em texto das estatuetas ---------- */
+    .placar { grid-area: placar; align-self: start; padding: 20px 16px; border-radius: 4px; background: var(--shelf); }
+    .placar__lista { list-style: none; margin: 12px 0 0; padding: 0; }
+    .placar__item { display: grid; grid-template-columns: 52px 44px minmax(0, 1fr); gap: 10px; align-items: start; padding: 12px 0; border-top: 1px solid rgb(122 97 83 / 0.4); }
+    .placar__item:first-child { border-top: 0; }
+    .pos {
+      justify-self: start; padding: 3px 8px 0; rotate: -3deg; background: var(--m); color: var(--deep);
+      font: 400 1.6rem/1 var(--f-placa); font-variant-numeric: tabular-nums; box-shadow: 0 3px 0 var(--deep);
+    }
+    .foto { display: block; width: 44px; height: 44px; overflow: hidden; border-radius: 50%; border: 3px solid var(--ink); }
+    .foto svg { display: block; width: 100%; height: 100%; }
+    .placar__nome { font-weight: 700; }
+    .placar__tempo { color: var(--muted); font-weight: 400; font-variant-numeric: tabular-nums; }
+    .placar__txt { margin-top: 2px; color: var(--ink); }
+    .placar__item.novo { animation: realce 1600ms ease-out; }
+    @keyframes realce { from { background: rgb(255 193 94 / 0.18); } to { background: transparent; } }
+    .placar__ainda { margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--edge); color: var(--muted); }
+    .placar__vazio { color: var(--muted); }
+
+    /* ---------- Balcão do admin: só ele vê; finalizar pede confirmação na hora ---------- */
+    .balcao {
+      grid-area: balcao; justify-self: center; display: grid; justify-items: center; gap: 12px; width: min(100%, 560px);
+      padding: 18px 16px; background: transparent; border: 2px dashed var(--teal); border-radius: 4px; text-align: center;
+    }
+    .balcao__dica { color: var(--muted); max-width: 46ch; }
+    .balcao__dica b { color: var(--ink); }
+    .balcao__acoes { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+    .balcao__acoes[hidden] { display: none; }
+    /* perigo do sistema: contorno rosa, Atkinson; hover preenche rosa com texto deep */
+    .btn--fechar { background: transparent; border-color: var(--pink); color: var(--pink); }
+    .btn--fechar:hover { background: var(--pink); border-color: var(--pink); color: var(--deep); }
+
+    /* ---------- Depois de finalizar: a mesa fica vazia e o bilhete do fechamento aparece ---------- */
+    .fim {
+      position: absolute; z-index: 5; left: 50%; top: 42%; width: min(calc(100% - 32px), 420px); translate: -50% -50%; rotate: -1.4deg;
+      padding: 22px 20px 18px; background: var(--paper); color: var(--paper-ink); text-align: center; box-shadow: 0 6px 0 var(--deep);
+    }
+    .fim :focus-visible { outline-color: var(--paper-ink); }
+    .fim__carimbo {
+      display: inline-block; padding: 3px 12px; border: 4px solid currentColor; rotate: -6deg; color: var(--stamp);
+      font: 800 1.25rem/1.25 var(--f-texto); letter-spacing: 0.14em; text-transform: uppercase;
+    }
+    .fim__titulo { margin-top: 12px; font: 400 2.4rem/1 var(--f-placa); letter-spacing: 0.05em; }
+    .fim__titulo:focus { outline: none; }
+    .fim__txt { margin-top: 8px; }
+    .fim .btn { margin-top: 16px; text-decoration: none; }
+    .apagao { position: fixed; inset: 0; z-index: 300; background: var(--deep); pointer-events: none; }
+
+    .rodape { max-width: var(--max); margin: 0 auto; padding: 0 var(--gutter) 40px; color: var(--muted); font-size: 0.875rem; }
+
+    /* ---------- Modais ---------- */
+    .modal { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 16px; overflow-y: auto; perspective: 1400px; }
+    .modal[hidden] { display: none; }
+    .modal__fundo { position: fixed; inset: 0; background: radial-gradient(ellipse 70% 60% at 50% 45%, rgb(20 11 16 / 0.82), rgb(12 6 9 / 0.95)); }
+
+    .acoes { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+
+    /* ---------- Quadro aberto: o quadro da mesa vem pra frente; cada resenha é uma página de caderno pregada ---------- */
+    .modal--quadro { place-items: start center; padding-block: 24px; }
+    @media (min-width: 760px) { .modal--quadro { place-items: safe center; } }
+    .quadro-palco { position: relative; display: flex; flex-direction: column; align-items: center; gap: 14px; width: min(100%, 1000px); }
+    .quadro {
+      width: 100%; padding: 14px; border-radius: 6px; transform-origin: 50% 40%;
+      background: var(--grain-h) 0 0 / 640px 160px, linear-gradient(135deg, var(--wood-5), var(--wood-4) 40%, var(--wood-3));
+      box-shadow: 0 8px 0 var(--deep), inset 0 0 0 2px #a07652, inset 0 0 0 6px var(--wood-2);
+    }
+    @media (min-width: 760px) { .quadro { padding: 18px; } }
+    .quadro__cortica {
+      position: relative; padding: 18px 14px 26px;
+      background:
+        radial-gradient(circle at 30% 40%, rgb(70 38 16 / 0.5) 0 1.2px, transparent 1.9px) 0 0 / 9px 11px,
+        radial-gradient(circle at 70% 60%, rgb(255 222 170 / 0.28) 0 1px, transparent 1.6px) 4px 3px / 13px 10px,
+        linear-gradient(120deg, #c08d58, #a8743f 50%, #8a5a31);
+      box-shadow: inset 0 0 18px rgb(12 6 9 / 0.5);
+    }
+    @media (min-width: 760px) { .quadro__cortica { padding: 22px 24px 30px; } }
+    /* título numa tira de papel pregada (texto sempre em superfície sólida) */
+    .quadro__titulo {
+      position: relative; display: table; margin: 0 auto; padding: 6px 22px 2px; rotate: -1.2deg;
+      background: var(--paper); color: var(--paper-ink); font: 400 clamp(1.9rem, 6vw, 2.6rem)/1 var(--f-placa); letter-spacing: 0.06em;
+      box-shadow: 2px 4px 0 rgb(12 6 9 / 0.45);
+    }
+    .quadro__titulo:focus { outline: none; }
+    .quadro__titulo .tacha { --tacha: var(--amber); top: -5px; left: 10px; translate: none; width: 15px; height: 15px; }
+    .quadro__titulo .tacha + .tacha { left: auto; right: 10px; --tacha: var(--teal); }
+    .quadro__grade {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr)); gap: 26px 20px; align-items: start;
+      margin: 22px 0 0; padding: 0; list-style: none;
+    }
+    .quadro__grade > ul { display: contents; list-style: none; }
+    /* página de caderno: pauta alinhada com a linha do texto (24px), margem vermelha, tachinha no topo */
+    .pagina {
+      position: relative; padding: 24px 14px 14px 32px; rotate: var(--r, -1deg); color: var(--paper-ink);
+      background: repeating-linear-gradient(180deg, transparent 0 23px, rgb(70 160 170 / 0.32) 23px 24px) 0 70px / 100% 100% no-repeat, var(--paper);
+      box-shadow: 3px 5px 0 rgb(12 6 9 / 0.45);
+    }
+    .pagina::before { content: ''; position: absolute; left: 22px; top: 0; bottom: 0; width: 2px; background: rgb(179 33 63 / 0.35); }
+    .pagina > .tacha { top: -6px; width: 18px; height: 18px; box-shadow: 3px 3px 0 rgb(12 6 9 / 0.4); }
+    .pagina__topo { display: flex; align-items: center; gap: 10px; }
+    .pagina__quem { font: 400 1.1rem/1.2 var(--f-mao); }
+    .pagina__txt { margin-top: 10px; font: 400 1rem/24px var(--f-texto); overflow-wrap: anywhere; }
+    .pagina__meta { margin-top: 6px; color: var(--paper-muted); font: 400 0.875rem/24px var(--f-dati); }
+    /* a página em branco: é onde você escreve a sua antes de pregar */
+    .pagina--nova { rotate: 0deg; background: #fbf6e6; outline: 2px dashed var(--paper-ink); outline-offset: -8px; }
+    .pagina--nova::before { display: none; }
+    .pagina--nova { padding: 18px 16px 16px; }
+    .pagina--nova :focus-visible { outline-color: var(--paper-ink); }
+    .pagina__rotulo { display: block; font: 400 1.1rem/1.2 var(--f-mao); }
+    .campo-papel {
+      display: block; width: 100%; min-height: 104px; margin-top: 8px; padding: 8px 10px; resize: vertical;
+      border: 2px solid var(--paper-ink); border-radius: 4px; background: var(--paper); color: var(--paper-ink);
+      font: 400 1rem/1.4 var(--f-texto); caret-color: var(--stamp);
+    }
+    .campo-papel::placeholder { color: #7a6656; }
+    .campo-papel:focus-visible { outline: 3px solid var(--paper-ink); outline-offset: 1px; }
+    .campo-papel[aria-invalid="true"] { border-color: var(--stamp); }
+    .contador { margin-top: 4px; color: var(--paper-muted); font-size: 0.875rem; text-align: right; font-variant-numeric: tabular-nums; }
+    .erro { min-height: 1.4em; color: var(--stamp); font-weight: 700; font-size: 0.95rem; }
+    .pagina--nova .btn { width: 100%; margin-top: 4px; }
+
+    /* ---------- Caixinha aberta (igual ao mock da votação): estojo + manual + CD + comentários ---------- */
+    .modal--leitura { overflow-x: hidden; place-items: start center; perspective: none; }
+    .modal__palco { position: relative; display: flex; flex-direction: column; align-items: center; gap: 10px; width: 100%; perspective: 1800px; }
+    .modal__titulo { font: 400 clamp(1.9rem, 6vw, 2.4rem)/1 var(--f-placa); letter-spacing: 0.05em; text-align: center; }
+    .modal__titulo:focus { outline: none; }
+    .modal__acoes { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+    .modal--leitura .modal__palco { --w: min(80vw, calc((100dvh - 240px) * 0.75)); padding: 8px 0 24px; }
+    .leitura { display: flex; flex-direction: column; align-items: center; gap: 28px; width: 100%; }
+    .leitura__caixa { width: 100%; display: flex; justify-content: center; padding-bottom: 12px; }
+    @media (min-width: 760px) {
+      .modal--leitura { place-items: safe center; }
+      .modal--leitura .modal__palco { --w: min(300px, 26vw, calc((100dvh - 200px) * 0.75)); }
+      .leitura { flex-direction: row; justify-content: center; align-items: flex-start; }
+      /* a coluna tem 2 capas de largura: a caixa fica na metade direita e a tampa abre pra esquerda */
+      .leitura__caixa { width: calc(var(--w) * 2); justify-content: flex-end; }
+    }
+    .estojo { position: relative; width: var(--w); aspect-ratio: 3 / 4; margin-top: calc(var(--w) * 0.2 + 8px); perspective: 1600px; }
+    .estojo__sombra {
+      position: absolute; left: 4%; right: 4%; bottom: -20px; height: 24px; border-radius: 50%;
+      background: radial-gradient(closest-side, rgb(12 6 9 / 0.75), transparent);
+    }
+    .estojo__corpo { position: absolute; inset: 0; transform-style: preserve-3d; }
+    .estojo__base {
+      position: absolute; inset: 0; border-radius: 3px 8px 8px 3px; transform: translateZ(-2px);
+      background: radial-gradient(circle at 50% 50%, #34313a 0 7%, #16151a 7.5% 10%, transparent 10.5%), linear-gradient(160deg, #26232b, #141317);
+      box-shadow: inset 0 0 0 3px #322f37, inset 0 0 0 7px #1a181d;
+    }
+    /* a coroinha fica apoiada na borda de cima da caixa, também com a tampa aberta */
+    .estojo__coroa { position: absolute; left: 20%; top: calc(var(--w) * -0.2); width: 36%; rotate: -11deg; transform: translateZ(4px); pointer-events: none; }
+    .estojo__coroa svg { display: block; width: 100%; height: auto; overflow: visible; }
+    .estojo__tampa { position: absolute; inset: 0; transform-origin: 0 50%; transform: translateZ(2px); transform-style: preserve-3d; }
+    .tampa__frente, .tampa__verso { position: absolute; inset: 0; overflow: hidden; border-radius: 3px 8px 8px 3px; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+    /* a frente é decorativa: sem ponteiro, senão a capa (com container-type) "vaza" o clique por trás da tampa aberta */
+    .tampa__frente { background: #19171c; box-shadow: inset 0 0 0 3px #2c2a31; pointer-events: none; }
+    .tampa__frente .capa { inset: 4px; }
+    .tampa__frente::after {
+      content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+      background: linear-gradient(115deg, rgb(243 230 216 / 0.12), transparent 32% 70%, rgb(243 230 216 / 0.05));
+    }
+    .tampa__frente .tarja, .tampa__frente .preco, .tampa__frente .carimbo { z-index: 2; }
+    .tampa__frente .preco { right: 8px; top: 8px; }
+    .tampa__frente .carimbo { font-size: calc(var(--w) * 0.06); }
+    .cd {
+      position: absolute; left: 50%; top: 50%; width: 86%; aspect-ratio: 1; margin: -43% 0 0 -43%; border-radius: 50%;
+      background: conic-gradient(from 20deg, #c9c6cf, #e8e6ee, #a9c7d6, #d6c2e0, #f0e2b8, #c9c6cf 50%, #e8e6ee, #b9d6cf, #d9c8e8, #c9c6cf);
+      box-shadow: 0 3px 0 var(--deep), inset 0 0 0 2px rgb(255 255 255 / 0.35);
+    }
+    .cd::after {
+      content: ''; position: absolute; inset: 0; border-radius: 50%; pointer-events: none;
+      background: conic-gradient(transparent 0 20%, rgb(255 255 255 / 0.25) 25%, transparent 30% 70%, rgb(255 255 255 / 0.18) 75%, transparent 80%);
+      animation: brilho-cd 7s linear infinite;
+    }
+    @keyframes brilho-cd { to { rotate: 360deg; } }
+    .cd__rotulo {
+      position: absolute; inset: 7%; display: grid; place-items: end center; padding: 0 18% 17%; overflow: hidden; border-radius: 50%;
+      background: radial-gradient(circle, transparent 0 21%, rgb(255 255 255 / 0.55) 21% 22.5%, transparent 23%), var(--rotulo, #3a2848);
+      color: var(--ink); font: 400 calc(var(--w) * 0.065)/1 var(--f-placa); letter-spacing: 0.06em; text-align: center;
+    }
+    .cd__furo { position: absolute; left: 50%; top: 50%; width: 13%; aspect-ratio: 1; translate: -50% -50%; border-radius: 50%; background: #16151a; box-shadow: 0 0 0 3px #2b2930; }
+    .tampa__verso { transform: rotateY(180deg); padding: 6% 6%; background: linear-gradient(200deg, #222026, #141317); box-shadow: inset 0 0 0 3px #322f37; }
+    .presilha { position: absolute; z-index: 2; left: 50%; width: 22%; height: 10px; translate: -50% 0; border-radius: 3px; background: #2f2c35; }
+    .presilha--cima { top: 3.4%; } .presilha--baixo { bottom: 3.4%; }
+    .manual {
+      position: relative; height: 100%; overflow-y: auto; overscroll-behavior: contain; padding: 14px 14px 18px;
+      background: var(--paper); color: var(--paper-ink); rotate: -0.6deg; box-shadow: 0 4px 0 var(--deep);
+      scrollbar-width: thin; scrollbar-color: var(--paper-muted) transparent;
+    }
+    .manual:focus-visible, .manual :focus-visible { outline-color: var(--paper-ink); }
+    .manual__cabeca {
+      display: flex; justify-content: space-between; align-items: baseline; padding-bottom: 6px; border-bottom: 2px solid var(--paper-ink);
+      font: 400 1.05rem/1 var(--f-placa); letter-spacing: 0.1em; text-transform: uppercase;
+    }
+    .manual__pag { font: 400 0.75rem/1 var(--f-dati); letter-spacing: 0; text-transform: none; }
+    .manual__jogo { margin-top: 8px; font: 400 1.6rem/1 var(--f-placa); letter-spacing: 0.04em; overflow-wrap: anywhere; }
+    .manual__por { margin-top: 4px; color: var(--paper-muted); font: 400 0.85rem/1.3 var(--f-dati); }
+    .manual__sec { margin: 14px 0 0; font: 400 1.05rem/1 var(--f-placa); letter-spacing: 0.08em; text-transform: uppercase; }
+    .manual__txt { margin-top: 4px; font-size: 0.95rem; line-height: 1.4; }
+    .manual__pitch { margin-top: 4px; font: 400 1.05rem/1.3 var(--f-mao); }
+    .manual__fatos { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; margin: 14px 0 0; padding-top: 10px; border-top: 2px dashed rgb(42 29 23 / 0.35); }
+    .manual__fatos dt { font: 700 0.8125rem/1.2 var(--f-texto); color: var(--paper-muted); }
+    .manual__fatos dd { margin: 0; font: 400 1.35rem/1.1 var(--f-placa); letter-spacing: 0.03em; }
+    .manual__plats { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; padding: 0; list-style: none; }
+    .manual__plats li { padding: 3px 8px; border: 2px solid var(--paper-ink); border-radius: 4px; font: 600 0.85rem/1.2 var(--f-texto); }
+    .comentarios { display: flex; flex-direction: column; width: min(100%, 420px); padding: 16px; border-radius: 4px; background: var(--shelf); }
+    /* o painel cresce com os post-its (sem rolagem interna); no mínimo a altura da caixa */
+    @media (min-width: 760px) { .comentarios { width: min(340px, 30vw); min-height: calc(var(--w) * 4 / 3 + 8px); margin-top: calc(var(--w) * 0.2 + 8px); } }
+    .comentarios__titulo { font: 400 1.6rem/1 var(--f-placa); letter-spacing: 0.05em; color: var(--teal); }
+    .comentarios__lista { flex: 1; margin: 12px 0 0; padding: 4px 6px 8px 2px; list-style: none; display: grid; align-content: start; gap: 12px; }
+    .coment {
+      display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: start; padding: 10px 12px 12px;
+      background: var(--papel, #f7e48a); color: var(--paper-ink); rotate: var(--r, -1deg); box-shadow: 0 3px 0 var(--deep);
+    }
+    .coment__quem { font: 400 1rem/1.2 var(--f-mao); }
+    .coment__txt { margin-top: 2px; font: 400 0.95rem/1.35 var(--f-texto); overflow-wrap: anywhere; }
+    .coment.novo { animation: coment-cola 420ms cubic-bezier(0.2, 0.8, 0.2, 1.15) both; }
+    @keyframes coment-cola {
+      0% { transform: translateY(-26px) rotate(-7deg) scale(1.08); opacity: 0; }
+      65% { transform: translateY(2px) scale(0.98); opacity: 1; }
+      100% { transform: none; }
+    }
+    /* balão de conversa: a foto de quem comentou */
+    .balao { position: relative; display: block; width: 36px; height: 36px; border: 3px solid var(--paper-ink); border-radius: 50%; }
+    .balao svg { display: block; width: 100%; height: 100%; border-radius: 50%; }
+    .balao::after { content: ''; position: absolute; left: 1px; bottom: -7px; width: 9px; height: 9px; background: var(--paper-ink); clip-path: polygon(0 0, 100% 0, 0 100%); }
+    .comentarios__form { display: grid; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 2px solid var(--edge); }
+    .comentarios__campo {
+      width: 100%; min-height: 56px; padding: 8px 12px; border: 2px solid var(--edge); border-radius: 4px; resize: vertical;
+      background: var(--deep); color: var(--ink); font: 400 1rem/1.4 var(--f-texto);
+    }
+    .comentarios__campo:hover { border-color: var(--lip); }
+    .comentarios__campo:focus-visible { outline: 3px solid var(--amber); outline-offset: 1px; }
+    .comentarios__erro { color: var(--pink); font-weight: 700; font-size: 0.875rem; }
+    .comentarios__erro:empty { display: none; }
+    .btn--primario { background: var(--amber); border-color: var(--amber); color: var(--deep); }
+    .btn--primario:hover { background: var(--ink); border-color: var(--ink); }
+
+    /* ---------- Vitrine da estatueta: vem pra frente e gira devagar; o recado ao lado ---------- */
+    /* --ry tipado para poder girar (a cabeça-foto lê o mesmo valor e continua de frente) */
+    @property --ry { syntax: '<angle>'; inherits: true; initial-value: 0deg; }
+    .vitrine { position: relative; display: flex; flex-direction: column; align-items: center; gap: 20px; width: min(100%, 760px); }
+    @media (min-width: 760px) { .vitrine { flex-direction: row; justify-content: center; align-items: center; gap: 36px; } }
+    .vitrine__palco { position: relative; flex: none; width: 240px; height: 290px; perspective: 1100px; perspective-origin: 50% 30%; }
+    @media (min-width: 760px) { .vitrine__palco { width: 300px; height: 380px; } }
+    /* poça de luz do abajur embaixo dela (a estatueta acabou de sair da mesa iluminada) */
+    .vitrine__luz {
+      position: absolute; left: 50%; bottom: 2%; width: 120%; height: 30%; translate: -50% 0; border-radius: 50%; pointer-events: none;
+      background: radial-gradient(closest-side, rgb(255 193 94 / 0.32), rgb(255 193 94 / 0.1) 55%, transparent);
+    }
+    .vitrine__chao { position: absolute; left: 50%; bottom: 8%; width: 56%; height: 9%; translate: -50% 0; border-radius: 50%; background: radial-gradient(closest-side, rgb(12 6 9 / 0.85), transparent); }
+    .vitrine__mundo { position: absolute; left: 50%; top: 88%; width: 0; height: 0; transform-style: preserve-3d; transform: rotateX(var(--cam)); }
+    .vitrine .obj.gira { animation: gira 8s ease-in-out infinite; }
+    @keyframes gira { 0% { --ry: 0deg; } 25% { --ry: -30deg; } 75% { --ry: 30deg; } 100% { --ry: 0deg; } }
+    .vitrine__ficha { width: min(100%, 360px); padding: 18px 16px; border-radius: 4px; background: var(--shelf); }
+    .vitrine__topo { display: flex; align-items: center; gap: 12px; }
+    .vitrine__nome { font: 400 clamp(2.4rem, 8vw, 3rem)/0.95 var(--f-placa); letter-spacing: 0.04em; }
+    .vitrine__nome:focus { outline: none; }
+    .vitrine__meta { margin-top: 8px; color: var(--muted); }
+    .vitrine__meta strong { color: var(--ink); font-variant-numeric: tabular-nums; }
+    .recado { margin: 16px 0 0; padding: 12px 14px 14px; rotate: -1.6deg; background: var(--papel, #f7e48a); color: var(--paper-ink); box-shadow: 0 3px 0 var(--deep); }
+    .recado__quem { font: 400 1rem/1.2 var(--f-mao); }
+    .recado__txt { margin: 4px 0 0; font: 400 1.15rem/1.4 var(--f-texto); overflow-wrap: anywhere; }
+    .recado--vazio .recado__txt { color: var(--paper-muted); }
+    .vitrine__ficha .acoes { margin-top: 18px; }
+
+    /* toast */
+    .toast {
+      position: fixed; left: 50%; bottom: 16px; z-index: 200; translate: -50% 0; width: max-content; max-width: min(460px, calc(100% - 32px)); padding: 10px 16px; border-radius: 4px;
+      background: var(--ink); color: var(--deep); font-weight: 700; box-shadow: 0 6px 12px rgb(0 0 0 / 0.55), 0 2px 3px rgb(0 0 0 / 0.5);
+    }
+    .toast[hidden] { display: none; }
+
+    /* ---------- Movimento desligável ---------- */
+    @media (prefers-reduced-motion: reduce), (prefers-contrast: more) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+      .cena-grao { display: none; }
+      .neon__l.apaga { opacity: 1; }
+      .obj.ativo > .mola { translate: none; }
+      .btn:active { transform: none; }
+    }
+    @media (prefers-contrast: more) {
+      .cena-luz { display: none; }
+      .cena-vinheta { background: radial-gradient(ellipse 85% 80% at 50% 42%, transparent 55%, rgb(12 6 9 / 0.3) 100%); }
+    }
+  </style>
+</head>
+<body>
+  <div class="cena-parede" aria-hidden="true"></div>
+  <div class="cena-luz" id="luz" aria-hidden="true"></div>
+  <div class="cena-grao" aria-hidden="true"></div>
+  <div class="cena-vinheta" aria-hidden="true"></div>
+
+  <div class="app" id="app">
+    <header class="topo">
+      <a class="marca" href="#rodada" aria-label="Clube dos Jogos, ir para a rodada">
+        <!-- letreiro de neon: o único neon do sistema; um traço por letra, núcleo claro, tubo apagado atrás, glow em 3 camadas -->
+        <svg class="neon" id="neon" viewBox="-10 -10 260 96" role="img" aria-label="Clube dos Jogos">
+          <defs>
+            <filter id="neon-glow" x="-20%" y="-40%" width="140%" height="180%" color-interpolation-filters="sRGB">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="0.8" result="a" />
+              <feGaussianBlur in="SourceGraphic" stdDeviation="3.5" result="b" />
+              <feGaussianBlur in="SourceGraphic" stdDeviation="9" result="c" />
+              <feMerge><feMergeNode in="c" /><feMergeNode in="b" /><feMergeNode in="a" /><feMergeNode in="SourceGraphic" /></feMerge>
+            </filter>
+            <path id="gC" d="M21 5C19 1 15 0 11 0C3 0 1 8 1 16C1 24 3 32 11 32C15 32 19 31 21 27" />
+            <path id="gL" d="M2 0V32H21" />
+            <path id="gU" d="M1 0V21C1 28 5 32 11 32C17 32 21 28 21 21V0" />
+            <path id="gB" d="M2 15H12C17 15 20 12 20 7.5C20 3 17 0 12 0H2V32H12C18 32 21 28.5 21 23.5C21 18.5 18 15 12 15" />
+            <path id="gE" d="M21 0H2V16H16H2V32H21" />
+            <path id="gD" d="M2 0V32H9C17 32 21 25 21 16C21 7 17 0 9 0Z" />
+            <path id="gO" d="M11 0C3 0 1 8 1 16C1 24 3 32 11 32C19 32 21 24 21 16C21 8 19 0 11 0Z" />
+            <path id="gS" d="M20 5C18 1 15 0 11 0C5 0 2 3 2 8C2 14 8 15 11 16C16 17 21 19 21 24C21 29 17 32 11 32C6 32 3 30 1 27" />
+            <path id="gJ" d="M21 0V22C21 29 17 32 11 32C5 32 2 29 1 25" />
+            <path id="gG" d="M20 5C18 1 15 0 11 0C3 0 1 8 1 16C1 24 3 32 11 32C19 32 21 26 21 18H12" />
+          </defs>
+          <!-- fio que sai por trás até o transformador, e os grampos -->
+          <path class="neon__fio" d="M236 18C252 22 252 60 248 86" />
+          <rect class="neon__grampo" x="38" y="33" width="6" height="4" /><rect class="neon__grampo" x="128" y="33" width="6" height="4" /><rect class="neon__grampo" x="205" y="33" width="6" height="4" />
+          <rect class="neon__grampo" x="72" y="75" width="6" height="4" /><rect class="neon__grampo" x="158" y="75" width="6" height="4" />
+          <!-- tubo apagado (aparece quando uma letra pisca) -->
+          <g class="neon__apagado">
+            <use href="#gC" x="0" /><use href="#gL" x="29" /><use href="#gU" x="58" /><use href="#gB" x="87" /><use href="#gE" x="116" />
+            <use href="#gD" x="157" /><use href="#gO" x="186" /><use href="#gS" x="215" />
+            <use href="#gJ" x="49.5" y="42" /><use href="#gO" x="78.5" y="42" /><use href="#gG" x="107.5" y="42" /><use href="#gO" x="136.5" y="42" /><use href="#gS" x="165.5" y="42" />
+          </g>
+          <!-- tubo aceso: cada letra num grupo, para o flicker raro de uma letra só -->
+          <g filter="url(#neon-glow)">
+            <g class="neon__l" transform="translate(0 0)"><use class="neon__tubo" href="#gC" /><use class="neon__nucleo" href="#gC" /></g>
+            <g class="neon__l" transform="translate(29 0)"><use class="neon__tubo" href="#gL" /><use class="neon__nucleo" href="#gL" /></g>
+            <g class="neon__l" transform="translate(58 0)"><use class="neon__tubo" href="#gU" /><use class="neon__nucleo" href="#gU" /></g>
+            <g class="neon__l" transform="translate(87 0)"><use class="neon__tubo" href="#gB" /><use class="neon__nucleo" href="#gB" /></g>
+            <g class="neon__l" transform="translate(116 0)"><use class="neon__tubo" href="#gE" /><use class="neon__nucleo" href="#gE" /></g>
+            <g class="neon__l" transform="translate(157 0)"><use class="neon__tubo" href="#gD" /><use class="neon__nucleo" href="#gD" /></g>
+            <g class="neon__l" transform="translate(186 0)"><use class="neon__tubo" href="#gO" /><use class="neon__nucleo" href="#gO" /></g>
+            <g class="neon__l" transform="translate(215 0)"><use class="neon__tubo" href="#gS" /><use class="neon__nucleo" href="#gS" /></g>
+            <g class="neon__l" transform="translate(49.5 42)"><use class="neon__tubo" href="#gJ" /><use class="neon__nucleo" href="#gJ" /></g>
+            <g class="neon__l" transform="translate(78.5 42)"><use class="neon__tubo" href="#gO" /><use class="neon__nucleo" href="#gO" /></g>
+            <g class="neon__l" transform="translate(107.5 42)"><use class="neon__tubo" href="#gG" /><use class="neon__nucleo" href="#gG" /></g>
+            <g class="neon__l" transform="translate(136.5 42)"><use class="neon__tubo" href="#gO" /><use class="neon__nucleo" href="#gO" /></g>
+            <g class="neon__l" transform="translate(165.5 42)"><use class="neon__tubo" href="#gS" /><use class="neon__nucleo" href="#gS" /></g>
+          </g>
+        </svg>
+      </a>
+      <nav class="nav" aria-label="Principal">
+        <ul>
+          <li><a href="#rodada" aria-current="page">Rodada</a></li>
+          <li><a href="#estante">Estante</a></li>
+          <li><a href="#stats">Stats</a></li>
+        </ul>
+      </nav>
+      <span class="avatar" id="avatar-topo" role="img" aria-label="Você: Yuri"></span>
+    </header>
+
+    <main class="rodada" id="rodada">
+      <div class="cabeca">
+        <div class="varal">
+          <span class="varal__corda varal__corda--e" aria-hidden="true"></span>
+          <span class="varal__corda varal__corda--d" aria-hidden="true"></span>
+          <span class="banner-sombra" aria-hidden="true"></span>
+          <h1 class="banner"><span>Encerrado</span></h1>
+        </div>
+        <p>Rodada 2 · Fase 4 · hora da resenha</p>
+      </div>
+
+      <ol class="faixa" aria-label="Etapas da rodada">
+        <li class="feita">Sugerindo<span class="sr"> (concluída)</span></li>
+        <li class="feita">Votando<span class="sr"> (concluída)</span></li>
+        <li class="feita">Jogando<span class="sr"> (concluída)</span></li>
+        <li aria-current="step">Encerrada</li>
+      </ol>
+
+      <p class="falta" id="falta"></p>
+
+      <section class="mesa-sec" aria-labelledby="mesa-titulo">
+        <h2 class="sr" id="mesa-titulo">A mesa da rodada</h2>
+        <div class="palco-wrap" id="palco-wrap">
+          <div class="palco" id="palco" aria-hidden="true">
+            <div class="mundo" id="mundo"><div class="mesa" id="mesa"></div></div>
+          </div>
+          <span class="palco-chao" aria-hidden="true"></span>
+          <button class="alvo" type="button" id="alvo-quadro" data-obj="quadro-obj" aria-haspopup="dialog">
+            <span class="sr" id="alvo-quadro-txt">Abrir o quadro de resenhas</span>
+          </button>
+          <button class="alvo" type="button" id="alvo-caso" data-obj="caso-obj" aria-haspopup="dialog">
+            <span class="sr">Abrir a caixinha de Outer Wilds: manual e comentários da votação</span>
+          </button>
+          <div id="alvos-est" style="display: contents"></div>
+        </div>
+        <p class="sr" id="aviso" aria-live="polite"></p>
+      </section>
+
+      <!-- placar em texto: as estatuetas da mesa para quem usa leitor de tela -->
+      <section class="sr" aria-labelledby="placar-titulo">
+        <h2 id="placar-titulo">Quem zerou</h2>
+        <ol id="placar-lista"></ol>
+        <p id="ainda"></p>
+      </section>
+
+      <section class="balcao" id="balcao" aria-labelledby="balcao-titulo">
+        <h2 class="sr" id="balcao-titulo">Balcão do admin</h2>
+        <p class="balcao__dica" id="balcao-dica">Só você vê isso, admin. Quando a resenha acabar, fecha a rodada: tudo vai pra <b>estante</b> e pros <b>stats</b>.</p>
+        <div class="balcao__acoes" id="fin-1"><button class="btn btn--fechar" type="button" id="btn-finalizar">Finalizar rodada</button></div>
+        <div class="balcao__acoes" id="fin-2" hidden>
+          <button class="btn btn--fechar" type="button" id="fin-sim">Fechar de vez</button>
+          <button class="btn" type="button" id="fin-nao">Ainda não</button>
+        </div>
+      </section>
+    </main>
+
+    <footer class="rodape">
+      <p>Clube entre amigos, sem fins comerciais. Sem afiliação com fabricantes, estúdios ou plataformas.</p>
+    </footer>
+  </div>
+
+  <!-- Modal QUADRO: o quadro de cortiça da mesa vem pra frente; a página em branco no fim é a sua -->
+  <div class="modal modal--quadro" id="m-quadro" role="dialog" aria-modal="true" aria-labelledby="qd-titulo" hidden>
+    <div class="modal__fundo" data-fecha></div>
+    <div class="quadro-palco">
+      <div class="quadro" id="quadro">
+        <div class="quadro__cortica" id="cortica">
+          <h2 class="quadro__titulo" id="qd-titulo" tabindex="-1"><span class="tacha" aria-hidden="true"></span><span class="tacha" aria-hidden="true"></span>Resenha do Outer Wilds</h2>
+          <div class="quadro__grade">
+            <ul id="qd-lista" role="list" aria-label="Páginas pregadas"></ul>
+            <form class="pagina pagina--nova" id="qd-form" novalidate>
+              <label class="pagina__rotulo" for="qd-txt">Tua página</label>
+              <textarea class="campo-papel" id="qd-txt" maxlength="280" placeholder="E aí, valeu a pena? Sem medo de spoiler, todo mundo já jogou." aria-describedby="qd-cont qd-erro"></textarea>
+              <p class="contador" id="qd-cont">0/280</p>
+              <p class="erro" id="qd-erro" role="alert"></p>
+              <button class="btn btn--papel-primario" type="submit">Pregar no quadro</button>
+            </form>
+          </div>
+        </div>
+      </div>
+      <div class="modal__acoes"><button class="btn" type="button" data-fecha>Fechar o quadro</button></div>
+    </div>
+  </div>
+
+  <!-- Modal CAIXINHA: o mesmo da votação (a caixinha abre com o manual e o CD; comentários do lado) -->
+  <div class="modal modal--leitura" id="m-leitura" role="dialog" aria-modal="true" aria-labelledby="modal-titulo" hidden>
+    <div class="modal__fundo" id="modal-fundo"></div>
+    <div class="modal__palco">
+      <h2 class="modal__titulo" id="modal-titulo" tabindex="-1">Outer Wilds</h2>
+      <div class="leitura">
+        <div class="leitura__caixa">
+          <div class="estojo" id="estojo">
+            <span class="estojo__sombra" id="estojo-sombra"></span>
+            <div class="estojo__corpo" id="estojo-corpo">
+              <div class="estojo__base">
+                <div class="cd" id="cd" aria-hidden="true"><span class="cd__rotulo" id="cd-rotulo"></span><span class="cd__furo"></span></div>
+              </div>
+              <div class="estojo__tampa" id="tampa">
+                <div class="tampa__frente" id="frente" aria-hidden="true"></div>
+                <div class="tampa__verso" id="verso" inert>
+                  <span class="presilha presilha--cima" aria-hidden="true"></span><span class="presilha presilha--baixo" aria-hidden="true"></span>
+                  <div class="manual" id="manual" tabindex="0" aria-label="Manual do jogo"></div>
+                </div>
+              </div>
+              <div class="estojo__coroa" id="estojo-coroa" aria-hidden="true"></div>
+            </div>
+          </div>
+        </div>
+        <section class="comentarios" id="comentarios" aria-labelledby="coment-titulo">
+          <h3 class="comentarios__titulo" id="coment-titulo">Comentários da votação</h3>
+          <ul class="comentarios__lista" id="coment-lista"></ul>
+        </section>
+      </div>
+      <div class="modal__acoes" id="modal-acoes">
+        <button class="btn" type="button" id="btn-fechar">Fechar a caixinha</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal VITRINE: a estatueta vem pra frente, gira devagar, e o recado de quem zerou fica do lado -->
+  <div class="modal" id="m-est" role="dialog" aria-modal="true" aria-labelledby="vit-nome" hidden>
+    <div class="modal__fundo" data-fecha></div>
+    <div class="vitrine">
+      <div class="vitrine__palco" id="vit-palco" aria-hidden="true">
+        <span class="vitrine__luz"></span><span class="vitrine__chao"></span>
+        <div class="vitrine__mundo" id="vit-mundo"></div>
+      </div>
+      <section class="vitrine__ficha" id="vit-ficha">
+        <div class="vitrine__topo"><span class="pos" id="vit-pos"></span><h2 class="vitrine__nome" id="vit-nome" tabindex="-1"></h2></div>
+        <p class="vitrine__meta" id="vit-meta"></p>
+        <figure class="recado" id="vit-recado"><figcaption class="recado__quem" id="vit-quem"></figcaption><blockquote class="recado__txt" id="vit-txt"></blockquote></figure>
+        <div class="acoes"><button class="btn" type="button" data-fecha>Voltar pra mesa</button></div>
+      </section>
+    </div>
+  </div>
+
+  <p class="toast" id="toast" role="status" hidden></p>
+
+  <script>
+    // Mock: só o necessário para a tela parecer viva. Nada aqui grava dados.
+    const $ = (s, el = document) => el.querySelector(s);
+    const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const espera = (ms) => new Promise((r) => setTimeout(r, ms));
+    const calma = matchMedia('(prefers-reduced-motion: reduce), (prefers-contrast: more)');
+    const largo = matchMedia('(min-width: 760px)');
+
+    // ---------- dados do mock ----------
+    // no app a foto vem da conta Google (safeUrl); aqui um retratinho desenhado faz o papel
+    const PESSOAS = {
+      Yuri: { bg: '#ff5c8a', pele: '#e0ac83', cabelo: '#2a1a12', estilo: 'curto', roupa: '#2a3b4f' },
+      Mari: { bg: '#f59a5b', pele: '#c58b62', cabelo: '#1c120c', estilo: 'longo', roupa: '#5b2a3a' },
+      Caio: { bg: '#46c3b5', pele: '#8d5a3b', cabelo: '#120b08', estilo: 'cacho', roupa: '#3b2417' },
+      Bia: { bg: '#c58cf0', pele: '#f0c9a8', cabelo: '#a0522d', estilo: 'coque', roupa: '#1f3446' },
+      Duda: { bg: '#ffc15e', pele: '#d9a179', cabelo: '#3b2417', estilo: 'longo', roupa: '#33452a' },
+      Léo: { bg: '#9fd16b', pele: '#f2d2b6', cabelo: '#d9a441', estilo: 'curto', roupa: '#4a1d26' },
+    };
+    // cor do post-it de cada um (a mesma da votação)
+    const PAPEL = { Yuri: '#f6c1cf', Mari: '#f6cf9e', Caio: '#bfe0ea', Bia: '#e3d0f2', Duda: '#f7e48a', Léo: '#cfe7b4' };
+    // o jogo da rodada (o mesmo que a votação mostrava no manual) e os comentários que vieram junto
+    const JOGO = {
+      nome: 'Outer Wilds', por: 'Léo', capa: '#4a2f1c', ano: 2019, genero: 'Exploração', duracao: 'Médio', modo: 'Solo', preco: 'R$ 60',
+      plats: ['PC', 'PlayStation', 'Xbox', 'Nintendo'],
+      desc: 'Um sistema solar em miniatura preso num ciclo de 22 minutos. O resto você descobre.', pitch: 'Não pesquisem nada. Só confiem em mim.',
+    };
+    const COMENT = [
+      { quem: 'Mari', txt: 'NÃO PESQUISEM NADA.' }, { quem: 'Bia', txt: 'concordo com a Mari' },
+      { quem: 'Caio', txt: 'Fiquei curioso, mas tenho medo de jogo espacial.' }, { quem: 'Duda', txt: '+1 pro Léo' },
+      { quem: 'Léo', txt: 'Quem chegar no Olho primeiro paga a pizza da call.' },
+    ];
+    const ROT = ['-1.2deg', '0.9deg', '-0.5deg', '1.4deg'];
+    // ordem de chegada = posição (quem zerou primeiro fica com o ouro)
+    const ZERADOS = [
+      { quem: 'Mari', min: 11 * 60 + 40, txt: 'Fácil. Próximo.' },
+      { quem: 'Caio', min: 16 * 60 + 5, txt: 'Demorei porque tive medo do espaço. Me deixem.' },
+      { quem: 'Yuri', min: 14 * 60 + 20, txt: 'Zerei antes do Léo, que SUGERIU o jogo. Pensem nisso.' },
+      { quem: 'Léo', min: 9 * 60 + 50, txt: 'Zerei de novo só pra acompanhar vocês. De nada.' },
+      { quem: 'Bia', min: 21 * 60 + 15, txt: 'Cheguei. Atrasada, mas cheguei.' },
+    ];
+    const NAO_ZEROU = ['Duda'];
+    // as páginas do quadro: a resenha de cada um depois de jogar (você ainda não pregou a sua)
+    const PAGINAS = [
+      { quem: 'Mari', txt: 'O final me desmontou. Obrigada, Léo. Te odeio, Léo.' },
+      { quem: 'Léo', txt: 'Eu avisei. Melhor jogo que esse clube já jogou e vai jogar.' },
+      { quem: 'Caio', txt: 'Continuo com medo do espaço, mas valeu cada loop. Até o do buraco negro.' },
+      { quem: 'Duda', txt: 'Não zerei, mas li o quadro inteiro. Me sinto spoilada e feliz.' },
+      { quem: 'Bia', txt: 'Chorei no museu e não vou explicar.' },
+    ];
+    const ADMIN = new URLSearchParams(location.search).get('visao') !== 'membro';
+    // material por posição: ouro, prata, bronze e depois metais/pedras próprios, cada um com sua cor
+    const METAIS = [
+      { nome: 'ouro', m: '#e3b341', m2: '#fff0b0', m3: '#8a6312' },
+      { nome: 'prata', m: '#c4c9d1', m2: '#f4f6fa', m3: '#6e737c' },
+      { nome: 'bronze', m: '#c27a43', m2: '#f2c08e', m3: '#6d3f1c' },
+      { nome: 'pátina', m: '#8fa36b', m2: '#d8e6b4', m3: '#4c5a32' },
+      { nome: 'ametista', m: '#a585c4', m2: '#e2d2f2', m3: '#55406e' },
+      { nome: 'cobre rosé', m: '#d68a7c', m2: '#f6cdc4', m3: '#7a3f36' },
+      { nome: 'jade', m: '#5fae98', m2: '#bfe7da', m3: '#2c5c4f' },
+      { nome: 'ferro', m: '#9a8e88', m2: '#d6ccc6', m3: '#4a403c' },
+      { nome: 'âmbar', m: '#d79a4a', m2: '#f6d6a2', m3: '#6e4a1c' },
+      { nome: 'cobalto', m: '#7d93c9', m2: '#d0dbf3', m3: '#3a4a74' },
+      { nome: 'latão', m: '#b8a960', m2: '#ece2ad', m3: '#5e5428' },
+      { nome: 'granada', m: '#b9636f', m2: '#ecbcc3', m3: '#5f2b33' },
+    ];
+    const PEDESTAL = [36, 30, 26];
+
+    const st = { comentou: false, ocupado: false };
+
+    // ---------- retratinho (foto falsa) ----------
+    function foto(nome) {
+      const p = PESSOAS[nome];
+      const rosto = `<rect x="27" y="38" width="10" height="10" fill="${p.pele}"/><ellipse cx="32" cy="29" rx="11" ry="13" fill="${p.pele}"/>
+        <circle cx="28" cy="29" r="1.5" fill="#1a1013"/><circle cx="36" cy="29" r="1.5" fill="#1a1013"/>
+        <path d="M28 35q4 3 8 0" fill="none" stroke="#1a1013" stroke-width="1.5" stroke-linecap="round"/>`;
+      const atras = p.estilo === 'longo' ? `<path d="M17 31c-1-12 6-19 15-19s16 7 15 19l1 17H41c0-8-2-14-9-16-7 2-9 8-9 16H16z" fill="${p.cabelo}"/>` : '';
+      const cabelo = {
+        curto: `<path d="M20 27c-1-10 5-15 12-15s13 5 12 15c-2-5-6-8-12-8s-10 3-12 8z" fill="${p.cabelo}"/>`,
+        longo: `<path d="M20 26c2-7 7-10 12-10s10 3 12 10c-4-3-8-4-12-4s-8 1-12 4z" fill="${p.cabelo}"/>`,
+        cacho: `<g fill="${p.cabelo}"><circle cx="22" cy="20" r="7"/><circle cx="32" cy="15" r="8"/><circle cx="42" cy="20" r="7"/><circle cx="20" cy="27" r="4.5"/><circle cx="44" cy="27" r="4.5"/></g>`,
+        coque: `<g fill="${p.cabelo}"><circle cx="32" cy="9" r="6"/><path d="M20 27c-1-10 5-15 12-15s13 5 12 15c-2-5-6-8-12-8s-10 3-12 8z"/></g>`,
+      }[p.estilo];
+      return `<svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" fill="${p.bg}"/>${atras}
+        <path d="M8 64c1-12 11-18 24-18s23 6 24 18z" fill="${p.roupa}"/>${rosto}${cabelo}</svg>`;
+    }
+
+    // ---------- peças 3D ----------
+    // caixa de faces (sem fundo): base no chão do objeto; faces = quais desenhar (f u l r b)
+    function caixa({ w, h, t, x = 0, y = 0, z = 0, cls = '', faces = 'fulr', f = '', u = '', l = '', r = '', s = '' }) {
+      const face = (k, c) => (faces.includes(k) ? `<i class="${k}">${c}</i>` : '');
+      return `<div class="bx ${cls}" style="--w:${w}px;--h:${h}px;--t:${t}px;--bx:${x}px;--by:${y}px;--bz:${z}px;${s}">${face('f', f)}${face('u', u)}${face('l', l)}${face('r', r)}${face('b', '')}</div>`;
+    }
+    const obj = (id, [x, z, ry = 0], s, inner, extra = '') =>
+      `<div class="obj" id="${id}" style="--x:${x}px;--z:${z}px;--ry:${ry}deg;--s:${s};${extra}"><div class="mola">${inner}</div></div>`;
+
+    // duas composições da mesma mesa: PC (larga) e celular (mais funda).
+    // Esquerda: quadro de resenhas · meio: a capinha · direita: estatuetas em pódio (prata, ouro, bronze na frente).
+    const LAYOUTS = {
+      pc: {
+        W: 1040, H: 560, cy: 300, cam: -26, mesa: [1000, 440],
+        lamp: [-150, -185, 0], quadro: [-305, -40, 16], caso: [-10, 40, -4],
+        slots: [[300, 85], [205, 62], [395, 62], [250, -60], [345, -70], [440, -60], [205, -180], [300, -188], [395, -180]],
+        est: { s: 1 }, esc: { quadro: 1, caso: 1 }, nota: [130, 175], marca: [-130, 165],
+      },
+      cel: {
+        W: 600, H: 640, cy: 330, cam: -30, mesa: [580, 560],
+        lamp: [40, -250, 0], quadro: [-150, -150, 14], caso: [-120, 150, -4],
+        slots: [[150, 150], [62, 128], [238, 128], [105, 10], [195, 0], [150, -110], [240, -110], [60, -120], [150, -220]],
+        est: { s: 0.9 }, esc: { quadro: 0.78, caso: 0.85 }, nota: [60, 250], marca: [-240, 240],
+      },
+    };
+    let L = LAYOUTS.pc;
+    const slot = (i) => L.slots[i] ?? [L.slots[i % L.slots.length][0], -200];
+
+    function mesaHtml() {
+      const [W, D] = L.mesa;
+      const ponto = (x, z) => `left:${x + W / 2}px;top:${z + D / 2}px`;
+      // data-de: de quem é a sombra (some junto quando o objeto voa)
+      const sombra = ([x, z], w, d, de) => `<span class="decal decal--sombra" data-de="${de}" style="${ponto(x, z)};width:${w}px;height:${d}px"></span>`;
+      const [lx, lz] = L.lamp, kq = L.esc.quadro;
+      const decals = [
+        `<span class="decal decal--luz" data-de="abajur-obj" style="${ponto(lx + 180, lz + 130)};width:${W * 0.75}px;height:${D * 1.1}px"></span>`,
+        sombra(L.quadro, 360 * kq, 110 * kq, 'quadro-obj'),
+        sombra(L.caso, 190 * L.esc.caso, 60 * L.esc.caso, 'caso-obj'),
+        sombra(L.lamp, 90, 40, 'abajur-obj'),
+        `<span class="decal decal--marca" style="${ponto(...L.marca)};width:58px;height:58px"></span>`,
+        `<span class="decal decal--nota" id="nota-mesa" style="${ponto(...L.nota)}">${ZERADOS.length} de ${ZERADOS.length + NAO_ZEROU.length} zeraram</span>`,
+        ...ZERADOS.map((_, i) => sombra(slot(i), 84 * L.est.s, 84 * L.est.s, `est-${i}`)),
+      ].join('');
+      const pernas = [[-1, -1], [1, -1], [-1, 1], [1, 1]].map(([a, b]) =>
+        caixa({ w: 44, h: 320, t: 44, x: a * (W / 2 - 56), z: b * (D / 2 - 56), y: -348, cls: 'm-perna', faces: 'flr' })).join('');
+      return caixa({ w: W, h: 28, t: D, y: -28, cls: 'm-tampo', u: decals })
+        + caixa({ w: W - 90, h: 54, t: D - 90, y: -82, cls: 'm-saia', faces: 'flr' })
+        + pernas;
+    }
+
+    function abajurHtml() {
+      return `<div class="abajur"><span class="abajur__halo" id="abajur"></span>
+        <svg viewBox="0 0 140 190">
+          <path d="M14 186q32-16 64 0z" fill="#3a2a22"/><path d="M14 186h64" stroke="#1a1013" stroke-width="3"/>
+          <path d="M46 176 L34 104 L92 62" stroke="#8c6646" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="34" cy="104" r="5.5" fill="#8c6646"/><circle cx="92" cy="62" r="5" fill="#8c6646"/>
+          <g transform="rotate(32 96 62)">
+            <path d="M80 44h32l18 36H62z" fill="#2f4a3e"/><path d="M80 44h32l4 8H76z" fill="#3e6152"/>
+            <ellipse cx="96" cy="80" rx="34" ry="7" fill="#ffe3b0"/><ellipse cx="96" cy="80" rx="20" ry="4" fill="#fff6e2"/>
+          </g>
+        </svg></div>`;
+    }
+
+    // quadro de cortiça em cavalete: dois pés de madeira + o quadro inclinado pra trás.
+    // A frente mostra as páginas em miniatura (foto + rabiscos); o texto de verdade fica no modal.
+    const ROTQ = ['-2.4deg', '1.8deg', '-1deg', '2.6deg', '-1.8deg', '0.8deg', '-2.8deg', '1.2deg'];
+    function miniPaginas() {
+      const mostra = PAGINAS.slice(0, 8);
+      return mostra.map((p, i) => {
+        const c = i % 4, r = Math.floor(i / 4), w = ['82%', '64%', '74%', '56%'];
+        const rabiscos = [0, 1, 2].map((k) => `<span class="qm__rabisco" style="--w:${w[(i + k) % 4]}"></span>`).join('');
+        return `<span class="qm" style="left:${26 + c * 70}px;top:${48 + r * 92}px;--r:${ROTQ[i % ROTQ.length]};--tacha:${PESSOAS[p.quem].bg}">
+          <span class="qm__foto">${foto(p.quem)}</span>${rabiscos}<span class="tacha"></span></span>`;
+      }).join('');
+    }
+    function quadroHtml() {
+      const face = `<span class="qm-faixa">Resenha</span>${miniPaginas()}`;
+      return caixa({ w: 40, h: 30, t: 74, x: -112, cls: 'm-perna' }) + caixa({ w: 40, h: 30, t: 74, x: 112, cls: 'm-perna' })
+        + `<div class="quadro3d">${caixa({ w: 320, h: 244, t: 16, y: 24, cls: 'm-quadro', f: face })}</div>`;
+    }
+
+    function casoHtml() {
+      const capa = `<span class="capa" style="--capa:#4a2f1c;--risca:#c99a5e">
+          <svg class="capa__motivo" viewBox="0 0 100 100"><circle cx="50" cy="50" r="22" fill="#f4a95a"/><ellipse cx="50" cy="50" rx="46" ry="12" fill="none" stroke="#f3e6d8" stroke-width="5" transform="rotate(-18 50 50)"/></svg>
+          <span class="capa__nome">Outer Wilds</span></span>
+        <span class="tarja">Médio · Solo</span><span class="preco">R$ 60</span><span class="carimbo">Vencedor</span>`;
+      return caixa({ w: 168, h: 224, t: 22, cls: 'm-estojo', f: capa, l: '<span>Outer Wilds</span>' })
+        + `<div class="coroa" style="--cx:-22px;--cy:224px">${coroaSvg('coroa-ouro')}</div>`;
+    }
+    // ouro igual ao da estatueta de 1º lugar; joias nas cores de luz da cena
+    function coroaSvg(id) {
+      return `<svg viewBox="0 0 72 48" aria-hidden="true">
+          <defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff0b0"/><stop offset="0.45" stop-color="#e3b341"/><stop offset="1" stop-color="#8a6312"/></linearGradient></defs>
+          <path d="M8 40 4 14 20 26 36 6 52 26 68 14 64 40Z" fill="url(#${id})" stroke="#0c0609" stroke-width="2.5" stroke-linejoin="round"/>
+          <path d="M14 30 20 26 36 6" fill="none" stroke="#fff6d6" stroke-width="1.5" stroke-linecap="round" opacity="0.7"/>
+          <rect x="6" y="38" width="60" height="9" fill="#c99a2e" stroke="#0c0609" stroke-width="2.5"/>
+          <path d="M9 42h54" stroke="#fff0b0" stroke-width="1.2" opacity="0.6"/>
+          <g stroke="#0c0609" stroke-width="2"><circle cx="4" cy="13" r="3.6" fill="#fff0b0"/><circle cx="36" cy="5" r="4" fill="#fff0b0"/><circle cx="68" cy="13" r="3.6" fill="#fff0b0"/>
+          <circle cx="36" cy="27" r="4.6" fill="#ff5c8a"/><circle cx="21" cy="33" r="2.8" fill="#46c3b5"/><circle cx="51" cy="33" r="2.8" fill="#46c3b5"/></g>
+        </svg>`;
+    }
+
+
+    const metalVars = (i) => { const m = METAIS[i % METAIS.length]; return `--m:${m.m};--m2:${m.m2};--m3:${m.m3}`; };
+    function estatuetaHtml(z, i) {
+      const [x, zz] = slot(i);
+      return obj(`est-${i}`, [x, zz, -8 + (i % 3) * 6], L.est.s, `<div class="est__corpo">${estatuetaCorpo(z, i)}</div>`, metalVars(i));
+    }
+    // o boneco em si (a mesa e a vitrine usam o mesmo)
+    function estatuetaCorpo(z, i) {
+      const ph = PEDESTAL[i] ?? 22, y0 = ph + 6;
+      const corpo = caixa({ w: 58, h: ph, t: 58, cls: 'm-pedra', f: `<span class="placa">${i + 1}º</span>` })
+        + caixa({ w: 62, h: 6, t: 62, y: ph, cls: 'm-metal' })
+        + caixa({ w: 24, h: 34, t: 14, y: y0, cls: 'm-metal est__pernas', faces: 'flr' })
+        + caixa({ w: 34, h: 36, t: 18, y: y0 + 34, cls: 'm-metal' })
+        + `<div class="braco" style="--ax:-15px;--ay:${y0 + 64}px;--a:-34deg">${caixa({ w: 8, h: 30, t: 8, cls: 'm-metal' })}</div>`
+        + `<div class="braco" style="--ax:15px;--ay:${y0 + 64}px;--a:34deg">${caixa({ w: 8, h: 30, t: 8, cls: 'm-metal' })}</div>`
+        + caixa({ w: 12, h: 6, t: 10, y: y0 + 70, cls: 'm-metal', faces: 'flr' })
+        + `<div class="cabeca3d" style="--hy:${y0 + 97}px">${foto(z.quem)}</div>`
+        + Array.from({ length: 8 }, () => '<span class="cisco3d"></span>').join('');
+      return corpo;
+    }
+
+    const posDe = (quem) => ZERADOS.findIndex((z) => z.quem === quem);
+
+    // ---------- montagem e escala ----------
+    const wrap = $('#palco-wrap'), palco = $('#palco'), mundo = $('#mundo'), mesa = $('#mesa');
+    const alvoQuadro = $('#alvo-quadro');
+    function monta() {
+      L = largo.matches ? LAYOUTS.pc : LAYOUTS.cel;
+      palco.style.width = `${L.W}px`; palco.style.height = `${L.H}px`;
+      mundo.style.top = `${L.cy}px`; mundo.style.setProperty('--cam', `${L.cam}deg`);
+      mesa.innerHTML = mesaHtml()
+        + obj('abajur-obj', L.lamp, 1, abajurHtml())
+        + obj('quadro-obj', L.quadro, L.esc.quadro, quadroHtml())
+        + obj('caso-obj', L.caso, L.esc.caso, casoHtml())
+        + ZERADOS.map((z, i) => estatuetaHtml(z, i)).join('');
+      escala();
+      montaAlvosEst();
+    }
+    function escala() {
+      const k = Math.min(1.08, wrap.clientWidth / L.W);
+      palco.style.scale = k;
+      wrap.style.height = `${Math.round(L.H * k)}px`;
+      posicionaAlvos();
+      placeLights();
+    }
+    // os botões reais ficam por cima da projeção dos objetos (mínimo 44px)
+    function uniao(els) {
+      const rs = els.map((e) => e.getBoundingClientRect());
+      const l = Math.min(...rs.map((r) => r.left)), t = Math.min(...rs.map((r) => r.top));
+      return { l, t, w: Math.max(...rs.map((r) => r.right)) - l, h: Math.max(...rs.map((r) => r.bottom)) - t };
+    }
+    function poe(alvo, els, pad = 6) {
+      const base = wrap.getBoundingClientRect(), r = uniao(els);
+      const w = Math.max(44, r.w + pad * 2), h = Math.max(44, r.h + pad * 2);
+      Object.assign(alvo.style, { left: `${r.l - base.left + r.w / 2 - w / 2}px`, top: `${r.t - base.top + r.h / 2 - h / 2}px`, width: `${w}px`, height: `${h}px` });
+    }
+    function posicionaAlvos() {
+      poe(alvoQuadro, [$('#quadro-obj .m-quadro > .f')]);
+      poe($('#alvo-caso'), [$('#caso-obj .m-estojo > .f'), $('#caso-obj .coroa')]);
+      $('#alvos-est').querySelectorAll('.alvo').forEach((b) => {
+        const e = $(`#${b.dataset.obj}`);
+        if (e) poe(b, [e.querySelector('.cabeca3d'), e.querySelector('.m-pedra > .f')], 2);
+      });
+    }
+    // um botão real por estatueta já pousada na mesa
+    function montaAlvosEst() {
+      $('#alvos-est').innerHTML = ZERADOS.map((z, i) => `<button class="alvo" type="button" data-obj="est-${i}" data-i="${i}" aria-haspopup="dialog">
+        <span class="sr">Ver a estatueta de ${z.quem === 'Yuri' ? 'você' : esc(z.quem)}, ${i + 1}º lugar, e o recado</span></button>`).join('');
+      posicionaAlvos();
+    }
+    new ResizeObserver(escala).observe(wrap);
+    largo.addEventListener('change', monta);
+
+    // ---------- luz motivada: a poça âmbar nasce do abajur, o halo rosa do letreiro ----------
+    const luz = $('#luz');
+    function placeLights() {
+      const page = document.body.getBoundingClientRect();
+      const at = (el) => { const r = el.getBoundingClientRect(); return [r.left - page.left + r.width / 2, r.top - page.top + r.height / 2, r]; };
+      const [lx, ly] = at($('#abajur')), [nx, ny, neon] = at($('#neon'));
+      const set = (k, v) => luz.style.setProperty(k, `${Math.round(v)}px`);
+      set('--lamp-x', lx + wrap.clientWidth * 0.12); set('--lamp-y', ly + 40); set('--lamp-r', Math.max(420, wrap.clientWidth * 0.75));
+      set('--neon-x', nx); set('--neon-y', ny); set('--neon-w', neon.width * 0.85); set('--neon-h', neon.height * 0.9);
+    }
+    document.fonts?.ready.then(escala);
+
+    // letreiro: uma letra pisca a cada 20–40 s
+    function flickerLater() {
+      setTimeout(() => {
+        const ls = document.querySelectorAll('.neon__l');
+        if (!calma.matches && document.visibilityState === 'visible' && ls.length) {
+          const l = ls[Math.floor(Math.random() * ls.length)];
+          l.classList.add('apaga'); setTimeout(() => l.classList.remove('apaga'), 70);
+        }
+        flickerLater();
+      }, 20000 + Math.random() * 20000);
+    }
+    flickerLater();
+
+    // ---------- parallax da câmera (só PC com mouse, sem reduced-motion) ----------
+    const fino = matchMedia('(hover: hover) and (pointer: fine) and (min-width: 760px)');
+    let cam = { y: 0, p: 0, ay: 0, ap: 0, on: false };
+    function passoCam() {
+      cam.y += (cam.ay - cam.y) * 0.08; cam.p += (cam.ap - cam.p) * 0.08;
+      mundo.style.setProperty('--yaw', `${cam.y.toFixed(3)}deg`); mundo.style.setProperty('--pitch', `${cam.p.toFixed(3)}deg`);
+      posicionaAlvos();
+      if (Math.abs(cam.ay - cam.y) + Math.abs(cam.ap - cam.p) > 0.01) requestAnimationFrame(passoCam); else cam.on = false;
+    }
+    const liga = () => { if (!cam.on) { cam.on = true; requestAnimationFrame(passoCam); } };
+    $('.mesa-sec').addEventListener('pointermove', (e) => {
+      if (!fino.matches || calma.matches || st.ocupado) return;
+      const r = wrap.getBoundingClientRect();
+      cam.ay = ((e.clientX - r.left) / r.width - 0.5) * 8;
+      cam.ap = ((e.clientY - r.top) / r.height - 0.5) * -4;
+      liga();
+    });
+    $('.mesa-sec').addEventListener('pointerleave', () => { cam.ay = 0; cam.ap = 0; liga(); });
+
+    // hover/foco no botão real levanta o objeto (feedback < 200ms)
+    const levanta = (e, sim) => { const b = e.target.closest?.('.alvo'); if (b) $(`#${b.dataset.obj}`)?.classList.toggle('ativo', sim); };
+    wrap.addEventListener('pointerover', (e) => levanta(e, true)); wrap.addEventListener('pointerout', (e) => levanta(e, false));
+    wrap.addEventListener('focusin', (e) => levanta(e, true)); wrap.addEventListener('focusout', (e) => levanta(e, false));
+
+    // ---------- motor de movimento (mesmo dos outros mocks) ----------
+    const SAI = 'cubic-bezier(0.2, 0.8, 0.2, 1)';
+    const NA_TELA = 'cubic-bezier(0.65, 0, 0.35, 1)';
+    const ENTRA_RAPIDO = 'cubic-bezier(0.4, 0, 1, 1)';
+    const GRAVIDADE = 'cubic-bezier(0.55, 0, 1, 0.45)';
+    // só para revisar o movimento: ?lento=8 deixa tudo 8x mais devagar
+    const LENTO = Math.max(1, Number(new URLSearchParams(location.search).get('lento')) || 1);
+    function anim(el, quadros, opts) {
+      if (calma.matches) { const { offset, easing, ...fim } = quadros[quadros.length - 1]; Object.assign(el.style, fim); return Promise.resolve(); }
+      const a = el.animate(quadros, { fill: 'both', ...opts, duration: (opts.duration ?? 0) * LENTO, delay: (opts.delay ?? 0) * LENTO });
+      return a.finished.then(() => { a.commitStyles(); a.cancel(); }).catch(() => {});
+    }
+
+    // ---------- textos de estado ----------
+    const fmt = (min) => { const h = Math.floor(min / 60), m = min % 60; return h ? `${h}h${String(m).padStart(2, '0')}` : `${m} min`; };
+    function atualizaTextos() {
+      const falta = $('#falta');
+      falta.textContent = st.comentou ? 'Página pregada. Agora é esperar o admin fechar a rodada.' : 'Falta você: pregar tua resenha no quadro.';
+
+      $('#placar-lista').innerHTML = ZERADOS.map((z, i) =>
+        `<li>${i + 1}º lugar (${METAIS[i % METAIS.length].nome}): ${z.quem === 'Yuri' ? 'você' : esc(z.quem)}, em ${fmt(z.min)}.${z.txt ? ` Recado: “${esc(z.txt)}”` : ''}</li>`).join('');
+      $('#ainda').textContent = NAO_ZEROU.length ? `Não zerou: ${NAO_ZEROU.join(', ')}.` : 'Todo mundo zerou.';
+
+      const n = PAGINAS.length;
+      $('#alvo-quadro-txt').textContent = `Abrir o quadro de resenhas (${n} página${n > 1 ? 's' : ''}${st.comentou ? ', uma é sua' : ', falta a sua'})`;
+    }
+    const aviso = (t) => { $('#aviso').textContent = ''; setTimeout(() => { $('#aviso').textContent = t; }, 30); };
+    let toastT;
+    function toast(t) {
+      const el = $('#toast'); el.textContent = t; el.hidden = false; clearTimeout(toastT);
+      anim(el, [{ opacity: 0, transform: 'translateY(12px)' }, { opacity: 1, transform: 'none' }], { duration: 220, easing: SAI });
+      toastT = setTimeout(() => anim(el, [{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(8px)' }], { duration: 160, easing: ENTRA_RAPIDO }).then(() => { el.hidden = true; }), 3200);
+    }
+
+    // ---------- modais: foco preso, Esc fecha, foco volta ao gatilho ----------
+    const app = $('#app');
+    let modalAberto = null;
+    function prende(modal) {
+      modalAberto = modal; modal.hidden = false; app.inert = true; document.documentElement.classList.add('trava'); st.ocupado = true;
+    }
+    function solta(modal, gatilho) {
+      modal.hidden = true; app.inert = false; document.documentElement.classList.remove('trava'); modalAberto = null; st.ocupado = false;
+      gatilho?.focus({ preventScroll: true });
+    }
+    document.addEventListener('keydown', (e) => {
+      if (!modalAberto) return;
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        ({ 'm-quadro': () => fechaQuadro(), 'm-leitura': () => fechaLeitura(), 'm-est': () => fechaEst() })[modalAberto.id]();
+        return;
+      }
+      if (e.key !== 'Tab') return;
+      const fs = [...modalAberto.querySelectorAll('button, input, textarea, [tabindex="0"]')].filter((el) => !el.disabled && el.offsetParent);
+      const i = fs.indexOf(document.activeElement);
+      if (e.shiftKey && i <= 0) { e.preventDefault(); fs.at(-1).focus(); }
+      else if (!e.shiftKey && i === fs.length - 1) { e.preventDefault(); fs[0].focus(); }
+    });
+
+
+    // ---------- pulinho: o objeto assenta na mesa quando volta de um modal ----------
+    function pulinho(mola, alto, atraso, giro = 0) {
+      if (!mola) return Promise.resolve();
+      return anim(mola, [
+        { transform: 'none' },
+        { transform: `translateY(${-alto}px) rotateZ(${giro}deg)`, offset: 0.35, easing: GRAVIDADE },
+        { transform: `translateY(0) rotateZ(${-giro * 0.5}deg)`, offset: 0.7, easing: SAI },
+        { transform: `translateY(${-alto * 0.18}px)`, offset: 0.85 },
+        { transform: 'none' },
+      ], { duration: 520, delay: atraso, easing: SAI });
+    }
+
+    // ---------- QUADRO: o quadro da mesa vem pra frente; você escreve na página em branco e prega ----------
+    const mQ = $('#m-quadro'), quadro = $('#quadro'), cortica = $('#cortica'), fundoQ = mQ.querySelector('.modal__fundo');
+    const listaQ = $('#qd-lista'), campoQ = $('#qd-txt'), erroQ = $('#qd-erro'), formQ = $('#qd-form'), acoesQ = mQ.querySelector('.modal__acoes');
+    const faceQuadro = () => $('#quadro-obj .m-quadro > .f');
+    function paginaHtml(p, i) {
+      const z = posDe(p.quem), voce = p.quem === 'Yuri';
+      const meta = z >= 0 ? `zerou em ${fmt(ZERADOS[z].min)} · ${z + 1}º` : 'não zerou';
+      return `<li class="pagina" style="--r:${ROTQ[i % ROTQ.length]};--tacha:${PESSOAS[p.quem].bg}">
+        <span class="tacha" aria-hidden="true"></span>
+        <div class="pagina__topo">${balao(p.quem)}<p class="pagina__quem">${voce ? 'Você' : esc(p.quem)}</p></div>
+        <p class="pagina__txt">${esc(p.txt)}</p><p class="pagina__meta">${meta}</p></li>`;
+    }
+    const contaQ = () => { $('#qd-cont').textContent = `${campoQ.value.length}/280`; };
+    campoQ.addEventListener('input', contaQ);
+    // voo entre o quadro da mesa (projeção 3D) e o quadro aberto
+    const deQuadro = () => {
+      const a = faceQuadro().getBoundingClientRect(), b = quadro.getBoundingClientRect();
+      return `translate(${a.left + a.width / 2 - (b.left + b.width / 2)}px, ${a.top + a.height / 2 - (b.top + b.height / 2)}px) scale(${a.width / b.width}, ${a.height / b.height})`;
+    };
+    async function abreQuadro() {
+      if (st.ocupado) return;
+      listaQ.innerHTML = PAGINAS.map(paginaHtml).join('');
+      campoQ.value = ''; contaQ(); erroQ.textContent = ''; campoQ.removeAttribute('aria-invalid');
+      prende(mQ); mQ.scrollTop = 0;
+      const longe = deQuadro();
+      $('#quadro-obj').style.visibility = 'hidden';
+      const pags = [...listaQ.children, formQ];
+      pags.forEach((p) => { p.style.opacity = calma.matches ? '' : '0'; });
+      anim(fundoQ, [{ opacity: 0 }, { opacity: 1 }], { duration: 300, easing: SAI });
+      anim(acoesQ, [{ opacity: 0 }, { opacity: 1 }], { duration: 240, delay: 380, easing: SAI });
+      await anim(quadro, [
+        { transform: `${longe} rotateX(9deg)`, opacity: 0.7 },
+        { opacity: 1, offset: 0.2 },
+        { transform: 'translateY(-22px) scale(1.02) rotateX(-4deg)', offset: 0.66 },
+        { transform: 'none', opacity: 1 },
+      ], { duration: 600, easing: NA_TELA });
+      // as páginas aparecem em cascata curta, cada uma "assentando" na cortiça
+      pags.forEach((p, k) => anim(p, [{ opacity: 0, transform: 'translateY(-12px) scale(1.03)' }, { opacity: 1, transform: 'none' }], { duration: 220, delay: k * 40, easing: SAI }));
+      $('#qd-titulo').focus({ preventScroll: true });
+    }
+    async function fechaQuadro() {
+      if (!modalAberto) return;
+      anim(fundoQ, [{ opacity: 1 }, { opacity: 0 }], { duration: 300, easing: ENTRA_RAPIDO });
+      anim(acoesQ, [{ opacity: 1 }, { opacity: 0 }], { duration: 140, easing: ENTRA_RAPIDO });
+      mQ.scrollTop = 0;
+      await anim(quadro, [
+        { transform: 'none', opacity: 1 },
+        { transform: 'translateY(-12px) scale(1.01) rotateX(-3deg)', offset: 0.25 },
+        { transform: `${deQuadro()} rotateX(9deg)`, opacity: 1, offset: 0.9 },
+        { transform: `${deQuadro()} rotateX(9deg)`, opacity: 0 },
+      ], { duration: 460, easing: NA_TELA });
+      // a miniatura da mesa ganha a página nova antes de reaparecer
+      $('#quadro-obj .mola').innerHTML = quadroHtml();
+      $('#quadro-obj').style.visibility = '';
+      solta(mQ, alvoQuadro);
+      [quadro, fundoQ, acoesQ].forEach((el) => { el.getAnimations().forEach((a) => a.cancel()); el.style.removeProperty('transform'); el.style.removeProperty('opacity'); });
+      posicionaAlvos();
+      pulinho($('#quadro-obj .mola'), 10, 0);
+      atualizaTextos();
+      if (st.pregouAgora) toast('Página pregada. A galera já pode ler.');
+      st.pregouAgora = false;
+    }
+    alvoQuadro.addEventListener('click', abreQuadro);
+    mQ.addEventListener('click', (e) => { if (e.target.closest('[data-fecha]') || e.target === mQ || e.target.matches('.quadro-palco')) fechaQuadro(); });
+
+    formQ.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const txt = campoQ.value.trim();
+      if (!txt) {
+        erroQ.textContent = 'Página em branco não vale. Escreve alguma coisa.';
+        campoQ.setAttribute('aria-invalid', 'true');
+        anim(formQ, [0, -8, 6, -3, 0].map((x) => ({ transform: `translateX(${x}px)` })), { duration: 320, easing: 'ease-in-out' });
+        campoQ.focus(); return;
+      }
+      erroQ.textContent = ''; campoQ.removeAttribute('aria-invalid');
+      PAGINAS.push({ quem: 'Yuri', txt }); st.comentou = true; st.pregouAgora = true;
+      listaQ.insertAdjacentHTML('beforeend', paginaHtml(PAGINAS.at(-1), PAGINAS.length - 1));
+      const pg = listaQ.lastElementChild, tacha = pg.querySelector('.tacha');
+      campoQ.value = ''; contaQ();
+      aviso('Página pregada no quadro.');
+      if (calma.matches) return;
+      // a página encosta na cortiça (sombra longa → curta) e a tachinha desce e crava
+      tacha.style.opacity = '0';
+      pg.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      await anim(pg, [
+        { transform: 'translate(-10px, -26px) rotate(-4deg) scale(1.05)', opacity: 0, boxShadow: '16px 22px 0 rgb(12 6 9 / 0.25)' },
+        { opacity: 1, offset: 0.3 },
+        { transform: 'none', opacity: 1, boxShadow: '3px 5px 0 rgb(12 6 9 / 0.45)' },
+      ], { duration: 340, easing: SAI });
+      tacha.style.opacity = '';
+      await anim(tacha, [
+        { transform: 'translateY(-64px) scale(1.9)', opacity: 0 },
+        { transform: 'translateY(0) scale(1.15)', opacity: 1, offset: 0.78 },
+        { transform: 'translateY(0) scale(0.92)', offset: 0.88 },
+        { transform: 'none' },
+      ], { duration: 320, easing: GRAVIDADE });
+      // tum: a página e o quadro sentem a pancada
+      anim(pg, [{ transform: 'none' }, { transform: 'translateY(2px) scale(0.99)' }, { transform: 'none' }], { duration: 180, easing: SAI });
+      anim(cortica, [{ translate: '0 0' }, { translate: '0 3px' }, { translate: '0 -1px' }, { translate: '0 0' }], { duration: 220, easing: 'ease-out' });
+    });
+
+    // ---------- FINALIZAR (só admin): tudo da mesa voa pra cima, guarda na estante e volta pra "sugerindo" ----------
+    const balcao = $('#balcao'), fin1 = $('#fin-1'), fin2 = $('#fin-2');
+    if (!ADMIN) balcao.remove();
+    $('#btn-finalizar')?.addEventListener('click', () => {
+      fin1.hidden = true; fin2.hidden = false;
+      $('#balcao-dica').innerHTML = 'Certeza? A rodada 2 fecha pra todo mundo e vai pra <b>estante</b>. Não tem volta.';
+      $('#fin-sim').focus();
+    });
+    $('#fin-nao')?.addEventListener('click', () => {
+      fin2.hidden = true; fin1.hidden = false;
+      $('#balcao-dica').innerHTML = 'Só você vê isso, admin. Quando a resenha acabar, fecha a rodada: tudo vai pra <b>estante</b> e pros <b>stats</b>.';
+      $('#btn-finalizar').focus();
+    });
+    $('#fin-sim')?.addEventListener('click', finaliza);
+
+    // um objeto sai voando: agacha (antecipação), estica e sobe acelerando até sumir por cima da tela
+    function voa(o, atraso) {
+      const mola = o.querySelector('.mola'), s = parseFloat(o.style.getPropertyValue('--s')) || 1;
+      const partes = [...o.querySelectorAll('.bx > i, .abajur, .cabeca3d, .coroa')];
+      const baixo = Math.max(...partes.map((p) => p.getBoundingClientRect().bottom));
+      const k = (parseFloat(palco.style.scale) || 1) * s * Math.cos((L.cam * Math.PI) / 180);
+      const alto = (Math.max(300, baixo) + 120) / k;
+      const giro = (Math.random() < 0.5 ? -1 : 1) * (6 + Math.random() * 12);
+      const dur = Math.round(Math.min(1100, Math.max(760, 520 + baixo * 0.5)));
+      mesa.querySelectorAll(`[data-de="${o.id}"]`).forEach((sb) =>
+        anim(sb, [{ opacity: 1, transform: 'scale(1)' }, { opacity: 0, transform: 'scale(0.3)' }], { duration: dur * 0.55, delay: atraso + dur * 0.2, easing: ENTRA_RAPIDO }));
+      return anim(mola, [
+        { transform: 'none', easing: SAI },
+        { transform: 'translateY(6px) scale(1.06, 0.9)', offset: 0.16, easing: 'cubic-bezier(0.3, 0, 0.6, 1)' },
+        { transform: `translateY(${-alto * 0.05}px) scale(0.94, 1.1)`, offset: 0.3, easing: ENTRA_RAPIDO },
+        { transform: `translateY(${-alto}px) rotateZ(${giro}deg) scale(0.97, 1.05)` },
+      ], { duration: dur, delay: atraso }).then(() => { o.style.visibility = 'hidden'; });
+    }
+    async function finaliza() {
+      if (st.ocupado) return;
+      st.ocupado = true;
+      balcao.inert = true;
+      const r = wrap.getBoundingClientRect();
+      if (r.top < 0 || r.bottom > innerHeight) {
+        wrap.scrollIntoView({ block: 'center', behavior: calma.matches ? 'auto' : 'smooth' });
+        await espera(calma.matches ? 0 : 450);
+      }
+      aviso('Fechando a rodada.');
+      anim(balcao, [{ opacity: 1 }, { opacity: 0.35 }], { duration: 300, easing: SAI });
+      // ordem: estatuetas da última pra primeira, depois o quadro, o abajur (a luz vai junto) e a capinha por último
+      const ordem = [...ZERADOS.map((_, i) => `#est-${ZERADOS.length - 1 - i}`), '#quadro-obj', '#abajur-obj', '#caso-obj'].map((s) => $(s));
+      const passo = calma.matches ? 0 : 120;
+      const voos = ordem.map((o, n) => voa(o, n * passo));
+      // o bilhete da mesa sai voando junto, mais leve (papel)
+      anim($('#nota-mesa'), [{ transform: 'none', opacity: 1 }, { transform: 'translateY(-120px) rotate(-20deg)', opacity: 0 }], { duration: 600, delay: ordem.length * passo, easing: ENTRA_RAPIDO });
+      // quando o abajur decola, o quarto escurece
+      anim(luz, [{ opacity: 1 }, { opacity: 0.25 }], { duration: 700, delay: (ordem.length - 2) * passo + 300, easing: ENTRA_RAPIDO });
+      await Promise.all(voos);
+      // a mesa, aliviada, dá um pulinho
+      await anim(mesa, [{ transform: 'none' }, { transform: 'translateY(-10px)', offset: 0.35, easing: GRAVIDADE }, { transform: 'translateY(2px)', offset: 0.7 }, { transform: 'none' }], { duration: 420, easing: SAI });
+      document.querySelectorAll('.mesa-sec .alvo').forEach((b) => b.remove());
+      balcao.remove();
+      // o bilhete do fechamento
+      $('.mesa-sec').insertAdjacentHTML('beforeend', `<div class="fim" id="fim">
+        <p class="fim__carimbo" id="fim-carimbo">Guardado</p>
+        <h2 class="fim__titulo" id="fim-titulo" tabindex="-1">Rodada 2 fechada</h2>
+        <p class="fim__txt">Outer Wilds foi pra estante e o placar foi pros stats. Agora é sugerir a rodada 3.</p>
+        <a class="btn btn--papel-primario" href="rodada-sugerindo.html">Bora pra rodada 3</a></div>`);
+      const fim = $('#fim');
+      $('#falta').textContent = 'Rodada fechada. Valeu, galera.';
+      await anim(fim, [{ transform: 'translateY(-30px) rotate(3deg)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 360, easing: SAI });
+      await anim($('#fim-carimbo'), [{ transform: 'scale(1.9)', opacity: 0 }, { transform: 'scale(1)', opacity: 1 }], { duration: 380, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' });
+      $('#fim-titulo').focus({ preventScroll: true });
+      aviso('Rodada 2 fechada e guardada na estante. Indo pra rodada 3.');
+      // volta pra fase de sugestões sozinho (o botão adianta); ?fica=1 segura aqui para revisar
+      if (new URLSearchParams(location.search).has('fica')) return;
+      await espera(3200 * LENTO);
+      document.body.insertAdjacentHTML('beforeend', '<div class="apagao" id="apagao"></div>');
+      await anim($('#apagao'), [{ opacity: 0 }, { opacity: 1 }], { duration: 420, easing: 'ease-in' });
+      location.href = 'rodada-sugerindo.html';
+    }
+
+    // ---------- CAIXINHA: a capinha da mesa abre igual na votação (comentários da votação, só leitura) ----------
+    const mL = $('#m-leitura'), estojo = $('#estojo'), corpoE = $('#estojo-corpo'), tampa = $('#tampa'), frente = $('#frente');
+    const verso = $('#verso'), sombraE = $('#estojo-sombra'), cd = $('#cd'), manual = $('#manual'), painel = $('#comentarios');
+    const listaC = $('#coment-lista'), tituloL = $('#modal-titulo'), acoesL = $('#modal-acoes'), fundoL = $('#modal-fundo');
+    const lt = { ocupado: false };
+    // O Chrome não rola sozinho uma área de rolagem dentro de contexto 3D (preserve-3d) da caixinha:
+    // a roda do mouse e o dedo rolam o manual na mão (no fim do manual, a rolagem passa pra página).
+    function rolaNaMao(el) {
+      el.addEventListener('wheel', (e) => {
+        const d = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? el.clientHeight : 1), max = el.scrollHeight - el.clientHeight;
+        if ((d < 0 && el.scrollTop <= 0) || (d > 0 && el.scrollTop >= max - 1)) return;
+        e.preventDefault();
+        el.scrollTop = Math.max(0, Math.min(max, el.scrollTop + d));
+      }, { passive: false });
+      let y0 = null, s0 = 0;
+      el.addEventListener('touchstart', (e) => { y0 = e.touches[0].clientY; s0 = el.scrollTop; }, { passive: true });
+      el.addEventListener('touchmove', (e) => {
+        if (y0 === null) return;
+        const max = el.scrollHeight - el.clientHeight, novo = s0 + (y0 - e.touches[0].clientY);
+        if (novo < 0 || novo > max) return;
+        e.preventDefault();
+        el.scrollTop = novo;
+      }, { passive: false });
+      el.addEventListener('touchend', () => { y0 = null; });
+    }
+    rolaNaMao(manual);
+    const entrar = (els, atraso = 0, passo = 0) => Promise.all(els.map((el, i) =>
+      anim(el, [{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }], { duration: 260, delay: atraso + i * passo, easing: SAI })));
+    const sumir = (els, dur = 160) => Promise.all(els.map((el) =>
+      anim(el, [{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(6px)' }], { duration: dur, easing: ENTRA_RAPIDO })));
+    const fonteCaso = () => $('#caso-obj .m-estojo > .f');
+    // de onde a caixa sai: a frente da capinha 3D, já projetada na tela
+    function deCaixa(el) {
+      const s = el.getBoundingClientRect(), t = estojo.getBoundingClientRect();
+      const dx = s.left + s.width / 2 - (t.left + t.width / 2), dy = s.top + s.height / 2 - (t.top + t.height / 2);
+      const k = s.height / t.height;
+      return {
+        longe: `translate(${dx}px, ${dy}px) scale(${k}) rotateY(22deg)`,
+        meio: `translate(${dx * 0.4}px, ${dy * 0.4 - 56}px) scale(${0.5 + k * 0.5}) rotateY(8deg)`,
+      };
+    }
+    // no PC a caixa pousa na metade direita e a tampa abre pra esquerda; no celular a caixa anda e o CD espia na borda
+    const abertura = () => (innerWidth < 760 ? estojo.offsetWidth * 0.92 : 0);
+    function abreTampa() {
+      const x = abertura(), w = estojo.offsetWidth;
+      giraCd();
+      return Promise.all([
+        anim(tampa, [{ transform: 'translateZ(2px) rotateY(0deg)' }, { transform: 'translateZ(2px) rotateY(4deg)', offset: 0.12 }, { transform: 'translateZ(2px) rotateY(-180deg)' }], { duration: 760, easing: NA_TELA }),
+        anim(corpoE, [{ transform: 'translateX(0px)' }, { transform: `translateX(${x}px)` }], { duration: 760, easing: NA_TELA }),
+        anim(sombraE, [{ transform: 'none' }, { transform: `translateX(${x - w / 2}px) scaleX(2)` }], { duration: 760, easing: NA_TELA }),
+      ]);
+    }
+    let giro = null;
+    function giraCd() {
+      if (calma.matches) return;
+      cd.getAnimations().forEach((a) => a.cancel());
+      giro = cd.animate([{ transform: 'rotate(0deg)' }, { transform: 'rotate(360deg)' }], { duration: 1400 * LENTO, delay: 200 * LENTO, easing: 'cubic-bezier(0.1, 0.6, 0.2, 1)' });
+      giro.finished.then(() => { giro = cd.animate([{ transform: 'rotate(0deg)' }, { transform: 'rotate(360deg)' }], { duration: 9000, iterations: Infinity }); }).catch(() => {});
+    }
+    function paraCd() {
+      if (!giro) return;
+      const atual = getComputedStyle(cd).transform;
+      giro.cancel(); giro = null;
+      if (calma.matches || atual === 'none') return;
+      const m = new DOMMatrix(atual), ang = Math.atan2(m.b, m.a) * 180 / Math.PI;
+      cd.animate([{ transform: `rotate(${ang}deg)` }, { transform: `rotate(${ang + 40}deg)` }], { duration: 500, easing: SAI, fill: 'forwards' });
+    }
+    function fechaTampa(dur = 520) {
+      const x = abertura(), w = estojo.offsetWidth;
+      paraCd();
+      return Promise.all([
+        anim(tampa, [{ transform: 'translateZ(2px) rotateY(-180deg)' }, { transform: 'translateZ(2px) rotateY(0deg)' }], { duration: dur, easing: NA_TELA }),
+        anim(corpoE, [{ transform: `translateX(${x}px)` }, { transform: 'translateX(0px)' }], { duration: dur, easing: NA_TELA }),
+        anim(sombraE, [{ transform: `translateX(${x - w / 2}px) scaleX(2)` }, { transform: 'none' }], { duration: dur, easing: NA_TELA }),
+      ]);
+    }
+    const balao = (quem) => `<span class="balao">${foto(quem)}</span>`;
+    const comentHtml = (c, i, novo = false) => `<li class="coment${novo ? ' novo' : ''}" style="--papel: ${PAPEL[c.quem]}; --r: ${ROT[i % ROT.length]}">
+        ${balao(c.quem)}<div><p class="coment__quem">${c.quem === 'Yuri' ? 'Você' : esc(c.quem)}</p><p class="coment__txt">${esc(c.txt)}</p></div></li>`;
+    function preencheCaixa() {
+      frente.innerHTML = fonteCaso().innerHTML; // a frente no modal é cópia da capinha da mesa
+      $('#estojo-coroa').innerHTML = coroaSvg('coroa-ouro-modal');
+      $('#cd-rotulo').innerHTML = `<span>${esc(JOGO.nome)}</span>`;
+      cd.style.setProperty('--rotulo', JOGO.capa);
+      manual.innerHTML = `
+        <p class="manual__cabeca" aria-hidden="true"><span>Manual de instruções</span><span class="manual__pag">pág. 1</span></p>
+        <p class="manual__jogo">${esc(JOGO.nome)}</p>
+        <p class="manual__por">sugestão de ${esc(JOGO.por)} · o escolhido</p>
+        <h4 class="manual__sec">Do que se trata</h4><p class="manual__txt">${esc(JOGO.desc)}</p>
+        <h4 class="manual__sec">Por que jogar</h4><p class="manual__pitch">“${esc(JOGO.pitch)}”</p>
+        <dl class="manual__fatos">
+          <div><dt>Ano</dt><dd>${JOGO.ano}</dd></div><div><dt>Gênero</dt><dd>${esc(JOGO.genero)}</dd></div>
+          <div><dt>Tempo pra zerar</dt><dd>${JOGO.duracao}</dd></div><div><dt>Modo</dt><dd>${JOGO.modo}</dd></div>
+          <div><dt>Preço</dt><dd>${JOGO.preco}</dd></div>
+        </dl>
+        <h4 class="manual__sec">Plataformas</h4><ul class="manual__plats">${JOGO.plats.map((p) => `<li>${p}</li>`).join('')}</ul>`;
+      manual.scrollTop = 0;
+      listaC.innerHTML = COMENT.map((c, i) => comentHtml(c, i)).join('');
+      $('#coment-titulo').textContent = `Comentários da votação (${COMENT.length})`;
+    }
+    // Abrir: voa em arco da mesa até o lugar, segura de frente, a tampa abre sozinha;
+    // o manual entra em cascata e o painel de comentários desliza da direita.
+    async function abreLeitura() {
+      if (lt.ocupado || modalAberto) return;
+      lt.ocupado = true;
+      preencheCaixa();
+      verso.inert = true;
+      prende(mL); mL.scrollTop = 0;
+      painel.style.opacity = '0';
+      [...manual.children].forEach((el) => (el.style.opacity = '0'));
+      const de = deCaixa(fonteCaso());
+      $('#caso-obj').style.visibility = 'hidden';
+      await Promise.all([
+        anim(estojo, [{ transform: de.longe }, { transform: de.meio, offset: 0.55 }, { transform: 'none' }], { duration: 680, easing: SAI }),
+        anim(sombraE, [{ transform: 'scale(0.3)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 680, easing: SAI }),
+        anim(fundoL, [{ opacity: 0 }, { opacity: 1 }], { duration: 320, easing: 'ease-out' }),
+        entrar([tituloL, acoesL], 240, 60),
+      ]);
+      await espera(calma.matches ? 0 : 140);
+      verso.inert = false;
+      await Promise.all([
+        abreTampa(),
+        entrar([...manual.children], 460, 35),
+        anim(painel, [{ opacity: 0, transform: 'translateX(28px)' }, { opacity: 1, transform: 'none' }], { duration: 420, delay: 420, easing: SAI }),
+      ]);
+      lt.ocupado = false;
+      tituloL.focus({ preventScroll: true });
+    }
+    // Fechar: o painel sai, a tampa fecha e a caixinha volta pra mesa, que dá um pulinho ao receber.
+    async function fechaLeitura() {
+      if (lt.ocupado) return;
+      lt.ocupado = true;
+      verso.inert = true;
+      await anim(painel, [{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateX(20px)' }], { duration: 200, easing: ENTRA_RAPIDO });
+      await fechaTampa();
+      const para = deCaixa(fonteCaso());
+      await Promise.all([
+        anim(estojo, [{ transform: 'none' }, { transform: para.meio, offset: 0.45 }, { transform: para.longe }], { duration: 540, easing: 'cubic-bezier(0.45, 0, 0.2, 1)' }),
+        anim(sombraE, [{ transform: 'none', opacity: 1 }, { transform: 'scale(0.3)', opacity: 0 }], { duration: 540, easing: 'ease-in' }),
+        anim(fundoL, [{ opacity: 1 }, { opacity: 0 }], { duration: 340, delay: 200, easing: 'ease-in' }),
+        sumir([tituloL, acoesL]),
+      ]);
+      $('#caso-obj').style.visibility = '';
+      solta(mL, $('#alvo-caso'));
+      [estojo, corpoE, sombraE, fundoL, cd, tituloL, acoesL, painel].forEach((el) => { el.getAnimations().forEach((a) => a.cancel()); el.style.removeProperty('transform'); el.style.removeProperty('opacity'); });
+      tampa.style.transform = 'translateZ(2px)';
+      pulinho($('#caso-obj .mola'), 8, 0);
+      lt.ocupado = false;
+    }
+    $('#alvo-caso').addEventListener('click', abreLeitura);
+    $('#btn-fechar').addEventListener('click', fechaLeitura);
+    // clicar fora da caixinha e dos comentários (no fundo escuro ou no vão em volta) fecha
+    $('#m-leitura').addEventListener('click', (e) => {
+      if (e.target.matches('#m-leitura, #modal-fundo, .modal__palco, .leitura, .leitura__caixa')) fechaLeitura();
+    });
+
+    // ---------- VITRINE: a estatueta sai da mesa, vem pra frente e gira devagar; o recado aparece do lado ----------
+    const mE = $('#m-est'), vitPalco = $('#vit-palco'), vitMundo = $('#vit-mundo'), vitFicha = $('#vit-ficha'), fundoE = mE.querySelector('.modal__fundo');
+    const ve = { i: -1, gatilho: null, ocupado: false };
+    const partesEst = (el) => [el.querySelector('.cabeca3d'), el.querySelector('.m-pedra > .f')];
+    // leva o palco da vitrine para cima da estatueta da mesa (mesma área na tela), em torno do centro dela
+    function vooEst() {
+      vitPalco.style.transform = 'none';
+      const a = uniao(partesEst($(`#est-${ve.i}`))), b = uniao(partesEst(vitMundo)), p = vitPalco.getBoundingClientRect();
+      vitPalco.style.removeProperty('transform');
+      vitPalco.style.transformOrigin = `${b.l - p.left + b.w / 2}px ${b.t - p.top + b.h / 2}px`;
+      const dx = a.l + a.w / 2 - (b.l + b.w / 2), dy = a.t + a.h / 2 - (b.t + b.h / 2), k = a.h / b.h;
+      return { longe: `translate(${dx}px, ${dy}px) scale(${k})`, meio: `translate(${dx * 0.3}px, ${dy * 0.3 - 40}px) scale(${0.6 + k * 0.4})` };
+    }
+    async function abreEst(i, gatilho) {
+      if (ve.ocupado || modalAberto || !$(`#est-${i}`)) return;
+      ve.ocupado = true; ve.i = i; ve.gatilho = gatilho;
+      const z = ZERADOS[i], m = METAIS[i % METAIS.length], voce = z.quem === 'Yuri';
+      const pos = $('#vit-pos'); pos.style.setProperty('--m', m.m); pos.innerHTML = `${i + 1}º<span class="sr"> lugar</span>`;
+      $('#vit-nome').textContent = voce ? 'Você' : z.quem;
+      $('#vit-meta').innerHTML = `Zerou em <strong>${fmt(z.min)}</strong> · estatueta de ${m.nome}${i === 0 ? ' · primeiro a zerar' : ''}`;
+      const recado = $('#vit-recado');
+      recado.style.setProperty('--papel', PAPEL[z.quem]);
+      recado.classList.toggle('recado--vazio', !z.txt);
+      $('#vit-quem').textContent = voce ? 'Seu recado' : `Recado de ${z.quem}`;
+      $('#vit-txt').textContent = z.txt ? `“${z.txt}”` : 'Zerou e não deixou recado. Frio.';
+      prende(mE);
+      // a estatueta da vitrine é o mesmo modelo da mesa, maior
+      const s = (vitPalco.clientHeight * 0.78) / 165;
+      vitMundo.style.setProperty('--cam', '-12deg');
+      vitMundo.innerHTML = obj('vit-est', [0, 0, 0], s, `<div class="est__corpo">${estatuetaCorpo(z, i)}</div>`, metalVars(i));
+      const v = vooEst();
+      $(`#est-${i}`).style.visibility = 'hidden';
+      [vitFicha, ...vitFicha.children].forEach((el) => (el.style.opacity = calma.matches ? '' : '0'));
+      await Promise.all([
+        anim(fundoE, [{ opacity: 0 }, { opacity: 1 }], { duration: 300, easing: SAI }),
+        anim(vitFicha, [{ opacity: 0, transform: 'translateX(32px)' }, { opacity: 1, transform: 'none' }], { duration: 360, delay: 240, easing: SAI }),
+        anim(vitPalco, [{ transform: v.longe }, { transform: v.meio, offset: 0.55 }, { transform: 'none' }], { duration: 620, easing: SAI }),
+        Promise.all([...vitFicha.children].map((el, k) => anim(el, [{ opacity: 0, transform: 'translateX(24px)' }, { opacity: 1, transform: 'none' }], { duration: 320, delay: 300 + k * 60, easing: SAI }))),
+      ]);
+      // pousou: começa a girar devagar no pedestal (ambiente; desliga com reduced-motion)
+      if (!calma.matches) $('#vit-est').classList.add('gira');
+      ve.ocupado = false;
+      $('#vit-nome').focus({ preventScroll: true });
+    }
+    async function fechaEst() {
+      if (ve.ocupado) return;
+      ve.ocupado = true;
+      const vit = $('#vit-est');
+      // para o giro onde estiver e volta de frente antes de voar de volta
+      const ang = getComputedStyle(vit).getPropertyValue('--ry').trim() || '0deg';
+      vit.classList.remove('gira');
+      await anim(vit, [{ '--ry': ang }, { '--ry': '0deg' }], { duration: 260, easing: SAI });
+      const v = vooEst();
+      await Promise.all([
+        anim(vitPalco, [{ transform: 'none' }, { transform: v.meio, offset: 0.45 }, { transform: v.longe }], { duration: 480, easing: 'cubic-bezier(0.45, 0, 0.2, 1)' }),
+        anim(fundoE, [{ opacity: 1 }, { opacity: 0 }], { duration: 300, delay: 160, easing: ENTRA_RAPIDO }),
+        sumir([vitFicha], 180),
+      ]);
+      $(`#est-${ve.i}`).style.visibility = '';
+      solta(mE, ve.gatilho);
+      [vitPalco, fundoE, vitFicha, ...vitFicha.children].forEach((el) => { el.getAnimations().forEach((a) => a.cancel()); el.style.removeProperty('transform'); el.style.removeProperty('opacity'); });
+      vitMundo.innerHTML = '';
+      pulinho($(`#est-${ve.i} .mola`), 10, 0); // pousa de volta com um pulinho
+      ve.ocupado = false;
+    }
+    $('#alvos-est').addEventListener('click', (e) => { const b = e.target.closest('.alvo'); if (b) abreEst(Number(b.dataset.i), b); });
+    mE.addEventListener('click', (e) => { if (e.target.closest('[data-fecha]')) fechaEst(); });
+
+    // ---------- início ----------
+
+    $('#avatar-topo').innerHTML = foto('Yuri');
+    monta();
+    atualizaTextos();
+
+    // Atalhos só do mock, para revisar: ?demo=quadro | caixinha | estatueta | finalizar (com &fica=1 não sai da tela)
+    const demo = new URLSearchParams(location.search).get('demo');
+    if (demo) document.fonts.ready.then(async () => {
+      await espera(400);
+      if (demo === 'quadro') abreQuadro();
+      if (demo === 'caixinha') abreLeitura();
+      if (demo === 'estatueta') abreEst(0, $('#alvos-est .alvo'));
+      if (demo === 'finalizar' && ADMIN) { $('#btn-finalizar').click(); await espera(700); finaliza(); }
+    });
+  </script>
+</body>
+</html>

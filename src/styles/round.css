@@ -1,0 +1,546 @@
+/* ==========================================================================
+   Tela da rodada: grade da página (cabeçalho, faixa, ficha, TV, prateleira),
+   faixa de pano das fases jogando/encerrada, a mesa 3D (rodada-jogando.html /
+   rodada-encerrada.html), ficha do jogo, calendário, quadro de cortiça e balcão.
+   ========================================================================== */
+
+/* ---------- Página da rodada (sugerindo/votando) ---------- */
+.rodada {
+  
+  display: grid; grid-template-columns: minmax(0, 1fr); row-gap: 20px;
+  grid-template-areas: "cabeca" "faixa" "ficha" "tv" "estante";
+}
+@media (min-width: 760px) {
+  .rodada {
+    grid-template-columns: minmax(0, 1fr) minmax(250px, 380px); column-gap: 40px;
+    grid-template-areas: "cabeca tv" "faixa tv" "ficha tv" "estante estante";
+  }
+}
+.cabeca { grid-area: cabeca; }
+.cabeca h1 { overflow-wrap: anywhere; }
+.rodada > .faixa { grid-area: faixa; }
+.rodada > .ficha { grid-area: ficha; }
+.rodada > .mesa-tv { grid-area: tv; }
+.rodada__antiga { grid-area: cabeca; align-self: end; }
+/* PC estreito: a faixa divide a linha com a TV e fica sem espaço para 4 blocos */
+@media (min-width: 760px) and (max-width: 899.98px) { .rodada .faixa { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* ---------- Página da rodada com mesa (jogando/encerrada) ---------- */
+.rodada--mesa {
+  
+  display: grid; grid-template-columns: minmax(0, 1fr); row-gap: 20px;
+  grid-template-areas: "cabeca" "faixa" "falta" "mesa" "info" "placar";
+}
+@media (min-width: 760px) {
+  .rodada--mesa {
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 360px); column-gap: 28px;
+    grid-template-areas: "cabeca cabeca" "faixa faixa" "falta falta" "mesa mesa" "info placar";
+  }
+}
+
+.rodada--mesa > .falta { grid-area: falta; }
+.rodada--mesa > .info { grid-area: info; }
+.rodada--mesa > .placar { grid-area: placar; }
+
+/* faixa de pano pendurada: é o h1 da tela (pedido do grupo no lugar de "FASE 3") */
+.rodada--mesa .cabeca { grid-area: cabeca; display: flex; flex-direction: column; align-items: center; text-align: center; }
+.varal {
+  position: relative; width: min(100%, 640px); padding-top: 30px; transform-origin: 50% 0;
+  animation: balanca 7s ease-in-out infinite alternate;
+}
+@keyframes balanca { from { transform: rotate(-0.7deg); } to { transform: rotate(0.7deg); } }
+/* cordinhas e tachinhas na parede */
+.varal__corda { position: absolute; top: 4px; width: 2px; height: 34px; background: linear-gradient(180deg, #8c6646, #5a3f2a); }
+.varal__corda::before {
+  content: ''; position: absolute; left: 50%; top: -5px; width: 12px; height: 12px; translate: -50% 0; border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #ffd89a, #c88a2c 55%, #6b4a2f); box-shadow: 0 2px 0 var(--deep);
+}
+.varal__corda--e { left: 12%; } .varal__corda--d { right: 12%; }
+.banner-sombra, .banner {
+  clip-path: polygon(0 0, 100% 0, calc(100% - 26px) 50%, 100% 100%, 0 100%, 26px 50%);
+}
+.banner-sombra { position: absolute; left: 0; right: 0; top: 36px; bottom: -6px; background: var(--deep); }
+.banner {
+  position: relative; padding: 10px 44px; color: var(--paper);
+  /* pano: dobras verticais suaves + bainha costurada */
+  background:
+    repeating-linear-gradient(90deg, transparent 0 70px, rgb(12 6 9 / 0.12) 100px, transparent 130px),
+    linear-gradient(180deg, #c8304f, var(--stamp) 45%, #8d1731);
+  font: 400 clamp(2.6rem, 11vw, 4.6rem)/0.95 var(--f-placa); letter-spacing: 0.06em; text-wrap: balance;
+}
+.banner span {
+  display: block; padding: 8px 6px 4px;
+  border-top: 2px dashed rgb(244 236 210 / 0.5); border-bottom: 2px dashed rgb(244 236 210 / 0.5);
+}
+.rodada--mesa .cabeca p { margin-top: 14px; color: var(--muted); }
+
+/* o que falta a pessoa fazer: bilhete colado com fita */
+.falta {
+  grid-area: falta; justify-self: center; position: relative; max-width: 520px; padding: 8px 16px 6px;
+  background: var(--paper); color: var(--paper-ink); rotate: -1.2deg; text-align: center;
+  font: 400 1.15rem/1.3 var(--f-mao); box-shadow: 0 3px 6px rgb(12 6 9 / 0.45);
+}
+.falta::before {
+  content: ''; position: absolute; left: 50%; top: -9px; width: 70px; height: 18px; translate: -50% 0; rotate: 3deg;
+  background: rgb(243 230 216 / 0.38);
+}
+
+
+/* ---------- A mesa 3D ----------
+   palco (perspectiva + escala) → mundo (câmera) → mesa (pula no impacto) → objetos.
+   Cada objeto: .obj (posição) → .mola (pulinho/hover) → caixas de faces. Nada de filtro, blend,
+   opacity, mask ou clip-path em quem tem filhos 3D (Sem Filtro no 3D Rule). */
+.mesa-sec { grid-area: mesa; position: relative; }
+.palco-wrap {
+  position: relative; width: 100%; margin: 0 auto;
+  /* recorta só embaixo (pernas da mesa); em cima fica livre para a estatueta cair "do céu" */
+  clip-path: inset(-2000px -40px 0 -40px);
+}
+.palco { position: absolute; left: 0; top: 0; transform-origin: 0 0; perspective: 1700px; perspective-origin: 50% 22%; }
+.mundo {
+  position: absolute; left: 50%; width: 0; height: 0; transform-style: preserve-3d;
+  transform: rotateX(calc(var(--cam) + var(--pitch, 0deg))) rotateY(var(--yaw, 0deg));
+}
+.mesa, .obj, .mola, .bx, .braco, .est__corpo, .cupula, .cal3d, .controle3d { position: absolute; left: 0; top: 0; transform-style: preserve-3d; }
+.obj { transform: translate3d(var(--x), 0, var(--z)) rotateY(var(--ry, 0deg)) scale3d(var(--s, 1), var(--s, 1), var(--s, 1)); }
+.mola { transition: translate 180ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+.obj.ativo > .mola { translate: 0 -8px 0; }
+/* chão: o pé da mesa some no escuro do quarto (camada 2D por cima, decorativa) */
+.palco-chao {
+  position: absolute; left: -40px; right: -40px; bottom: 0; height: 22%; pointer-events: none;
+  background: linear-gradient(180deg, transparent, rgb(20 11 16 / 0.85) 60%, var(--ground));
+}
+
+/* caixa de faces: base no chão do objeto, centrada em x/z; --by sobe a caixa */
+.bx {
+  left: calc(var(--w) / -2); top: calc(var(--h) * -1); width: var(--w); height: var(--h);
+  transform: translate3d(var(--bx, 0px), calc(var(--by, 0px) * -1), calc(var(--bz, 0px) + var(--t) / 2));
+}
+.bx > i { position: absolute; display: block; backface-visibility: hidden; font-style: normal; }
+.bx > .f { inset: 0; }
+.bx > .l { top: 0; bottom: 0; right: 100%; width: var(--t); transform-origin: right center; transform: rotateY(-90deg); }
+.bx > .r { top: 0; bottom: 0; left: 100%; width: var(--t); transform-origin: left center; transform: rotateY(90deg); }
+.bx > .u { left: 0; right: 0; bottom: 100%; height: var(--t); transform-origin: center bottom; transform: rotateX(90deg); }
+.bx > .b { inset: 0; transform: translateZ(calc(var(--t) * -1)) rotateY(180deg); }
+
+/* materiais (luz do abajur vem da esquerda: lado esquerdo mais claro, direito mais escuro) */
+.m-tampo > .u {
+  background:
+    linear-gradient(90deg, transparent 0 calc(25% - 1px), rgb(12 6 9 / 0.55) calc(25% - 1px) 25%, transparent 25% calc(50% - 1px), rgb(12 6 9 / 0.55) calc(50% - 1px) 50%, transparent 50% calc(75% - 1px), rgb(12 6 9 / 0.55) calc(75% - 1px) 75%, transparent 75%),
+    var(--grain-h) 0 0 / 640px 160px,
+    linear-gradient(180deg, #2a180f, #4a2d1c 55%, #5b3a25);
+}
+.m-tampo > .f { background: linear-gradient(180deg, #a07652 0 2px, var(--wood-5) 2px 5px, var(--wood-4) 5px 12px, var(--wood-3) 12px); }
+.m-tampo > .l { background: linear-gradient(180deg, #8c6646, var(--wood-3)); }
+.m-tampo > .r { background: var(--wood-1); }
+.m-saia > .f { background: var(--grain-h) 0 0 / 640px 160px, linear-gradient(180deg, var(--wood-1), var(--wood-2)); }
+.m-saia > .l { background: var(--wood-2); } .m-saia > .r { background: var(--wood-1); }
+.m-perna > .f { background: linear-gradient(90deg, var(--wood-2), var(--wood-3) 45%, var(--wood-1)); }
+.m-perna > .l { background: var(--wood-3); } .m-perna > .r { background: var(--wood-1); }
+
+/* decalques do tampo: deitados no plano, sem 3D dentro */
+.decal { position: absolute; translate: -50% -50%; pointer-events: none; }
+.decal--luz { border-radius: 50%; background: radial-gradient(closest-side, rgb(255 193 94 / 0.30), rgb(255 193 94 / 0.12) 45%, rgb(255 193 94 / 0.03) 75%, transparent); }
+.decal--sombra { border-radius: 50%; background: radial-gradient(closest-side, rgb(12 6 9 / 0.85), rgb(12 6 9 / 0.45) 55%, transparent); }
+.decal--poeira { width: 120px; height: 120px; border-radius: 50%; opacity: 0; border: 6px solid rgb(232 214 190 / 0.35); }
+.decal--marca { border-radius: 50%; border: 5px solid rgb(12 6 9 / 0.35); }
+.decal--cabo { translate: none; left: 0; top: 0; overflow: visible; }
+.decal--nota {
+  width: 120px; padding: 6px 8px; background: var(--paper); color: var(--paper-ink); rotate: -7deg; translate: -50% -50%;
+  font: 400 15px/1.2 var(--f-mao); text-align: center; box-shadow: 0 3px 0 rgb(12 6 9 / 0.6);
+}
+
+/* abajur: recorte que sempre encara a câmera (billboard); a luz dele é a camada .cena-luz */
+.mesa .abajur {
+  position: absolute; left: -70px; top: -190px; width: 140px; height: 190px; transform-origin: 50% 100%;
+  transform: rotateY(calc(-1 * (var(--ry) + var(--yaw, 0deg)))) rotateX(calc(-1 * (var(--cam) + var(--pitch, 0deg))));
+}
+.mesa .abajur svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.abajur__halo {
+  position: absolute; left: 50%; top: 34%; width: 220px; height: 220px; translate: -30% -50%; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(closest-side, rgb(255 216 154 / 0.5), rgb(255 193 94 / 0.16) 45%, transparent);
+  animation: respira 9s ease-in-out infinite alternate;
+}
+@keyframes respira { from { opacity: 0.8; } to { opacity: 1; } }
+
+/* capinha do jogo: estojo em pé (capa genérica por código; no app, a capa da RAWG ou enviada) */
+.m-estojo > .f { overflow: visible; }
+.m-estojo > .l {
+  display: flex; align-items: center; justify-content: center; overflow: hidden;
+  background: linear-gradient(90deg, hsl(28 30% 12%), hsl(28 34% 22%) 45%, hsl(28 30% 14%));
+  font: 400 15px/1 var(--f-placa); color: var(--ink); letter-spacing: 0.04em;
+}
+.m-estojo > .l span { writing-mode: vertical-rl; white-space: nowrap; }
+.m-estojo > .r { background: hsl(28 26% 9%); }
+.m-estojo > .u { background: linear-gradient(90deg, hsl(28 28% 22%), hsl(28 24% 15%)); }
+.m-estojo .capa {
+  position: absolute; inset: 0; display: block; container-type: inline-size;
+  background:
+    linear-gradient(135deg, transparent 0 56%, var(--risca) 56% 60%, transparent 60% 64%, var(--risca) 64% 68%, transparent 68% 72%, var(--risca) 72% 76%, transparent 76%),
+    var(--capa);
+  box-shadow: inset 0 0 0 2px rgb(12 6 9 / 0.4);
+}
+.m-estojo .capa::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(105deg, rgb(255 193 94 / 0.16), transparent 35%), linear-gradient(110deg, rgb(243 230 216 / 0.08), transparent 30%);
+}
+.m-estojo .capa__motivo { position: absolute; left: 22%; top: 16%; width: 56%; height: auto; }
+.m-estojo .capa__nome {
+  position: absolute; z-index: 1; left: 7%; right: 7%; bottom: 6%; padding: 4px 6px 2px;
+  background: var(--deep); color: var(--ink); font: 400 15cqw/0.95 var(--f-placa); letter-spacing: 0.04em;
+}
+.m-estojo .tarja {
+  position: absolute; z-index: 2; left: 0; top: 14%; padding: 2px 8px; background: var(--pink); color: var(--deep);
+  font: 700 12px/1.3 var(--f-texto); letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap;
+}
+.m-estojo .preco {
+  position: absolute; z-index: 2; right: -8px; top: -10px; padding: 2px 10px; rotate: 5deg;
+  background: var(--amber); color: var(--deep); font: 400 18px/1.3 var(--f-mao); box-shadow: 0 3px 0 var(--deep); white-space: nowrap;
+}
+/* coroinha do vencedor: recorte de metal apoiado no topo do estojo, sempre virado pra câmera */
+.coroa {
+  position: absolute; left: -36px; top: -48px; width: 72px; height: 48px; transform-origin: 50% 100%;
+  transform: translate3d(var(--cx), calc(var(--cy) * -1), 0)
+             rotateY(calc(-1 * (var(--ry) + var(--yaw, 0deg)))) rotateX(calc(-1 * (var(--cam) + var(--pitch, 0deg)))) rotateZ(-11deg);
+}
+.coroa svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.m-estojo .carimbo {
+  position: absolute; z-index: 3; left: 50%; top: 52%; padding: 3px 8px; border: 3px solid currentColor;
+  background: rgb(20 11 16 / 0.85); color: var(--amber); white-space: nowrap;
+  font: 800 14px/1.3 var(--f-texto); letter-spacing: 0.12em; text-transform: uppercase;
+  transform: translate(-50%, -50%) rotate(-12deg);
+}
+
+/* console genérico de mesa (no app pode virar o console real da família de plataforma) */
+.m-console > .f {
+  background: linear-gradient(180deg, #34313a 0 3px, #26242b 3px 60%, #1b1a1f);
+  box-shadow: inset 0 -4px 0 rgb(12 6 9 / 0.5);
+}
+.m-console > .u {
+  background:
+    repeating-linear-gradient(90deg, transparent 0 7px, rgb(12 6 9 / 0.55) 7px 10px) 58% 30% / 40% 34% no-repeat,
+    linear-gradient(180deg, #2a2830, #3a3741 70%, #44414b);
+}
+.m-console > .l { background: linear-gradient(180deg, #3a3741, #2a2830); }
+.m-console > .r { background: #151418; }
+.cn__fenda { position: absolute; left: 8%; top: 40%; width: 46%; height: 4px; border-radius: 2px; background: #0b0a0d; box-shadow: 0 1px 0 rgb(232 230 240 / 0.1); }
+.cn__power { position: absolute; right: 8%; top: 32%; width: 16px; height: 16px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #5d5a64, #1e1d22 70%); }
+.cn__led { position: absolute; right: calc(8% + 24px); top: calc(32% + 5px); width: 6px; height: 6px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #bff3ec, var(--teal) 60%); }
+.cn__porta { position: absolute; bottom: 9px; width: 22px; height: 10px; border-radius: 2px; background: #0b0a0d; box-shadow: inset 0 0 0 2px #2f2d34; }
+.cn__porta--1 { left: 10%; } .cn__porta--2 { left: calc(10% + 30px); }
+.cn__marca { position: absolute; left: 58%; top: 26%; color: #5b5763; font: 400 14px/1 var(--f-placa); letter-spacing: 0.12em; }
+.cn__logo { position: absolute; left: 10%; top: 30%; color: #56525e; font: 400 20px/1 var(--f-placa); letter-spacing: 0.2em; }
+
+/* controle: silhueta extrudada em camadas (mesmo truque dos discos) */
+.camada { position: absolute; left: -78px; top: -50px; width: 156px; height: 100px; transform: translateY(calc(var(--dy) * -1)) rotateX(90deg); }
+.camada svg { display: block; width: 100%; height: 100%; }
+
+
+/* calendário de mesa (cavalete): duas folhas apoiadas; a da frente é miniatura da folha do modal */
+.cal3d__frente, .cal3d__tras {
+  position: absolute; left: -90px; top: -160px; width: 180px; height: 160px; transform-origin: 50% 100%; backface-visibility: hidden;
+}
+.cal3d__frente { transform: translateZ(44px) rotateX(16deg); background: var(--paper); box-shadow: inset 0 -3px 0 rgb(42 29 23 / 0.18); }
+.cal3d__tras { transform: translateZ(-44px) rotateX(-16deg) rotateY(180deg); background: linear-gradient(180deg, #6b5040, #4a3428); }
+.mini__aros { height: 12px; background: radial-gradient(circle at 50% 70%, #1a1416 0 2.4px, transparent 2.8px) 2px 0 / 13px 12px; }
+.mini__aros::before {
+  content: ''; display: block; height: 7px; margin: 0 4px;
+  background: repeating-linear-gradient(90deg, transparent 0 4px, #8a8480 4px 6px, transparent 6px 13px);
+}
+.mini__topo {
+  display: flex; justify-content: space-between; align-items: baseline; padding: 4px 8px 2px;
+  background: var(--stamp); color: var(--paper); font: 400 19px/1 var(--f-placa); letter-spacing: 0.06em;
+}
+.mini__topo small { font-size: 14px; }
+.mini__grade {
+  display: grid; grid-template-columns: repeat(7, 1fr); padding: 4px 6px 0; row-gap: 1px;
+  color: var(--paper-muted); font: 700 9px/15px var(--f-texto); text-align: center;
+}
+.mini__grade span { margin: 0 2px; border-radius: 50%; border: 1px solid transparent; }
+.mini__grade .of { border: 1px dashed var(--paper-ink); color: var(--paper-ink); }
+.mini__grade .sel { border: 2px solid var(--stamp); color: var(--stamp); }
+.mini__nota {
+  position: absolute; right: -10px; bottom: 6px; padding: 2px 8px; rotate: 6deg;
+  background: var(--amber); color: var(--deep); font: 400 13px/1.3 var(--f-mao); box-shadow: 0 2px 0 var(--deep); white-space: nowrap;
+}
+
+
+/* alvos clicáveis: botões reais por cima dos objetos (fora da cadeia 3D) */
+.alvo {
+  position: absolute; z-index: 2; min-width: var(--toque); min-height: var(--toque); padding: 0; border: 0; border-radius: 4px;
+  background: transparent; cursor: pointer;
+}
+
+
+/* ---------- Painel: ficha do jogo ---------- */
+.info { grid-area: info; padding: 20px 16px; border-radius: 4px; background: var(--shelf); }
+.info__topo { display: grid; grid-template-columns: 1fr; gap: 6px; }
+.info__nome { font: 400 clamp(2.6rem, 9vw, 4rem)/0.95 var(--f-placa); letter-spacing: 0.04em; }
+.info__por { color: var(--muted); }
+.info__por b { color: var(--ink); }
+.info__desc { margin-top: 14px; max-width: 68ch; }
+.fatos { list-style: none; margin: 22px 0 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 12px; }
+@media (min-width: 560px) { .fatos { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 1000px) { .fatos { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+.fato { padding: 8px 10px 6px; background: var(--paper); color: var(--paper-ink); box-shadow: 0 4px 0 var(--deep); rotate: -0.8deg; }
+.fato:nth-child(even) { rotate: 0.6deg; }
+.fato__rot { display: block; color: var(--paper-muted); font: 700 0.75rem/1.3 var(--f-texto); letter-spacing: 0.06em; text-transform: uppercase; }
+.fato__val { display: block; margin-top: 2px; font: 400 1.6rem/1 var(--f-placa); letter-spacing: 0.05em; font-variant-numeric: tabular-nums; }
+.info__bloco { margin-top: 24px; }
+.painel__titulo { color: var(--teal); font: 400 1.75rem/1 var(--f-placa); letter-spacing: 0.05em; }
+.plats { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.plats li {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 4px 12px; border-radius: 4px;
+  border: 2px solid var(--edge); color: var(--ink); font: 700 0.95rem/1.2 var(--f-texto);
+}
+.plats li.sua { border-color: var(--amber); background: rgb(255 193 94 / 0.12); }
+.plats svg { width: 18px; height: 18px; }
+.pitch {
+  position: relative; max-width: 440px; margin-top: 14px; padding: 10px 14px 8px; rotate: -2deg;
+  background: var(--paper); color: var(--paper-ink); box-shadow: 0 3px 6px rgb(12 6 9 / 0.5);
+}
+.pitch blockquote { margin: 0; font: 400 1.25rem/1.3 var(--f-mao); }
+.pitch figcaption { margin-top: 6px; color: var(--paper-muted); font: 400 0.95rem/1.35 var(--f-dati); }
+
+/* ---------- Placar da votação (painel ao lado da ficha do jogo) ---------- */
+.placar { align-self: start; padding: 20px 16px; border-radius: 4px; background: var(--shelf); }
+
+/* ---------- Modais ---------- */
+.modal--quadro, .modal--folha { overflow-y: auto; perspective: 1400px; }
+.mesa .abajur::before { display: none; }
+.modal[hidden] { display: none; }
+.modal__fundo { position: fixed; inset: 0; background: radial-gradient(ellipse 70% 60% at 50% 45%, rgb(20 11 16 / 0.82), rgb(12 6 9 / 0.95)); }
+/* campo sobre papel: claro com borda de tinta (o campo escuro padrão vira um buraco no papel) */
+.campo-papel {
+  min-height: var(--toque); padding: 8px 10px; border: 2px solid var(--paper-ink); border-radius: 4px;
+  background: #fbf6e6; color: var(--paper-ink); font: 400 1rem/1.4 var(--f-texto); caret-color: var(--stamp);
+}
+.campo-papel::placeholder { color: #7a6656; }
+.campo-papel:focus-visible { outline: 3px solid var(--paper-ink); outline-offset: 1px; }
+.campo-papel[aria-invalid="true"] { border-color: var(--stamp); }
+.tempo .campo-papel { width: 84px; font: 400 1.6rem/1 var(--f-placa); letter-spacing: 0.04em; text-align: center; }
+.rotulo { display: block; margin-top: 16px; }
+.rotulo small { color: var(--paper-muted); font-weight: 400; }
+textarea.campo-papel { display: block; width: 100%; min-height: 96px; margin-top: 8px; resize: vertical; }
+.contador { margin-top: 4px; color: var(--paper-muted); font-size: 0.875rem; text-align: right; font-variant-numeric: tabular-nums; }
+.erro { min-height: 1.4em; margin-top: 6px; color: var(--stamp); font-weight: 700; font-size: 0.95rem; }
+.acoes { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+
+
+/* folha do calendário em evidência */
+.folha {
+  position: relative; width: min(100%, 470px); padding-bottom: 18px; rotate: -0.6deg; transform-origin: 50% 60%;
+  background: var(--paper); color: var(--paper-ink); box-shadow: 0 6px 0 var(--deep);
+}
+.folha__aros { height: 20px; background: radial-gradient(circle at 50% 70%, #1a1416 0 4px, transparent 4.6px) 4px 0 / 24px 20px; }
+.folha__aros::before {
+  content: ''; display: block; height: 12px; margin: -6px 8px 0;
+  background: repeating-linear-gradient(90deg, transparent 0 9px, #8a8480 9px 13px, transparent 13px 24px);
+}
+.folha__topo { display: flex; justify-content: space-between; align-items: baseline; padding: 10px 16px 6px; background: var(--stamp); color: var(--paper); }
+.folha__mes { font: 400 2.6rem/1 var(--f-placa); letter-spacing: 0.05em; }
+.folha__mes:focus { outline: none; }
+.folha__ano { font: 400 1.6rem/1 var(--f-placa); letter-spacing: 0.05em; }
+.folha__corpo { padding: 12px 14px 0; }
+.folha__dica { color: var(--paper-muted); font: 400 0.95rem/1.35 var(--f-dati); }
+.semana, .grade { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.semana { margin-top: 12px; color: var(--paper-muted); font: 700 0.75rem/1.3 var(--f-texto); letter-spacing: 0.06em; text-align: center; }
+.grade { margin-top: 6px; }
+@media (max-width: 420px) { .semana, .grade { gap: 2px; } .folha__corpo { padding-inline: 10px; } }
+.dia { position: relative; display: grid; place-items: center; min-height: 48px; color: #6e5a4c; font: 700 1rem/1 var(--f-texto); }
+.dia--op {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; width: 100%; padding: 0;
+  border: 2px dashed var(--paper-ink); border-radius: 999px; background: rgb(255 193 94 / 0.28); color: var(--paper-ink); cursor: pointer;
+  transition: background-color 120ms ease-out;
+}
+.dia--op:hover { background: rgb(255 193 94 / 0.5); }
+.dia__qtd { color: var(--paper-muted); font: 700 0.75rem/1 var(--f-texto); }
+.dia__circulo { position: absolute; inset: -5px -3px; width: calc(100% + 6px); height: calc(100% + 10px); pointer-events: none; opacity: 0; overflow: visible; }
+.dia[aria-pressed="true"] { border-color: transparent; color: var(--stamp); }
+.dia[aria-pressed="true"] .dia__circulo { opacity: 1; }
+.folha__legenda { margin-top: 12px; color: var(--paper-muted); font-size: 0.95rem; }
+.folha .acoes { padding: 0 14px; }
+
+
+/* caixinha da mesa: a coroinha apoiada na borda de cima da caixa */
+/* a coroinha fica apoiada na borda de cima da caixa, também com a tampa aberta */
+.estojo__coroa { position: absolute; left: 20%; top: calc(var(--w) * -0.2); width: 36%; rotate: -11deg; transform: translateZ(4px); pointer-events: none; }
+.estojo__coroa svg { display: block; width: 100%; height: auto; overflow: visible; }
+
+/* ---------- Encerrada: quadro de cortiça na mesa ---------- */
+
+/* quadro de cortiça no cavalete: moldura de madeira, cortiça e as páginas pregadas
+   (miniaturas das páginas do modal; o texto de verdade só no modal) */
+.quadro3d { transform: rotateX(9deg); }
+.m-quadro > .f {
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 30% 40%, rgb(70 38 16 / 0.55) 0 1px, transparent 1.6px) 0 0 / 7px 9px,
+    radial-gradient(circle at 70% 60%, rgb(255 222 170 / 0.3) 0 0.9px, transparent 1.4px) 3px 2px / 11px 8px,
+    linear-gradient(120deg, #c08d58, #a8743f 50%, #8a5a31);
+  box-shadow: inset 0 0 0 12px var(--wood-4), inset 0 0 0 14px var(--wood-1), inset 0 0 16px 14px rgb(12 6 9 / 0.4);
+}
+.m-quadro > .u { background: var(--wood-5); }
+.m-quadro > .l { background: linear-gradient(180deg, var(--wood-5), var(--wood-3)); }
+.m-quadro > .r { background: var(--wood-1); }
+.qm-faixa {
+  position: absolute; left: 50%; top: 18px; translate: -50% 0; rotate: -1.5deg; padding: 2px 12px 0;
+  background: var(--paper); color: var(--paper-ink); font: 400 17px/1.15 var(--f-placa); letter-spacing: 0.12em;
+  box-shadow: 1px 2px 0 rgb(12 6 9 / 0.45);
+}
+.qm {
+  position: absolute; width: 62px; height: 76px; padding: 14px 6px 0 9px; rotate: var(--r);
+  background: repeating-linear-gradient(180deg, transparent 0 8px, rgb(70 160 170 / 0.3) 8px 9px) 0 20px / 100% 100% no-repeat, var(--paper);
+  box-shadow: 2px 3px 0 rgb(12 6 9 / 0.45);
+}
+.qm::before { content: ''; position: absolute; left: 6px; top: 0; bottom: 0; width: 1px; background: rgb(179 33 63 / 0.4); }
+.qm__foto { display: block; width: 20px; height: 20px; overflow: hidden; border-radius: 50%; border: 2px solid var(--paper-ink); }
+.qm__foto svg { display: block; width: 100%; height: 100%; }
+.qm__rabisco { display: block; width: var(--w); height: 2px; margin-top: 6px; border-radius: 1px; background: rgb(42 29 23 / 0.55); }
+/* tachinha: cabeça de plástico colorida com brilho e sombra curta na cortiça */
+.tacha {
+  position: absolute; left: 50%; top: 2px; width: 11px; height: 11px; translate: -50% 0; border-radius: 50%;
+  background: radial-gradient(circle at 34% 32%, rgb(255 255 255 / 0.85) 0 12%, var(--tacha) 32%, color-mix(in srgb, var(--tacha), #0c0609 45%) 100%);
+  box-shadow: 2px 2px 0 rgb(12 6 9 / 0.45);
+}
+
+
+/* ---------- Balcão do admin: só ele vê; finalizar pede confirmação na hora ---------- */
+.balcao {
+  grid-area: balcao; justify-self: center; display: grid; justify-items: center; gap: 12px; width: min(100%, 560px);
+  padding: 18px 16px; background: transparent; border: 2px dashed var(--teal); border-radius: 4px; text-align: center;
+}
+.balcao__dica { color: var(--muted); max-width: 46ch; }
+.balcao__dica b { color: var(--ink); }
+.balcao__acoes { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.balcao__acoes[hidden] { display: none; }
+
+/* ---------- Depois de finalizar: a mesa fica vazia e o bilhete do fechamento aparece ---------- */
+.fim {
+  position: absolute; z-index: 5; left: 50%; top: 42%; width: min(calc(100% - 32px), 420px); translate: -50% -50%; rotate: -1.4deg;
+  padding: 22px 20px 18px; background: var(--paper); color: var(--paper-ink); text-align: center; box-shadow: 0 6px 0 var(--deep);
+}
+.fim :focus-visible { outline-color: var(--paper-ink); }
+.fim__carimbo {
+  display: inline-block; padding: 3px 12px; border: 4px solid currentColor; rotate: -6deg; color: var(--stamp);
+  font: 800 1.25rem/1.25 var(--f-texto); letter-spacing: 0.14em; text-transform: uppercase;
+}
+.fim__titulo { margin-top: 12px; font: 400 2.4rem/1 var(--f-placa); letter-spacing: 0.05em; }
+.fim__titulo:focus { outline: none; }
+.fim__txt { margin-top: 8px; }
+.fim .btn { margin-top: 16px; text-decoration: none; }
+.apagao { position: fixed; inset: 0; z-index: 300; background: var(--deep); pointer-events: none; }
+
+
+/* ---------- Quadro aberto: o quadro da mesa vem pra frente; cada resenha é uma página de caderno pregada ---------- */
+.modal--quadro { place-items: start center; padding-block: 24px; }
+@media (min-width: 760px) { .modal--quadro { place-items: safe center; } }
+.quadro-palco { position: relative; display: flex; flex-direction: column; align-items: center; gap: 14px; width: min(100%, 1000px); }
+.quadro {
+  width: 100%; padding: 14px; border-radius: 6px; transform-origin: 50% 40%;
+  background: var(--grain-h) 0 0 / 640px 160px, linear-gradient(135deg, var(--wood-5), var(--wood-4) 40%, var(--wood-3));
+  box-shadow: 0 8px 0 var(--deep), inset 0 0 0 2px #a07652, inset 0 0 0 6px var(--wood-2);
+}
+@media (min-width: 760px) { .quadro { padding: 18px; } }
+.quadro__cortica {
+  position: relative; padding: 18px 14px 26px;
+  background:
+    radial-gradient(circle at 30% 40%, rgb(70 38 16 / 0.5) 0 1.2px, transparent 1.9px) 0 0 / 9px 11px,
+    radial-gradient(circle at 70% 60%, rgb(255 222 170 / 0.28) 0 1px, transparent 1.6px) 4px 3px / 13px 10px,
+    linear-gradient(120deg, #c08d58, #a8743f 50%, #8a5a31);
+  box-shadow: inset 0 0 18px rgb(12 6 9 / 0.5);
+}
+@media (min-width: 760px) { .quadro__cortica { padding: 22px 24px 30px; } }
+/* título numa tira de papel pregada (texto sempre em superfície sólida) */
+.quadro__titulo {
+  position: relative; display: table; margin: 0 auto; padding: 6px 22px 2px; rotate: -1.2deg;
+  background: var(--paper); color: var(--paper-ink); font: 400 clamp(1.9rem, 6vw, 2.6rem)/1 var(--f-placa); letter-spacing: 0.06em;
+  box-shadow: 2px 4px 0 rgb(12 6 9 / 0.45);
+}
+.quadro__titulo:focus { outline: none; }
+.quadro__titulo .tacha { --tacha: var(--amber); top: -5px; left: 10px; translate: none; width: 15px; height: 15px; }
+.quadro__titulo .tacha + .tacha { left: auto; right: 10px; --tacha: var(--teal); }
+.quadro__grade {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr)); gap: 26px 20px; align-items: start;
+  margin: 22px 0 0; padding: 0; list-style: none;
+}
+.quadro__grade > ul { display: contents; list-style: none; }
+/* página de caderno: pauta alinhada com a linha do texto (24px), margem vermelha, tachinha no topo */
+.pagina {
+  position: relative; padding: 24px 14px 14px 32px; rotate: var(--r, -1deg); color: var(--paper-ink);
+  background: repeating-linear-gradient(180deg, transparent 0 23px, rgb(70 160 170 / 0.32) 23px 24px) 0 70px / 100% 100% no-repeat, var(--paper);
+  box-shadow: 3px 5px 0 rgb(12 6 9 / 0.45);
+}
+.pagina::before { content: ''; position: absolute; left: 22px; top: 0; bottom: 0; width: 2px; background: rgb(179 33 63 / 0.35); }
+.pagina > .tacha { top: -6px; width: 18px; height: 18px; box-shadow: 3px 3px 0 rgb(12 6 9 / 0.4); }
+.pagina__topo { display: flex; align-items: center; gap: 10px; }
+.pagina__quem { font: 400 1.1rem/1.2 var(--f-mao); }
+.pagina__txt { margin-top: 10px; font: 400 1rem/24px var(--f-texto); overflow-wrap: anywhere; }
+.pagina__meta { margin-top: 6px; color: var(--paper-muted); font: 400 0.875rem/24px var(--f-dati); }
+/* a página em branco: é onde você escreve a sua antes de pregar */
+.pagina--nova { rotate: 0deg; background: #fbf6e6; outline: 2px dashed var(--paper-ink); outline-offset: -8px; }
+.pagina--nova::before { display: none; }
+.pagina--nova { padding: 18px 16px 16px; }
+.pagina--nova :focus-visible { outline-color: var(--paper-ink); }
+.pagina__rotulo { display: block; font: 400 1.1rem/1.2 var(--f-mao); }
+.pagina--nova .btn { width: 100%; margin-top: 4px; }
+
+
+/* ---------- Ajustes do app (dados reais no lugar dos dados de exemplo) ---------- */
+/* balcão do admin fora da grade: centralizado, depois do conteúdo da rodada */
+.balcao { position: relative; margin: 40px auto 0; background: var(--ground); }
+.balcao .panel__title { margin-bottom: 0; }
+.balcao--largo { justify-items: stretch; text-align: left; width: min(100%, 760px); }
+.balcao--largo .form { max-width: none; }
+.balcao__datas { width: 100%; }
+.desempate { display: grid; gap: 12px; width: 100%; margin-top: 8px; }
+.desempate__titulo { font: 400 1.6rem/1 var(--f-placa); letter-spacing: 0.05em; }
+
+/* rodada sem fita: TV "sem sinal" e o estado vazio */
+.rodada--vazia .rodada__vazia { grid-area: ficha; }
+
+/* placar da votação ao lado da ficha do jogo */
+.placar .tally { margin-top: 12px; }
+.tally__quem { grid-column: 1 / -1; }
+
+/* resenhas (jogando): o quadro de cortiça fica deitado na página */
+.resenhas, .perguntas { margin-top: 40px; }
+.perguntas > .muted { margin-bottom: 12px; }
+.perguntas__form { margin-top: 16px; }
+.quadro__media { display: table; margin: 14px auto 0; padding: 4px 12px; background: var(--paper); color: var(--paper-ink); font: 400 0.95rem/1.35 var(--f-dati); rotate: 1deg; box-shadow: 2px 3px 0 rgb(12 6 9 / 0.45); }
+.quadro__media .sticker { margin-right: 6px; }
+.pagina__topo .sticker { margin-left: auto; transform: rotate(4deg); }
+.pagina__txt--vazia { color: var(--paper-muted); font-style: italic; }
+.pagina .spoiler summary { border-color: var(--stamp); color: var(--stamp); margin-top: 10px; }
+.pagina .score-picker { margin-top: 8px; }
+.pagina .score-picker input[type='range'] { accent-color: var(--paper-ink); }
+.pagina .score-out { color: var(--paper-ink); }
+.check--papel { margin: 10px 0; border-color: rgb(42 29 23 / 0.45); color: var(--paper-ink); }
+.check--papel:has(input:checked) { border-color: var(--paper-ink); background: rgb(42 29 23 / 0.08); }
+.check--papel:has(input:focus-visible) { outline-color: var(--paper-ink); }
+.check--papel input { accent-color: var(--paper-ink); }
+.modal--quadro .modal__acoes { margin-top: 4px; }
+
+/* miniatura das páginas no quadro da mesa: foto real ou a inicial */
+.qm__foto img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.qm__foto b { display: grid; place-items: center; width: 100%; height: 100%; background: var(--pink); color: var(--deep); font: 800 10px/1 var(--f-texto); }
+
+/* folha do calendário: um bloco por mês e, se precisar, os horários do mesmo dia */
+.folha__mesano { margin-top: 12px; font: 400 1.4rem/1 var(--f-placa); letter-spacing: 0.05em; }
+.folha__corpo .folha__dica + .folha__mesano { margin-top: 10px; }
+.dia--varios { border: 2px dotted var(--paper-ink); border-radius: 999px; color: var(--paper-ink); }
+.folha__horarios { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.horario {
+  display: inline-flex; align-items: center; gap: 8px; min-height: var(--toque); padding: 6px 12px; cursor: pointer;
+  border: 2px dashed var(--paper-ink); border-radius: var(--r); background: rgb(255 193 94 / 0.28); color: var(--paper-ink); font: 700 0.95rem/1.2 var(--f-texto);
+}
+.horario[aria-pressed="true"] { border-style: solid; border-color: var(--stamp); color: var(--stamp); }
+.dia:disabled, .horario:disabled { cursor: default; }
+
+/* capinha com imagem dentro da tampa da caixinha */
+.tampa__frente > .cover__img { inset: 4px; width: calc(100% - 8px); height: calc(100% - 8px); }
+.m-estojo .cover__img { z-index: 1; }
+/* a lombada do estojo da mesa pega a cor do jogo */
+.m-estojo > .l { background: linear-gradient(90deg, hsl(var(--hue, 28) 30% 12%), hsl(var(--hue, 28) 34% 22%) 45%, hsl(var(--hue, 28) 30% 14%)); }
+.m-estojo > .r { background: hsl(var(--hue, 28) 26% 9%); }
+.m-estojo > .u { background: linear-gradient(90deg, hsl(var(--hue, 28) 28% 22%), hsl(var(--hue, 28) 24% 15%)); }

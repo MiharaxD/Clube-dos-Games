@@ -1,0 +1,2583 @@
+<!doctype html>
+<!--
+  Mock estático EM REVISÃO: tela "Estante", no mundo "Sexta no quarto" (DESIGN.md + Estetica/DOSSIE.md). Não é código do app.
+  Base: a prateleira 3D de rodada-votando.html (sem voto) + a mesa de rodada-encerrada.html (só leitura).
+  A estante guarda todo jogo que já foi escolhido, da rodada mais nova pra mais velha. Clicar na capinha tira ela do nicho,
+  o quarto escurece, ela pousa na mesa e o resto cai do céu com impacto (abajur, quadro de resenhas, estatuetas de quem zerou).
+  Na mesa dá pra reler o quadro, abrir a caixinha (comentários da votação) e ver cada estatueta com o recado. "Devolver pra estante"
+  faz o caminho de volta.
+  Atalhos de revisão: ?demo=tirar · ?demo=quadro · ?demo=caixinha · ?demo=estatueta · ?demo=devolver · &rodada=N (padrão 2)
+  · &lento=8 (câmera lenta)
+
+  FONTES: o <link> do Google Fonts abaixo é TEMPORÁRIO, só para o mock (o app hospeda os .woff2 com a licença).
+  DADOS NOVOS (perguntar antes de implementar): os mesmos do mock da encerrada (páginas do quadro, "zerou" com ordem e
+  tempo, recado, foto do membro) precisam ficar guardados por rodada para a estante reabrir.
+-->
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mock: Estante (quarto gamer)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;600;700;800&family=Bebas+Neue&family=Permanent+Marker&family=Special+Elite&display=swap" rel="stylesheet" />
+  <style>
+    /* ---------- Tokens (DESIGN.md) ---------- */
+    :root {
+      --ground: #140b10; --shelf: #1e1218; --wood: #3b2417; --lip: #6b4a2f; --edge: #7a6153; --deep: #0c0609;
+      --ink: #f3e6d8; --muted: #c9b5a8; --amber: #ffc15e; --pink: #ff5c8a; --teal: #46c3b5;
+      --paper: #f4ecd2; --paper-ink: #2a1d17; --paper-muted: #4f3d33; --stamp: #b3213f;
+
+      --f-placa: 'Bebas Neue', 'Atkinson Hyperlegible Next', sans-serif;
+      --f-texto: 'Atkinson Hyperlegible Next', system-ui, sans-serif;
+      --f-dati: 'Special Elite', 'Atkinson Hyperlegible Next', monospace;
+      --f-mao: 'Permanent Marker', 'Atkinson Hyperlegible Next', cursive;
+
+      --gutter: 16px; --max: 1120px; --toque: 44px;
+
+      /* madeira do móvel em luz baixa (wood e lip são tokens; o resto são os tons vizinhos) */
+      --wood-1: #22140c; --wood-2: #3b2417; --wood-3: #4d3020; --wood-4: #6b4a2f; --wood-5: #8c6646;
+
+      /* veio de madeira e poeira: ruído renderizado uma vez como imagem (herdado do V2) */
+      --grain-h: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='640' height='160'><filter id='a' x='0' y='0' width='1' height='1'><feTurbulence type='fractalNoise' baseFrequency='0.0032 0.075' numOctaves='4' seed='9' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.10 0 0 0 0 0.05 0 0 0 0 0.02 1.4 0 0 0 -0.2'/><feComponentTransfer><feFuncA type='table' tableValues='0 0.42 0.04 0.36 0 0.46 0.06 0.32 0 0.4 0.05 0.3 0'/></feComponentTransfer></filter><filter id='b' x='0' y='0' width='1' height='1'><feTurbulence type='fractalNoise' baseFrequency='0.002 0.42' numOctaves='2' seed='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 0.86 0 0 0 0 0.7 2.6 0 0 0 -1.45'/></filter><rect width='640' height='160' filter='url(%23a)'/><rect width='640' height='160' filter='url(%23b)' opacity='0.3'/></svg>");
+      --grain-v: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='640'><filter id='a' x='0' y='0' width='1' height='1'><feTurbulence type='fractalNoise' baseFrequency='0.075 0.0032' numOctaves='4' seed='5' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.10 0 0 0 0 0.05 0 0 0 0 0.02 1.4 0 0 0 -0.2'/><feComponentTransfer><feFuncA type='table' tableValues='0 0.42 0.04 0.36 0 0.46 0.06 0.32 0 0.4 0.05 0.3 0'/></feComponentTransfer></filter><filter id='b' x='0' y='0' width='1' height='1'><feTurbulence type='fractalNoise' baseFrequency='0.42 0.002' numOctaves='2' seed='8' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 0.86 0 0 0 0 0.7 2.6 0 0 0 -1.45'/></filter><rect width='160' height='640' filter='url(%23a)'/><rect width='160' height='640' filter='url(%23b)' opacity='0.3'/></svg>");
+      --specks: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='d' x='0' y='0' width='1' height='1'><feTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='1' seed='4' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.86 0 0 0 0 0.82 0 0 0 0 0.74 7 0 0 0 -4.6'/></filter><rect width='180' height='180' filter='url(%23d)' opacity='0.25'/></svg>");
+      /* carpete geométrico de locadora (V2), base puxada para o vinho */
+      --carpet: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='96' height='96'><rect width='96' height='96' fill='%231c1418'/><path d='M6 14l9-8 9 8 9-8 9 8' fill='none' stroke='%232d6468' stroke-width='4'/><path d='M60 54h18l-9 15z' fill='%23a0702b'/><path d='M12 62h5v5h-5zM21 70h5v5h-5zM30 62h5v5h-5z' fill='%23a3354f'/><circle cx='78' cy='22' r='7' fill='none' stroke='%23a3354f' stroke-width='3'/><path d='M38 84h22v4H38z' fill='%232d6468'/><path d='M86 78h3v3h-3zM4 40h3v3H4zM50 30h3v3h-3zM70 90h3v3h-3z' fill='%23c9b98f'/></svg>");
+      /* bordas rasgadas do ticket (picote serrilhado) */
+      --serra-d: polygon(0 0, calc(100% - 4px) 0, 100% 10%, calc(100% - 4px) 20%, 100% 30%, calc(100% - 4px) 40%, 100% 50%, calc(100% - 4px) 60%, 100% 70%, calc(100% - 4px) 80%, 100% 90%, calc(100% - 4px) 100%, 0 100%);
+      --serra-e: polygon(4px 0, 100% 0, 100% 100%, 4px 100%, 0 90%, 4px 80%, 0 70%, 4px 60%, 0 50%, 4px 40%, 0 30%, 4px 20%, 0 10%);
+    }
+
+    /* ---------- Base e superfícies do navegador ---------- */
+    *, *::before, *::after { box-sizing: border-box; }
+    html { color-scheme: dark; background: var(--ground); scrollbar-color: var(--lip) var(--ground); }
+    body {
+      position: relative; margin: 0; min-height: 100vh;
+      color: var(--ink); font: 400 1rem/1.5 var(--f-texto); caret-color: var(--amber);
+      background: var(--ground); overflow-x: clip;
+      -webkit-font-smoothing: antialiased;
+    }
+    ::selection { background: var(--amber); color: var(--deep); }
+    :focus-visible { outline: 3px solid var(--amber); outline-offset: 3px; }
+    h1, h2, h3, p { margin: 0; }
+    .sr { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+    .icone { width: 20px; height: 20px; flex: none; }
+    /* ---------- A cena: camadas irmãs, todas atrás da interface ----------
+       Ordem: parede (fundo do body) → luz (screen) → grão (overlay) → vinheta. A UI fica acima (z 10),
+       fora de qualquer blend. Nenhuma delas é ancestral da estante 3D.
+       Blend em tela cheia: 2 (luz + grão), dentro do limite de 3 no PC e 2 no celular. */
+    /* parede: pegboard do V2 (furos escuros com quina clara), em camada própria para o parallax */
+    .cena-parede {
+      position: fixed; inset: -32px -32px -160px; z-index: 0; pointer-events: none;
+      background:
+        radial-gradient(circle at 11px 11px, #0a0507 0 2.3px, rgb(255 230 210 / 0.05) 2.6px 3.1px, transparent 3.4px) 0 0 / 22px 22px,
+        var(--specks) 0 0 / 180px 180px,
+        linear-gradient(180deg, #251a1c, var(--ground) 75%);
+    }
+    .cena-luz {
+      position: absolute; inset: 0; z-index: 1; pointer-events: none; mix-blend-mode: screen;
+      /* posições medidas por JS a partir dos objetos (TV, abajur, letreiro); queda ~1/d² por paradas */
+      background:
+        radial-gradient(circle var(--tv-r, 520px) at var(--tv-x, 75%) var(--tv-y, 360px),
+          rgb(70 195 181 / 0.42) 0, rgb(70 195 181 / 0.34) 12%, rgb(70 195 181 / 0.21) 25%,
+          rgb(70 195 181 / 0.085) 50%, rgb(70 195 181 / 0.03) 75%, transparent 100%),
+        radial-gradient(circle var(--lamp-r, 340px) at var(--lamp-x, 10%) var(--lamp-y, 900px),
+          rgb(255 193 94 / 0.24) 0, rgb(255 193 94 / 0.19) 12%, rgb(255 193 94 / 0.12) 25%,
+          rgb(255 193 94 / 0.05) 50%, rgb(255 193 94 / 0.017) 75%, transparent 100%),
+        radial-gradient(ellipse var(--neon-w, 170px) var(--neon-h, 90px) at var(--neon-x, 90px) var(--neon-y, 40px),
+          rgb(255 92 138 / 0.12), rgb(255 92 138 / 0.05) 50%, transparent 100%);
+    }
+    .cena-grao {
+      position: fixed; inset: 0; z-index: 2; pointer-events: none; opacity: 0.08; mix-blend-mode: overlay;
+      background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>") 0 0 / 160px 160px;
+    }
+    .cena-vinheta {
+      position: fixed; inset: 0; z-index: 3; pointer-events: none;
+      background: radial-gradient(ellipse 85% 80% at 50% 42%, transparent 48%, rgb(12 6 9 / 0.5) 100%);
+    }
+    .app { position: relative; z-index: 10; }
+
+    /* ---------- Barra superior ---------- */
+    .topo {
+      max-width: var(--max); margin: 0 auto; padding: 12px var(--gutter) 8px;
+      display: grid; grid-template-columns: 1fr auto; grid-template-areas: "marca avatar" "nav nav";
+      align-items: center; gap: 6px 12px; border-bottom: 2px solid var(--edge);
+    }
+    .marca { grid-area: marca; display: block; width: 158px; }
+    .neon { display: block; width: 100%; height: auto; overflow: visible; }
+    .neon__fio { fill: none; stroke: #2a1a20; stroke-width: 1.6; stroke-linecap: round; }
+    .neon__grampo { fill: #2a1a20; }
+    .neon__apagado { fill: none; stroke: #3e2632; stroke-width: 4.6; stroke-linecap: round; stroke-linejoin: round; }
+    .neon__tubo { fill: none; stroke: var(--pink); stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
+    .neon__nucleo { fill: none; stroke: rgb(255 243 250 / 0.55); stroke-width: 1.1; stroke-linecap: round; stroke-linejoin: round; }
+    .neon__l { transition: none; }
+    .neon__l.apaga { opacity: 0.12; }
+
+    .nav { grid-area: nav; }
+    .nav ul { list-style: none; margin: 0; padding: 0; display: flex; gap: 4px; overflow-x: auto; }
+    .nav a {
+      display: flex; align-items: center; min-height: var(--toque); padding: 8px 12px; border-radius: 4px;
+      color: var(--muted); font: 600 0.95rem/1.2 var(--f-texto); text-decoration: none; white-space: nowrap;
+      transition: background-color 120ms ease-out, color 120ms ease-out;
+    }
+    .nav a:hover { background: var(--shelf); color: var(--ink); }
+    .nav a[aria-current="page"] { background: var(--amber); color: var(--deep); }
+    .avatar {
+      grid-area: avatar; display: grid; place-items: center; width: var(--toque); height: var(--toque);
+      border-radius: 50%; border: 3px solid var(--ink); background: var(--pink); color: var(--deep);
+      font: 800 1.1rem/1 var(--f-texto);
+    }
+    @media (min-width: 760px) {
+      .topo { grid-template-columns: auto 1fr auto; grid-template-areas: "marca nav avatar"; gap: 20px; padding-top: 14px; }
+      .marca { width: 196px; }
+      .nav { justify-self: end; }
+    }
+
+    /* ---------- Botões ---------- */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      min-height: var(--toque); padding: 8px 16px; border: 2px solid currentColor; border-radius: 4px;
+      background: transparent; color: var(--ink); font: 700 1rem/1.2 var(--f-texto); cursor: pointer;
+      transition: background-color 120ms ease-out, color 120ms ease-out, border-color 120ms ease-out;
+    }
+    .btn:hover { background: var(--ink); border-color: var(--ink); color: var(--deep); }
+    .btn:active { transform: translateY(1px); }
+    .btn--primario { background: var(--amber); border-color: var(--amber); color: var(--deep); }
+    .btn--primario:hover { background: var(--ink); border-color: var(--ink); }
+    .btn:disabled { opacity: 0.55; cursor: not-allowed; background: transparent; color: var(--ink); border-color: var(--ink); transform: none; }
+    .btn--papel { color: var(--paper-ink); }
+    .btn--papel:hover { background: var(--paper-ink); border-color: var(--paper-ink); color: var(--paper); }
+
+    /* ---------- Ficha do sócio (papel pequeno) ---------- */
+    .ficha {
+      grid-area: ficha; position: relative; max-width: 760px; padding: 16px 16px 18px;
+      background: var(--paper); color: var(--paper-ink); rotate: -0.6deg; box-shadow: 0 5px 0 var(--deep);
+      font: 400 0.95rem/1.35 var(--f-dati);
+    }
+    .ficha :focus-visible { outline-color: var(--paper-ink); }
+    .ficha__titulo { font: 400 1.75rem/1 var(--f-placa); letter-spacing: 0.05em; padding-right: 112px; }
+    .ficha__socio { margin-top: 6px; color: var(--paper-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+    .ficha__falta { margin-top: 12px; font: 400 1.25rem/1.3 var(--f-mao); }
+    .ficha__resto { margin-top: 6px; max-width: 60ch; }
+    .ficha__resto strong { font: 400 1.25rem/1 var(--f-placa); font-variant-numeric: tabular-nums; }
+    .ficha__acoes { margin-top: 14px; }
+    .ficha__carimbo {
+      position: absolute; top: 14px; right: 14px; padding: 2px 8px; border: 3px solid currentColor;
+      color: var(--stamp); rotate: -6deg;
+      font: 800 1rem/1.3 var(--f-texto); letter-spacing: 0.12em; text-transform: uppercase;
+    }
+    /* ---------- TV de tubo (objeto da cena; o cartaz repete o h1, por isso aria-hidden) ---------- */
+    .mesa-tv { grid-area: tv; position: relative; align-self: end; justify-self: center; width: min(100%, 270px); padding-top: 64px; }
+    @media (min-width: 760px) { .mesa-tv { width: 100%; } }
+    .tv { position: relative; container-type: inline-size; }
+    /* brilho teal local: respira só em opacity */
+    .tv__brilho {
+      position: absolute; left: -12%; right: -12%; top: -20%; bottom: -12%; pointer-events: none;
+      background: radial-gradient(closest-side, rgb(70 195 181 / 0.24), rgb(70 195 181 / 0.09) 50%, rgb(70 195 181 / 0.02) 80%, transparent);
+      animation: respira 9s ease-in-out infinite alternate;
+    }
+    @keyframes respira { from { opacity: 0.8; } to { opacity: 1; } }
+    .tv__antena { position: absolute; left: 50%; bottom: 100%; width: 16cqw; height: 4.5cqw; translate: -50% 0; border-radius: 8cqw 8cqw 0 0; background: linear-gradient(180deg, #3a332b, #221d19); }
+    .tv__antena::before, .tv__antena::after {
+      content: ''; position: absolute; bottom: 60%; left: 50%; width: 2px; height: 26cqw; transform-origin: bottom center;
+      background: linear-gradient(180deg, #8a8070 0 3px, #5a5246 3px);
+    }
+    .tv__antena::before { transform: rotate(-28deg); }
+    .tv__antena::after { transform: rotate(24deg); }
+    .tv__caixa {
+      position: relative; display: grid; grid-template-columns: 1fr 15%; gap: 4cqw; padding: 5cqw;
+      border-radius: 3cqw 3cqw 2cqw 2cqw;
+      background: linear-gradient(180deg, #a3977f, #857964 45%, #5d5444);
+      box-shadow: inset 0 2px 0 rgb(255 240 215 / 0.28), inset 0 -3px 0 rgb(12 6 9 / 0.35),
+                  inset -12px 0 16px -12px rgb(70 195 181 / 0.25), 0 6px 0 var(--deep);
+    }
+    .tv__moldura { padding: 3.5cqw; border-radius: 12% / 15%; background: #221d19; box-shadow: inset 0 0 0 2px #3b332b; }
+    .tv__vidro {
+      position: relative; aspect-ratio: 4 / 3; overflow: hidden; border-radius: 9% / 12%;
+      background: radial-gradient(ellipse 75% 70% at 50% 45%, #1d5c56, #103a39 55%, #0a2022);
+      box-shadow: inset 0 0 8cqw 2cqw rgb(6 14 14 / 0.7);
+    }
+    /* reflexo: Fresnel nas bordas + o abajur refletido no canto (objeto que existe na cena) */
+    .tv__vidro::before {
+      content: ''; position: absolute; inset: 0; z-index: 2; border-radius: inherit; pointer-events: none;
+      background:
+        radial-gradient(ellipse 22% 12% at 18% 14%, rgb(255 210 150 / 0.16), transparent 70%),
+        radial-gradient(ellipse at 50% 50%, transparent 55%, rgb(232 246 255 / 0.10) 100%);
+    }
+    /* scanlines: só aqui, no vidro */
+    .tv__vidro::after {
+      content: ''; position: absolute; inset: 0; z-index: 3; border-radius: inherit; pointer-events: none;
+      background: repeating-linear-gradient(to bottom, transparent 0 1px, rgb(6 14 14 / 0.12) 1px 2px);
+    }
+    /* faixa clara rolando pelo tubo (V2), bem fraca: só transform */
+    .tv__rolo {
+      position: absolute; left: 0; right: 0; top: 0; height: 30%; z-index: 1; pointer-events: none;
+      background: linear-gradient(180deg, transparent, rgb(232 246 255 / 0.07), transparent);
+      animation: tv-rolo 8s linear infinite;
+    }
+    @keyframes tv-rolo { from { transform: translateY(-100%); } to { transform: translateY(340%); } }
+    /* poeira flutuando na luz da TV (V2): poucas partículas, um elemento por grupo (box-shadow) */
+    .poeira { position: absolute; inset: 0 -6% 22%; z-index: 2; pointer-events: none; }
+    .cisco {
+      position: absolute; width: 2px; height: 2px; border-radius: 50%;
+      background: rgb(214 245 240 / 0.75); color: rgb(214 245 240 / 0.5);
+      animation: cisco 26s ease-in-out infinite alternate;
+    }
+    .cisco--a { left: 18%; top: 34%; box-shadow: 40px 60px 0 0, 110px 22px 0 0, -18px 120px 0 1px, 150px 138px 0 0; }
+    .cisco--b { left: 62%; top: 22%; box-shadow: -60px 50px 0 0, 40px 108px 0 1px, 76px -10px 0 0; animation-duration: 34s; animation-delay: -8s; }
+    .cisco--c { left: 40%; top: 58%; box-shadow: 70px 30px 0 0, -80px 56px 0 0, 22px 96px 0 0; animation-duration: 30s; animation-delay: -15s; }
+    @keyframes cisco {
+      0% { transform: translate3d(0, 0, 0); opacity: 0.25; }
+      50% { opacity: 0.8; }
+      100% { transform: translate3d(24px, -36px, 0); opacity: 0.35; }
+    }
+    @media (max-width: 759px) { .cisco--c { display: none; } }
+    .tv__cartaz {
+      position: absolute; inset: 0; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      color: #e8f6ff; text-align: center;
+    }
+    .tv__osd { position: absolute; top: 9%; left: 10%; font: 400 5.5cqw/1 var(--f-placa); letter-spacing: 0.08em; color: #8fe6db; }
+    .tv__fase {
+      font: 400 17cqw/0.9 var(--f-placa); letter-spacing: 0.04em;
+      text-shadow: -1px 0 rgb(255 40 80 / 0.55), 1px 0 rgb(40 220 255 / 0.55); /* aberração: só título grande, só no vidro */
+    }
+    .tv__linha { margin-top: 1.5cqw; padding-top: 1.5cqw; border-top: 2px solid rgb(143 230 219 / 0.6); font: 400 7.5cqw/1 var(--f-placa); letter-spacing: 0.12em; }
+    .tv__painel { display: flex; flex-direction: column; align-items: center; gap: 3cqw; padding-top: 2cqw; }
+    .tv__botao { width: 9cqw; height: 9cqw; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #6d665a, #2b2722 70%); box-shadow: 0 2px 0 rgb(12 6 9 / 0.5); }
+    .tv__grade { flex: 1; width: 11cqw; margin-bottom: 2cqw; background: repeating-linear-gradient(180deg, #3e3930 0 2px, transparent 2px 5px); }
+    /* rack baixo da TV com o console */
+    .movel-tv { position: relative; margin: 0 -6%; }
+    .movel-tv__tampo { display: block; height: 10px; background: linear-gradient(180deg, #a07652 0 1px, var(--wood-5) 1px 3px, var(--wood-4) 3px 6px, var(--wood-3) 6px); }
+    .movel-tv__corpo {
+      display: grid; place-items: center; height: 52px;
+      background: var(--grain-h) -80px -40px / 640px 160px, linear-gradient(90deg, var(--wood-1), var(--wood-2) 8%, var(--wood-2) 92%, var(--wood-1));
+      box-shadow: 0 6px 0 var(--deep);
+    }
+    .movel-tv__nicho { display: grid; place-items: end center; width: 72%; height: 36px; padding-bottom: 4px; background: var(--deep); }
+    .console {
+      position: relative; width: 70%; height: 20px; border-radius: 3px 3px 2px 2px;
+      background: linear-gradient(180deg, #3a383f, #232227); box-shadow: inset 0 2px 0 rgb(232 230 240 / 0.08);
+    }
+    .console::before { content: ''; position: absolute; left: 30%; right: 30%; top: 5px; height: 3px; background: #121114; }
+    .console::after { content: ''; position: absolute; right: 8%; top: 8px; width: 4px; height: 4px; border-radius: 50%; background: var(--stamp); }
+
+    /* ---------- Estante ---------- */
+    .estante { grid-area: estante; position: relative; margin-top: 20px; }
+    .estante__titulo { font: 400 clamp(2rem, 6.5vw, 2.6rem)/0.95 var(--f-placa); letter-spacing: 0.04em; }
+    .estante__nota { margin-top: 6px; color: var(--muted); max-width: 68ch; }
+
+    /* props em cima do móvel (aria-hidden, sem clique) */
+    .cenario {
+      position: relative; display: flex; align-items: flex-end; justify-content: space-between; gap: 8px;
+      height: 112px; margin-top: 16px; padding: 0 10px; pointer-events: none;
+    }
+    .cenario svg { display: block; width: 100%; height: auto; }
+    .cenario .so-pc { display: none; }
+    .abajur-mov { position: relative; width: 50px; flex: none; }
+    .abajur-mov svg { position: relative; display: block; width: 100%; height: auto; }
+    /* brilho local do abajur na parede (a poça grande vem da camada de luz) */
+    .abajur-mov::before {
+      content: ''; position: absolute; left: -90%; right: -90%; top: -60%; bottom: 10%;
+      background: radial-gradient(closest-side, rgb(255 193 94 / 0.2), rgb(255 193 94 / 0.06) 55%, transparent);
+    }
+    /* consoles: silhuetas genéricas em SVG, sem logo; LEDs são as únicas luzinhas */
+    .console-obj { position: relative; flex: none; }
+    .console-obj--switch { width: 80px; }
+    .console-obj--x360 { width: 34px; }
+    .console-obj--pilha { width: 180px; display: flex; flex-direction: column; align-items: center; }
+    .console-obj--pilha .snes { width: 78%; margin-bottom: -1px; }
+    .console-obj--ps2 { width: 34px; }
+    .console-obj--gb { width: 44px; rotate: -8deg; margin-bottom: 2px; }
+    .led { animation: led 5s ease-in-out infinite alternate; }
+    @keyframes led { from { opacity: 0.55; } to { opacity: 1; } }
+
+    /* capinhas deitadas, lombada pra frente */
+    .capas-pilha { width: 118px; flex: none; display: flex; flex-direction: column; }
+    .capinha {
+      position: relative; display: flex; align-items: center; gap: 6px; height: 20px; margin-top: 1px; padding: 0 8px 0 0;
+      overflow: hidden; background: var(--c); color: var(--t, var(--ink));
+      box-shadow: inset 0 1px 0 rgb(255 245 230 / 0.16), inset 0 -2px 0 rgb(12 6 9 / 0.35), 0 2px 0 var(--deep);
+      font: 400 0.72rem/1 var(--f-placa); letter-spacing: 0.03em; white-space: nowrap;
+    }
+    /* faixa de plataforma na ponta da lombada */
+    .capinha::before { content: ''; flex: none; align-self: stretch; width: 7px; background: var(--faixa); }
+    .capinha--mario { --c: #a8242c; --t: #ffd25a; --faixa: #6f6c69; width: 86%; margin-left: 4%; rotate: -4deg; }
+    .capinha--sims { --c: #1c2a54; --faixa: #3a8f4a; width: 92%; margin-left: 7%; rotate: 1.5deg; }
+    .capinha--tlou { --c: #1d4b86; --faixa: #e9eef5; width: 96%; margin-left: 1%; }
+    .capinha--gta { --c: #151417; --t: #f2c14e; --faixa: #2a4fa0; width: 100%; }
+    .capinha__losango { flex: none; width: 8px; height: 11px; background: #59d36a; clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); }
+
+    @media (min-width: 760px) {
+      .cenario { height: 150px; gap: 16px; padding: 0 24px; }
+      .cenario .so-pc { display: block; }
+      .cenario .console-obj--pilha.so-pc { display: flex; }
+      .abajur-mov { width: 80px; }
+      .console-obj--switch { width: 130px; }
+      .console-obj--x360 { width: 46px; }
+      .capas-pilha { width: 196px; }
+      .capinha { height: 26px; font-size: 0.95rem; letter-spacing: 0.06em; gap: 8px; padding-right: 10px; }
+      .capinha::before { width: 9px; }
+    }
+    /* ---------- Chão do V2: rodapé + carpete em perspectiva (sem as estantes vizinhas) ---------- */
+    .chao {
+      position: absolute; z-index: -1; left: 50%; top: calc(100% - 34px); width: 100vw; height: 170px; translate: -50% 0;
+      perspective: 420px; pointer-events: none;
+      -webkit-mask: linear-gradient(180deg, #000 50%, transparent); mask: linear-gradient(180deg, #000 50%, transparent);
+    }
+    .chao::before {
+      content: ''; position: absolute; left: 0; right: 0; top: 0; height: 14px; z-index: 1;
+      background: linear-gradient(180deg, #7a5a40 0 1px, var(--wood-2) 1px 4px, var(--wood-1));
+      box-shadow: 0 2px 0 rgb(12 6 9 / 0.5);
+    }
+    .chao__carpete {
+      position: absolute; inset: 14px 0 -60px; transform-origin: top; transform: rotateX(52deg);
+      background:
+        radial-gradient(ellipse 34% 70% at 16% 0%, rgb(255 193 94 / 0.16), transparent 72%),
+        radial-gradient(ellipse 34% 70% at 84% 0%, rgb(70 195 181 / 0.10), transparent 72%),
+        linear-gradient(180deg, rgb(12 6 9 / 0.55), transparent 45%),
+        var(--carpet) 0 0 / 96px 96px;
+    }
+
+    /* ---------- Móvel: montantes, coroa, rodapé (herdado do V2, madeira em luz baixa) ---------- */
+    .movel { position: relative; padding: 32px 9px 44px; background:
+        var(--grain-v) 0 0 / 160px 640px,
+        linear-gradient(90deg, var(--wood-1), var(--wood-4) 4px, var(--wood-3) 10px, var(--wood-2) 16px,
+          var(--wood-2) calc(100% - 16px), var(--wood-3) calc(100% - 10px), var(--wood-4) calc(100% - 4px), var(--wood-1));
+    }
+    /* sombra do móvel no carpete (V2) */
+    .movel::before {
+      content: ''; position: absolute; z-index: -1; left: -4%; right: -4%; top: calc(100% - 6px); height: 46px; pointer-events: none;
+      background: radial-gradient(ellipse 50% 100% at 50% 0%, rgb(12 6 9 / 0.75), transparent 100%);
+    }
+    .movel__coroa, .movel__base { position: absolute; left: -4px; right: -4px; z-index: 1; pointer-events: none; }
+    .movel__coroa {
+      top: 0; height: 32px; box-shadow: 0 4px 0 rgb(12 6 9 / 0.45);
+      background:
+        linear-gradient(180deg, #a07652 0 1px, var(--wood-5) 1px 3px, var(--wood-4) 3px 7px, var(--wood-1) 7px 9px,
+          var(--wood-2) 9px 12px, transparent 12px calc(100% - 3px), rgb(12 6 9 / 0.4) calc(100% - 3px)),
+        var(--grain-h) -120px -30px / 640px 160px,
+        linear-gradient(180deg, var(--wood-3), var(--wood-2));
+    }
+    .movel__base {
+      bottom: 0; height: 44px;
+      background:
+        linear-gradient(180deg, var(--wood-5) 0 1px, var(--wood-4) 1px 3px, transparent 3px calc(100% - 14px),
+          var(--wood-1) calc(100% - 14px) calc(100% - 12px), #170d08 calc(100% - 12px)),
+        var(--grain-h) -300px -90px / 640px 160px,
+        linear-gradient(180deg, var(--wood-3), var(--wood-2));
+    }
+    @media (min-width: 760px) {
+      .movel { padding: 38px 22px 52px; }
+      .movel__coroa, .movel__base { left: -10px; right: -10px; }
+      .movel__coroa { height: 38px; }
+      .movel__base { height: 52px; }
+    }
+
+    /* ---------- Prateleira 3D (estrutura do V2) ----------
+       REGRA: nada de filter, opacity<1, mix-blend-mode, isolation, mask ou clip-path aqui nem nos ancestrais. */
+    .rack {
+      position: relative; z-index: 0; list-style: none; padding: 0; margin: 0;
+      display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+      background: var(--deep); box-shadow: 0 0 0 2px var(--wood-1);
+    }
+    @media (min-width: 760px) { .rack { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+
+    /* Cada nicho é uma caixa 3D com ponto de fuga por coluna; --gx/--gy emendam o veio entre nichos. */
+    .rack__slot {
+      --vx: 100%; --gx: 0px; --gy: 0px; --shade: 0;
+      /* luz do quarto dentro do nicho: âmbar do abajur (esquerda), teal da TV (direita) */
+      --luz: 255 193 94; --lx: 30%;
+      --seam: linear-gradient(transparent, transparent);
+      --scratch: linear-gradient(transparent, transparent);
+      container-type: inline-size;
+      position: relative; display: flex; flex-direction: column; min-width: 0;
+    }
+    .rack__slot:nth-child(2n) { --vx: 0%; --gx: -100cqw; --luz: 70 195 181; --lx: 75%; }
+    .rack__slot:nth-child(6n + 3), .rack__slot:nth-child(6n + 4) { --gy: -52px; --shade: 0.12; }
+    .rack__slot:nth-child(6n + 5), .rack__slot:nth-child(6n + 6) { --gy: -104px; --shade: 0.06; }
+    .rack__slot:nth-child(6n + 4) { --seam: linear-gradient(90deg, rgb(12 6 9 / 0.55) 0 1px, rgb(255 220 180 / 0.12) 1px 2px, transparent 2px); }
+    @media (min-width: 760px) {
+      .rack__slot:nth-child(n) { --gx: 0px; --gy: 0px; --shade: 0; --seam: linear-gradient(transparent, transparent); }
+      .rack__slot:nth-child(4n + 1) { --vx: 200%; --luz: 255 193 94; --lx: 20%; }
+      .rack__slot:nth-child(4n + 2) { --vx: 100%; --gx: -100cqw; --luz: 255 193 94; --lx: 45%; }
+      .rack__slot:nth-child(4n + 3) { --vx: 0%; --gx: -200cqw; --luz: 70 195 181; --lx: 55%; }
+      .rack__slot:nth-child(4n + 4) { --vx: -100%; --gx: -300cqw; --luz: 70 195 181; --lx: 80%; }
+      .rack__slot:nth-child(8n + 5), .rack__slot:nth-child(8n + 6),
+      .rack__slot:nth-child(8n + 7), .rack__slot:nth-child(8n + 8) { --gy: -52px; --shade: 0.12; }
+      .rack__slot:nth-child(8n + 7) { --seam: linear-gradient(90deg, rgb(12 6 9 / 0.55) 0 1px, rgb(255 220 180 / 0.12) 1px 2px, transparent 2px); }
+    }
+    .rack__slot:nth-child(5n + 3) { --scratch: linear-gradient(172deg, transparent 0 40%, rgb(255 230 200 / 0.16) 41% 43%, transparent 44%); }
+    .rack__slot:hover, .rack__slot:focus-within { z-index: 2; }
+    .rack__slot--vazio.so-pc { display: none; }
+    @media (min-width: 760px) { .rack__slot--vazio.so-pc { display: flex; } }
+
+    .rack__bay { --D: 24cqw; position: relative; perspective: 900px; perspective-origin: var(--vx) 35%; }
+    /* sombra de contato da tábua de cima (sem LED: a luz do quarto vem da TV e do abajur) */
+    .rack__bay::after {
+      content: ''; position: absolute; z-index: 2; left: 0; right: 0; top: 0; height: 30px; pointer-events: none;
+      background: linear-gradient(180deg, rgb(12 6 9 / 0.65) 0 3px, rgb(12 6 9 / 0.25) 3px, transparent 30px);
+    }
+    .rack__scene { position: relative; transform-style: preserve-3d; padding: 26px 2% 0 3%; pointer-events: none; }
+    .rack__face { position: absolute; display: block; pointer-events: none; }
+    .rack__wall {
+      inset: 0; transform: translateZ(calc(var(--D) * -1));
+      background:
+        linear-gradient(180deg, rgb(12 6 9 / 0.6), transparent 18%),
+        radial-gradient(ellipse 95% 70% at var(--lx) 0%, rgb(var(--luz) / 0.2), rgb(var(--luz) / 0.06) 45%, transparent 78%),
+        var(--specks) 0 0 / 180px 180px,
+        linear-gradient(180deg, #2c1a1f, var(--shelf) 50%, #170d12);
+    }
+    .rack__wall::after { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 36% 38% at 55% 66%, rgb(12 6 9 / 0.62), transparent 100%); }
+    .rack__slot--vazio .rack__wall::after { display: none; }
+    .rack__ceil {
+      top: 0; left: 0; right: 0; height: var(--D); transform-origin: top; transform: rotateX(-90deg);
+      background: var(--grain-h) var(--gx) var(--gy) / 640px 160px, linear-gradient(180deg, #2e1c12, #1a0f0a);
+    }
+    .rack__floor {
+      bottom: 0; left: 0; right: 0; height: var(--D); transform-origin: bottom; transform: rotateX(90deg);
+      background:
+        linear-gradient(0deg, var(--wood-5) 0 2px, transparent 2px),
+        radial-gradient(ellipse 50% 40% at 52% 62%, rgb(12 6 9 / 0.4), transparent 100%),
+        var(--specks) 0 0 / 180px 180px,
+        var(--seam),
+        var(--grain-h) var(--gx) var(--gy) / 640px 160px,
+        linear-gradient(rgb(12 6 9 / var(--shade)), rgb(12 6 9 / var(--shade))),
+        linear-gradient(180deg, #3e281a, var(--wood-3) 45%, var(--wood-4) 88%);
+    }
+    /* sombra dura da caixa na tábua */
+    .rack__floor::after { content: ''; position: absolute; left: 12%; right: 9%; bottom: 36%; height: 22%; background: rgb(12 6 9 / 0.72); }
+    .rack__slot--vazio .rack__floor::after { display: none; }
+    .rack__side { display: none; top: 0; bottom: 0; width: var(--D); background: var(--grain-h) 0 0 / 640px 160px, linear-gradient(90deg, var(--wood-1), var(--wood-2)); }
+    .rack__side--l { left: 0; transform-origin: left; transform: rotateY(90deg); }
+    .rack__side--r { right: 0; transform-origin: right; transform: rotateY(-90deg); background: var(--grain-h) 0 0 / 640px 160px, linear-gradient(270deg, var(--wood-1), var(--wood-2)); }
+    .rack__slot:nth-child(2n + 1) .rack__side--l, .rack__slot:nth-child(2n) .rack__side--r { display: block; }
+    @media (min-width: 760px) {
+      .rack__bay { --D: 30cqw; }
+      .rack__scene { padding: 30px 11% 0; }
+      .rack__slot:nth-child(n) .rack__side { display: none; }
+      .rack__slot:nth-child(4n + 1) .rack__side--l, .rack__slot:nth-child(4n) .rack__side--r { display: block; }
+    }
+
+    /* a caixa entra no nicho como um plano em pé, com o próprio ponto de vista (lombada à mostra) */
+    .rack__stage { position: relative; transform: translateZ(calc(var(--D) * -0.3)); perspective: 640px; perspective-origin: -40% -30%; }
+    @media (min-width: 760px) { .rack__stage { transform: translateZ(calc(var(--D) * -0.45)); } }
+    .rack__spacer { display: block; aspect-ratio: 3 / 4; }
+
+    /* beiço: 14 px de tábua + 6 px de borda iluminada */
+    .rack__beico {
+      position: relative; z-index: 1; height: 20px;
+      background:
+        linear-gradient(180deg, #a07652 0 1px, var(--wood-5) 1px 3px, var(--wood-4) 3px 6px, rgb(12 6 9 / 0.3) 6px 7px,
+          transparent 7px calc(100% - 2px), rgb(12 6 9 / 0.5) calc(100% - 2px)),
+        var(--scratch), var(--seam),
+        var(--grain-h) var(--gx) calc(var(--gy) - 24px) / 640px 160px,
+        linear-gradient(rgb(12 6 9 / var(--shade)), rgb(12 6 9 / var(--shade))),
+        linear-gradient(180deg, var(--wood-3), var(--wood-2));
+    }
+
+    /* frente do móvel abaixo do beiço: madeira lisa e sólida, é onde o texto mora */
+    .rack__info { flex: 1; display: flex; flex-direction: column; padding: 12px 8px 18px; background: var(--wood); }
+    @media (min-width: 760px) { .rack__info { padding: 14px 14px 20px; } }
+
+    /* post-it colado na frente do móvel: faixa de cola mais escura em cima e a ponta descolando */
+    .postit {
+      position: relative; padding: 14px 10px 14px; rotate: -1.4deg;
+      background: linear-gradient(180deg, #ecd56a 0 12px, #f7e48a 12px);
+      color: var(--paper-ink); box-shadow: 0 4px 0 var(--deep);
+      transition: rotate 160ms ease-out;
+    }
+    .rack__slot:nth-child(2n) .postit { rotate: 1.2deg; }
+    .postit::after {
+      content: ''; position: absolute; right: 0; bottom: 0; width: 18px; height: 18px;
+      background: linear-gradient(315deg, var(--wood) 0 50%, #d8c160 50%);
+    }
+    @media (hover: hover) { .rack__slot:hover .postit { rotate: 0deg; } }
+    .rack__nome { font: 400 1.15rem/1.2 var(--f-mao); overflow-wrap: anywhere; }
+    .rack__meta { margin-top: 2px; font-size: 0.875rem; line-height: 1.3; color: var(--paper-muted); }
+    .rack__acoes { margin-top: auto; padding-top: 14px; }
+    /* ---------- Caixa fechada (6 faces, herdada do V2) ---------- */
+    .case {
+      --ry: 11deg; --t: 15cqw;
+      position: relative; display: block; width: 100%; aspect-ratio: 3 / 4;
+      transform-style: preserve-3d; transform-origin: 50% 100%;
+      /* --tilt-x/--tilt-y: inclinação que segue o ponteiro no PC (V2) */
+      transform: translateY(var(--lift, 0px)) translateZ(var(--tz, 0px))
+                 rotateX(var(--tilt-x, 0deg)) rotateY(calc(var(--ry) + var(--tilt-y, 0deg)));
+      transition: transform 280ms cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    @media (min-width: 760px) { .case { --ry: 24deg; } }
+    /* passar o mouse no card ou focar o botão endireita a caixa */
+    @media (hover: hover) { .rack__slot:hover .case { --ry: 0deg; --tz: 34px; --lift: -6px; } }
+    /* só foco de teclado endireita a caixa (foco devolvido pelo script depois de um clique não conta) */
+    .rack__slot:has(:focus-visible) .case { --ry: 0deg; --tz: 34px; --lift: -6px; }
+
+    .case__face { position: absolute; display: block; backface-visibility: hidden; }
+    .case__front { inset: 0; }
+    .case__spine {
+      top: 0; bottom: 0; right: 100%; width: var(--t); transform-origin: right center; transform: rotateY(-90deg);
+      display: flex; align-items: center; justify-content: center; overflow: hidden;
+      font: calc(var(--t) * 0.62) / 1 var(--f-placa);
+      background: linear-gradient(90deg, hsl(var(--hue) 30% 12%), hsl(var(--hue) 34% 22%) 45%, hsl(var(--hue) 30% 14%));
+    }
+    .case__spine span { writing-mode: vertical-rl; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-height: 90%; color: var(--ink); letter-spacing: 0.04em; }
+    .case__side { top: 0; bottom: 0; left: 100%; width: var(--t); transform-origin: left center; transform: rotateY(90deg); background: hsl(var(--hue) 26% 9%); }
+    .case__top { left: 0; right: 0; bottom: 100%; height: var(--t); transform-origin: center bottom; transform: rotateX(90deg); background: linear-gradient(90deg, hsl(var(--hue) 28% 22%), hsl(var(--hue) 24% 15%)); }
+    /* ---------- Capinha clicável: um botão invisível por cima do nicho (fora da cadeia 3D) ---------- */
+    .rack__vitrine { position: relative; }
+    .rack__abrir { position: absolute; inset: 0; z-index: 3; padding: 0; border: 0; background: none; cursor: pointer; }
+    .rack__abrir:focus-visible { outline-offset: -4px; }
+    /* faixa de pano pendurada: é o h1 da tela (pedido do grupo no lugar de "FASE 4") */
+    .varal {
+      position: relative; width: min(100%, 640px); padding-top: 30px; transform-origin: 50% 0;
+      animation: balanca 7s ease-in-out infinite alternate;
+    }
+    @keyframes balanca { from { transform: rotate(-0.7deg); } to { transform: rotate(0.7deg); } }
+    /* cordinhas e tachinhas na parede */
+    .varal__corda { position: absolute; top: 4px; width: 2px; height: 34px; background: linear-gradient(180deg, #8c6646, #5a3f2a); }
+    .varal__corda::before {
+      content: ''; position: absolute; left: 50%; top: -5px; width: 12px; height: 12px; translate: -50% 0; border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #ffd89a, #c88a2c 55%, #6b4a2f); box-shadow: 0 2px 0 var(--deep);
+    }
+    .varal__corda--e { left: 12%; } .varal__corda--d { right: 12%; }
+    .banner-sombra, .banner {
+      clip-path: polygon(0 0, 100% 0, calc(100% - 26px) 50%, 100% 100%, 0 100%, 26px 50%);
+    }
+    .banner-sombra { position: absolute; left: 0; right: 0; top: 36px; bottom: -6px; background: var(--deep); }
+    .banner {
+      position: relative; padding: 10px 44px; color: var(--paper);
+      /* pano: dobras verticais suaves + bainha costurada */
+      background:
+        repeating-linear-gradient(90deg, transparent 0 70px, rgb(12 6 9 / 0.12) 100px, transparent 130px),
+        linear-gradient(180deg, #c8304f, var(--stamp) 45%, #8d1731);
+      font: 400 clamp(2.6rem, 11vw, 4.6rem)/0.95 var(--f-placa); letter-spacing: 0.06em; text-wrap: balance;
+    }
+    .banner span {
+      display: block; padding: 8px 6px 4px;
+      border-top: 2px dashed rgb(244 236 210 / 0.5); border-bottom: 2px dashed rgb(244 236 210 / 0.5);
+    }
+    .cabeca--pano p { margin-top: 14px; color: var(--muted); }
+    /* o que falta a pessoa fazer: bilhete colado com fita */
+    .falta {
+      grid-area: falta; justify-self: center; position: relative; max-width: 520px; padding: 8px 16px 6px;
+      background: var(--paper); color: var(--paper-ink); rotate: -1.2deg; text-align: center;
+      font: 400 1.15rem/1.3 var(--f-mao); box-shadow: 0 3px 6px rgb(12 6 9 / 0.45);
+    }
+    .falta::before {
+      content: ''; position: absolute; left: 50%; top: -9px; width: 70px; height: 18px; translate: -50% 0; rotate: 3deg;
+      background: rgb(243 230 216 / 0.38);
+    }
+    /* ---------- A mesa 3D ----------
+       palco (perspectiva + escala) → mundo (câmera) → mesa (pula no impacto) → objetos.
+       Cada objeto: .obj (posição) → .mola (pulinho/hover) → caixas de faces. Nada de filtro, blend,
+       opacity, mask ou clip-path em quem tem filhos 3D (Sem Filtro no 3D Rule). */
+    .mesa-sec { grid-area: mesa; position: relative; }
+    .palco-wrap {
+      position: relative; width: 100%; margin: 0 auto;
+      /* recorta só embaixo (pernas da mesa); em cima fica livre para a estatueta cair "do céu" */
+      clip-path: inset(-2000px -40px 0 -40px);
+    }
+    .palco { position: absolute; left: 0; top: 0; transform-origin: 0 0; perspective: 1700px; perspective-origin: 50% 22%; }
+    .mundo {
+      position: absolute; left: 50%; width: 0; height: 0; transform-style: preserve-3d;
+      transform: rotateX(calc(var(--cam) + var(--pitch, 0deg))) rotateY(var(--yaw, 0deg));
+    }
+    .mesa, .obj, .mola, .bx, .braco, .est__corpo, .quadro3d { position: absolute; left: 0; top: 0; transform-style: preserve-3d; }
+    .obj { transform: translate3d(var(--x), 0, var(--z)) rotateY(var(--ry, 0deg)) scale3d(var(--s, 1), var(--s, 1), var(--s, 1)); }
+    .mola { transition: translate 180ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+    .obj.ativo > .mola { translate: 0 -8px 0; }
+    /* chão: o pé da mesa some no escuro do quarto (camada 2D por cima, decorativa) */
+    .palco-chao {
+      position: absolute; left: -40px; right: -40px; bottom: 0; height: 22%; pointer-events: none;
+      background: linear-gradient(180deg, transparent, rgb(20 11 16 / 0.85) 60%, var(--ground));
+    }
+
+    /* caixa de faces: base no chão do objeto, centrada em x/z; --by sobe a caixa */
+    .bx {
+      left: calc(var(--w) / -2); top: calc(var(--h) * -1); width: var(--w); height: var(--h);
+      transform: translate3d(var(--bx, 0px), calc(var(--by, 0px) * -1), calc(var(--bz, 0px) + var(--t) / 2));
+    }
+    .bx > i { position: absolute; display: block; backface-visibility: hidden; font-style: normal; }
+    .bx > .f { inset: 0; }
+    .bx > .l { top: 0; bottom: 0; right: 100%; width: var(--t); transform-origin: right center; transform: rotateY(-90deg); }
+    .bx > .r { top: 0; bottom: 0; left: 100%; width: var(--t); transform-origin: left center; transform: rotateY(90deg); }
+    .bx > .u { left: 0; right: 0; bottom: 100%; height: var(--t); transform-origin: center bottom; transform: rotateX(90deg); }
+    .bx > .b { inset: 0; transform: translateZ(calc(var(--t) * -1)) rotateY(180deg); }
+
+    /* materiais (luz do abajur vem da esquerda: lado esquerdo mais claro, direito mais escuro) */
+    .m-tampo > .u {
+      background:
+        linear-gradient(90deg, transparent 0 calc(25% - 1px), rgb(12 6 9 / 0.55) calc(25% - 1px) 25%, transparent 25% calc(50% - 1px), rgb(12 6 9 / 0.55) calc(50% - 1px) 50%, transparent 50% calc(75% - 1px), rgb(12 6 9 / 0.55) calc(75% - 1px) 75%, transparent 75%),
+        var(--grain-h) 0 0 / 640px 160px,
+        linear-gradient(180deg, #2a180f, #4a2d1c 55%, #5b3a25);
+    }
+    .m-tampo > .f { background: linear-gradient(180deg, #a07652 0 2px, var(--wood-5) 2px 5px, var(--wood-4) 5px 12px, var(--wood-3) 12px); }
+    .m-tampo > .l { background: linear-gradient(180deg, #8c6646, var(--wood-3)); }
+    .m-tampo > .r { background: var(--wood-1); }
+    .m-saia > .f { background: var(--grain-h) 0 0 / 640px 160px, linear-gradient(180deg, var(--wood-1), var(--wood-2)); }
+    .m-saia > .l { background: var(--wood-2); } .m-saia > .r { background: var(--wood-1); }
+    .m-perna > .f { background: linear-gradient(90deg, var(--wood-2), var(--wood-3) 45%, var(--wood-1)); }
+    .m-perna > .l { background: var(--wood-3); } .m-perna > .r { background: var(--wood-1); }
+
+    /* decalques do tampo: deitados no plano, sem 3D dentro */
+    .decal { position: absolute; translate: -50% -50%; pointer-events: none; }
+    .decal--luz { border-radius: 50%; background: radial-gradient(closest-side, rgb(255 193 94 / 0.30), rgb(255 193 94 / 0.12) 45%, rgb(255 193 94 / 0.03) 75%, transparent); }
+    .decal--sombra { border-radius: 50%; background: radial-gradient(closest-side, rgb(12 6 9 / 0.85), rgb(12 6 9 / 0.45) 55%, transparent); }
+    .decal--poeira { width: 120px; height: 120px; border-radius: 50%; opacity: 0; border: 6px solid rgb(232 214 190 / 0.35); }
+    .decal--marca { border-radius: 50%; border: 5px solid rgb(12 6 9 / 0.35); }
+    .decal--cabo { translate: none; left: 0; top: 0; overflow: visible; }
+    .decal--nota {
+      width: 120px; padding: 6px 8px; background: var(--paper); color: var(--paper-ink); rotate: -7deg; translate: -50% -50%;
+      font: 400 15px/1.2 var(--f-mao); text-align: center; box-shadow: 0 3px 0 rgb(12 6 9 / 0.6);
+    }
+
+    /* abajur: recorte que sempre encara a câmera (billboard); a luz dele é a camada .cena-luz */
+    .abajur {
+      position: absolute; left: -70px; top: -190px; width: 140px; height: 190px; transform-origin: 50% 100%;
+      transform: rotateY(calc(-1 * (var(--ry) + var(--yaw, 0deg)))) rotateX(calc(-1 * (var(--cam) + var(--pitch, 0deg))));
+    }
+    .abajur svg { display: block; width: 100%; height: 100%; overflow: visible; }
+    .abajur__halo {
+      position: absolute; left: 50%; top: 34%; width: 220px; height: 220px; translate: -30% -50%; border-radius: 50%; pointer-events: none;
+      background: radial-gradient(closest-side, rgb(255 216 154 / 0.5), rgb(255 193 94 / 0.16) 45%, transparent);
+      animation: respira 9s ease-in-out infinite alternate;
+    }
+    @keyframes respira { from { opacity: 0.8; } to { opacity: 1; } }
+
+    /* capinha do jogo: estojo em pé (capa genérica por código; no app, a capa da RAWG ou enviada) */
+    .m-estojo > .f { overflow: visible; }
+    .m-estojo > .l {
+      display: flex; align-items: center; justify-content: center; overflow: hidden;
+      background: linear-gradient(90deg, hsl(28 30% 12%), hsl(28 34% 22%) 45%, hsl(28 30% 14%));
+      font: 400 15px/1 var(--f-placa); color: var(--ink); letter-spacing: 0.04em;
+    }
+    .m-estojo > .l span { writing-mode: vertical-rl; white-space: nowrap; }
+    .m-estojo > .r { background: hsl(28 26% 9%); }
+    .m-estojo > .u { background: linear-gradient(90deg, hsl(28 28% 22%), hsl(28 24% 15%)); }
+    .capa {
+      position: absolute; inset: 0; display: block; container-type: inline-size;
+      background:
+        linear-gradient(135deg, transparent 0 56%, var(--risca) 56% 60%, transparent 60% 64%, var(--risca) 64% 68%, transparent 68% 72%, var(--risca) 72% 76%, transparent 76%),
+        var(--capa);
+      box-shadow: inset 0 0 0 2px rgb(12 6 9 / 0.4);
+    }
+    .capa::after {
+      content: ''; position: absolute; inset: 0; pointer-events: none;
+      background: linear-gradient(105deg, rgb(255 193 94 / 0.16), transparent 35%), linear-gradient(110deg, rgb(243 230 216 / 0.08), transparent 30%);
+    }
+    .capa__motivo { position: absolute; left: 22%; top: 16%; width: 56%; height: auto; }
+    .capa__nome {
+      position: absolute; z-index: 1; left: 7%; right: 7%; bottom: 6%; padding: 4px 6px 2px;
+      background: var(--deep); color: var(--ink); font: 400 15cqw/0.95 var(--f-placa); letter-spacing: 0.04em;
+    }
+    .tarja {
+      position: absolute; z-index: 2; left: 0; top: 14%; padding: 2px 8px; background: var(--pink); color: var(--deep);
+      font: 700 12px/1.3 var(--f-texto); letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap;
+    }
+    .preco {
+      position: absolute; z-index: 2; right: -8px; top: -10px; padding: 2px 10px; rotate: 5deg;
+      background: var(--amber); color: var(--deep); font: 400 18px/1.3 var(--f-mao); box-shadow: 0 3px 0 var(--deep); white-space: nowrap;
+    }
+    /* coroinha do vencedor: recorte de metal apoiado no topo do estojo, sempre virado pra câmera */
+    .coroa {
+      position: absolute; left: -36px; top: -48px; width: 72px; height: 48px; transform-origin: 50% 100%;
+      transform: translate3d(var(--cx), calc(var(--cy) * -1), 0)
+                 rotateY(calc(-1 * (var(--ry) + var(--yaw, 0deg)))) rotateX(calc(-1 * (var(--cam) + var(--pitch, 0deg)))) rotateZ(-11deg);
+    }
+    .coroa svg { display: block; width: 100%; height: 100%; overflow: visible; }
+    .carimbo {
+      position: absolute; z-index: 3; left: 50%; top: 52%; padding: 3px 8px; border: 3px solid currentColor;
+      background: rgb(20 11 16 / 0.85); color: var(--amber); white-space: nowrap;
+      font: 800 14px/1.3 var(--f-texto); letter-spacing: 0.12em; text-transform: uppercase;
+      transform: translate(-50%, -50%) rotate(-12deg);
+    }
+
+    /* quadro de cortiça no cavalete: moldura de madeira, cortiça e as páginas pregadas
+       (miniaturas das páginas do modal; o texto de verdade só no modal) */
+    .quadro3d { transform: rotateX(9deg); }
+    .m-quadro > .f {
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 30% 40%, rgb(70 38 16 / 0.55) 0 1px, transparent 1.6px) 0 0 / 7px 9px,
+        radial-gradient(circle at 70% 60%, rgb(255 222 170 / 0.3) 0 0.9px, transparent 1.4px) 3px 2px / 11px 8px,
+        linear-gradient(120deg, #c08d58, #a8743f 50%, #8a5a31);
+      box-shadow: inset 0 0 0 12px var(--wood-4), inset 0 0 0 14px var(--wood-1), inset 0 0 16px 14px rgb(12 6 9 / 0.4);
+    }
+    .m-quadro > .u { background: var(--wood-5); }
+    .m-quadro > .l { background: linear-gradient(180deg, var(--wood-5), var(--wood-3)); }
+    .m-quadro > .r { background: var(--wood-1); }
+    .qm-faixa {
+      position: absolute; left: 50%; top: 18px; translate: -50% 0; rotate: -1.5deg; padding: 2px 12px 0;
+      background: var(--paper); color: var(--paper-ink); font: 400 17px/1.15 var(--f-placa); letter-spacing: 0.12em;
+      box-shadow: 1px 2px 0 rgb(12 6 9 / 0.45);
+    }
+    .qm {
+      position: absolute; width: 62px; height: 76px; padding: 14px 6px 0 9px; rotate: var(--r);
+      background: repeating-linear-gradient(180deg, transparent 0 8px, rgb(70 160 170 / 0.3) 8px 9px) 0 20px / 100% 100% no-repeat, var(--paper);
+      box-shadow: 2px 3px 0 rgb(12 6 9 / 0.45);
+    }
+    .qm::before { content: ''; position: absolute; left: 6px; top: 0; bottom: 0; width: 1px; background: rgb(179 33 63 / 0.4); }
+    .qm__foto { display: block; width: 20px; height: 20px; overflow: hidden; border-radius: 50%; border: 2px solid var(--paper-ink); }
+    .qm__foto svg { display: block; width: 100%; height: 100%; }
+    .qm__rabisco { display: block; width: var(--w); height: 2px; margin-top: 6px; border-radius: 1px; background: rgb(42 29 23 / 0.55); }
+    /* tachinha: cabeça de plástico colorida com brilho e sombra curta na cortiça */
+    .tacha {
+      position: absolute; left: 50%; top: 2px; width: 11px; height: 11px; translate: -50% 0; border-radius: 50%;
+      background: radial-gradient(circle at 34% 32%, rgb(255 255 255 / 0.85) 0 12%, var(--tacha) 32%, color-mix(in srgb, var(--tacha), #0c0609 45%) 100%);
+      box-shadow: 2px 2px 0 rgb(12 6 9 / 0.45);
+    }
+
+    /* estatuetas: pedestal de pedra + boneco de metal; a cabeça é a foto da pessoa (billboard) */
+    .m-pedra > .f { background: linear-gradient(180deg, #3a2c32, #231a1e); }
+    .m-pedra > .u { background: #44343b; } .m-pedra > .l { background: #3a2c32; } .m-pedra > .r { background: #160f12; }
+    .m-metal > .f { background: linear-gradient(90deg, var(--m3), var(--m) 28%, var(--m2) 46%, var(--m) 64%, var(--m3)); }
+    .m-metal > .u { background: var(--m2); }
+    .m-metal > .l { background: linear-gradient(90deg, var(--m), var(--m2)); }
+    .m-metal > .r { background: var(--m3); }
+    .est__pernas > .f { background: linear-gradient(90deg, transparent 47%, var(--m3) 47% 53%, transparent 53%), linear-gradient(90deg, var(--m3), var(--m) 28%, var(--m2) 46%, var(--m) 64%, var(--m3)); }
+    .placa {
+      position: absolute; left: 50%; top: 50%; translate: -50% -50%; padding: 1px 6px 0;
+      background: var(--m); color: var(--deep); font: 400 15px/1 var(--f-placa); letter-spacing: 0.04em;
+      box-shadow: inset 0 0 0 1px var(--m2);
+    }
+    .braco { transform: translate3d(var(--ax), calc(var(--ay) * -1), 0) rotateZ(var(--a)); }
+    .cabeca3d {
+      position: absolute; left: -21px; top: -21px; width: 42px; height: 42px; border-radius: 50%; overflow: hidden;
+      border: 3px solid var(--m); background: var(--m3);
+      transform: translate3d(0, calc(var(--hy) * -1), 0) rotateY(calc(-1 * (var(--ry) + var(--yaw, 0deg)))) rotateX(calc(-1 * (var(--cam) + var(--pitch, 0deg))));
+    }
+    .cabeca3d svg { display: block; width: 100%; height: 100%; }
+    /* volume de esfera: brilho do abajur em cima à esquerda, sombra embaixo à direita */
+    .cabeca3d::after {
+      content: ''; position: absolute; inset: 0; border-radius: 50%;
+      background: radial-gradient(circle at 32% 28%, rgb(255 236 200 / 0.38), transparent 34%), radial-gradient(circle at 50% 50%, transparent 52%, rgb(12 6 9 / 0.55) 100%);
+    }
+    .cisco3d { position: absolute; left: -3px; top: -3px; width: 6px; height: 6px; border-radius: 50%; background: rgb(232 214 190 / 0.8); opacity: 0; }
+
+    /* alvos clicáveis: botões reais por cima dos objetos (fora da cadeia 3D) */
+    .alvo {
+      position: absolute; z-index: 2; min-width: var(--toque); min-height: var(--toque); padding: 0; border: 0; border-radius: 4px;
+      background: transparent; cursor: pointer;
+    }
+
+    .painel__titulo { color: var(--teal); font: 400 1.75rem/1 var(--f-placa); letter-spacing: 0.05em; }
+    /* ---------- Placar: versão em texto das estatuetas ---------- */
+    .placar { grid-area: placar; align-self: start; padding: 20px 16px; border-radius: 4px; background: var(--shelf); }
+    .placar__lista { list-style: none; margin: 12px 0 0; padding: 0; }
+    .placar__item { display: grid; grid-template-columns: 52px 44px minmax(0, 1fr); gap: 10px; align-items: start; padding: 12px 0; border-top: 1px solid rgb(122 97 83 / 0.4); }
+    .placar__item:first-child { border-top: 0; }
+    .pos {
+      justify-self: start; padding: 3px 8px 0; rotate: -3deg; background: var(--m); color: var(--deep);
+      font: 400 1.6rem/1 var(--f-placa); font-variant-numeric: tabular-nums; box-shadow: 0 3px 0 var(--deep);
+    }
+    .foto { display: block; width: 44px; height: 44px; overflow: hidden; border-radius: 50%; border: 3px solid var(--ink); }
+    .foto svg { display: block; width: 100%; height: 100%; }
+    .placar__nome { font-weight: 700; }
+    .placar__tempo { color: var(--muted); font-weight: 400; font-variant-numeric: tabular-nums; }
+    .placar__txt { margin-top: 2px; color: var(--ink); }
+    .placar__item.novo { animation: realce 1600ms ease-out; }
+    @keyframes realce { from { background: rgb(255 193 94 / 0.18); } to { background: transparent; } }
+    .placar__ainda { margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--edge); color: var(--muted); }
+    .placar__vazio { color: var(--muted); }
+    .rodape { max-width: var(--max); margin: 0 auto; padding: 0 var(--gutter) 40px; color: var(--muted); font-size: 0.875rem; }
+    /* ---------- Modais ---------- */
+    .modal { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 16px; overflow-y: auto; perspective: 1400px; }
+    .modal[hidden] { display: none; }
+    .modal__fundo { position: fixed; inset: 0; background: radial-gradient(ellipse 70% 60% at 50% 45%, rgb(20 11 16 / 0.82), rgb(12 6 9 / 0.95)); }
+
+    .acoes { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+
+    /* ---------- Quadro aberto: o quadro da mesa vem pra frente; cada resenha é uma página de caderno pregada ---------- */
+    .modal--quadro { place-items: start center; padding-block: 24px; }
+    @media (min-width: 760px) { .modal--quadro { place-items: safe center; } }
+    .quadro-palco { position: relative; display: flex; flex-direction: column; align-items: center; gap: 14px; width: min(100%, 1000px); }
+    .quadro {
+      width: 100%; padding: 14px; border-radius: 6px; transform-origin: 50% 40%;
+      background: var(--grain-h) 0 0 / 640px 160px, linear-gradient(135deg, var(--wood-5), var(--wood-4) 40%, var(--wood-3));
+      box-shadow: 0 8px 0 var(--deep), inset 0 0 0 2px #a07652, inset 0 0 0 6px var(--wood-2);
+    }
+    @media (min-width: 760px) { .quadro { padding: 18px; } }
+    .quadro__cortica {
+      position: relative; padding: 18px 14px 26px;
+      background:
+        radial-gradient(circle at 30% 40%, rgb(70 38 16 / 0.5) 0 1.2px, transparent 1.9px) 0 0 / 9px 11px,
+        radial-gradient(circle at 70% 60%, rgb(255 222 170 / 0.28) 0 1px, transparent 1.6px) 4px 3px / 13px 10px,
+        linear-gradient(120deg, #c08d58, #a8743f 50%, #8a5a31);
+      box-shadow: inset 0 0 18px rgb(12 6 9 / 0.5);
+    }
+    @media (min-width: 760px) { .quadro__cortica { padding: 22px 24px 30px; } }
+    /* título numa tira de papel pregada (texto sempre em superfície sólida) */
+    .quadro__titulo {
+      position: relative; display: table; margin: 0 auto; padding: 6px 22px 2px; rotate: -1.2deg;
+      background: var(--paper); color: var(--paper-ink); font: 400 clamp(1.9rem, 6vw, 2.6rem)/1 var(--f-placa); letter-spacing: 0.06em;
+      box-shadow: 2px 4px 0 rgb(12 6 9 / 0.45);
+    }
+    .quadro__titulo:focus { outline: none; }
+    .quadro__titulo .tacha { --tacha: var(--amber); top: -5px; left: 10px; translate: none; width: 15px; height: 15px; }
+    .quadro__titulo .tacha + .tacha { left: auto; right: 10px; --tacha: var(--teal); }
+    .quadro__grade {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr)); gap: 26px 20px; align-items: start;
+      margin: 22px 0 0; padding: 0; list-style: none;
+    }
+    .quadro__grade > ul { display: contents; list-style: none; }
+    /* página de caderno: pauta alinhada com a linha do texto (24px), margem vermelha, tachinha no topo */
+    .pagina {
+      position: relative; padding: 24px 14px 14px 32px; rotate: var(--r, -1deg); color: var(--paper-ink);
+      background: repeating-linear-gradient(180deg, transparent 0 23px, rgb(70 160 170 / 0.32) 23px 24px) 0 70px / 100% 100% no-repeat, var(--paper);
+      box-shadow: 3px 5px 0 rgb(12 6 9 / 0.45);
+    }
+    .pagina::before { content: ''; position: absolute; left: 22px; top: 0; bottom: 0; width: 2px; background: rgb(179 33 63 / 0.35); }
+    .pagina > .tacha { top: -6px; width: 18px; height: 18px; box-shadow: 3px 3px 0 rgb(12 6 9 / 0.4); }
+    .pagina__topo { display: flex; align-items: center; gap: 10px; }
+    .pagina__quem { font: 400 1.1rem/1.2 var(--f-mao); }
+    .pagina__txt { margin-top: 10px; font: 400 1rem/24px var(--f-texto); overflow-wrap: anywhere; }
+    .pagina__meta { margin-top: 6px; color: var(--paper-muted); font: 400 0.875rem/24px var(--f-dati); }
+    /* a página em branco: é onde você escreve a sua antes de pregar */
+    .pagina--nova { rotate: 0deg; background: #fbf6e6; outline: 2px dashed var(--paper-ink); outline-offset: -8px; }
+    .pagina--nova::before { display: none; }
+    .pagina--nova { padding: 18px 16px 16px; }
+    .pagina--nova :focus-visible { outline-color: var(--paper-ink); }
+    .pagina__rotulo { display: block; font: 400 1.1rem/1.2 var(--f-mao); }
+    .campo-papel {
+      display: block; width: 100%; min-height: 104px; margin-top: 8px; padding: 8px 10px; resize: vertical;
+      border: 2px solid var(--paper-ink); border-radius: 4px; background: var(--paper); color: var(--paper-ink);
+      font: 400 1rem/1.4 var(--f-texto); caret-color: var(--stamp);
+    }
+    .campo-papel::placeholder { color: #7a6656; }
+    .campo-papel:focus-visible { outline: 3px solid var(--paper-ink); outline-offset: 1px; }
+    .campo-papel[aria-invalid="true"] { border-color: var(--stamp); }
+    .contador { margin-top: 4px; color: var(--paper-muted); font-size: 0.875rem; text-align: right; font-variant-numeric: tabular-nums; }
+    .erro { min-height: 1.4em; color: var(--stamp); font-weight: 700; font-size: 0.95rem; }
+    .pagina--nova .btn { width: 100%; margin-top: 4px; }
+
+    /* ---------- Caixinha aberta (igual ao mock da votação): estojo + manual + CD + comentários ---------- */
+    .modal--leitura { overflow-x: hidden; place-items: start center; perspective: none; }
+    .modal__palco { position: relative; display: flex; flex-direction: column; align-items: center; gap: 10px; width: 100%; perspective: 1800px; }
+    .modal__titulo { font: 400 clamp(1.9rem, 6vw, 2.4rem)/1 var(--f-placa); letter-spacing: 0.05em; text-align: center; }
+    .modal__titulo:focus { outline: none; }
+    .modal__acoes { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+    .modal--leitura .modal__palco { --w: min(80vw, calc((100dvh - 240px) * 0.75)); padding: 8px 0 24px; }
+    .leitura { display: flex; flex-direction: column; align-items: center; gap: 28px; width: 100%; }
+    .leitura__caixa { width: 100%; display: flex; justify-content: center; padding-bottom: 12px; }
+    @media (min-width: 760px) {
+      .modal--leitura { place-items: safe center; }
+      .modal--leitura .modal__palco { --w: min(300px, 26vw, calc((100dvh - 200px) * 0.75)); }
+      .leitura { flex-direction: row; justify-content: center; align-items: flex-start; }
+      /* a coluna tem 2 capas de largura: a caixa fica na metade direita e a tampa abre pra esquerda */
+      .leitura__caixa { width: calc(var(--w) * 2); justify-content: flex-end; }
+    }
+    .estojo { position: relative; width: var(--w); aspect-ratio: 3 / 4; margin-top: calc(var(--w) * 0.2 + 8px); perspective: 1600px; }
+    .estojo__sombra {
+      position: absolute; left: 4%; right: 4%; bottom: -20px; height: 24px; border-radius: 50%;
+      background: radial-gradient(closest-side, rgb(12 6 9 / 0.75), transparent);
+    }
+    .estojo__corpo { position: absolute; inset: 0; transform-style: preserve-3d; }
+    .estojo__base {
+      position: absolute; inset: 0; border-radius: 3px 8px 8px 3px; transform: translateZ(-2px);
+      background: radial-gradient(circle at 50% 50%, #34313a 0 7%, #16151a 7.5% 10%, transparent 10.5%), linear-gradient(160deg, #26232b, #141317);
+      box-shadow: inset 0 0 0 3px #322f37, inset 0 0 0 7px #1a181d;
+    }
+    /* a coroinha fica apoiada na borda de cima da caixa, também com a tampa aberta */
+    .estojo__coroa { position: absolute; left: 20%; top: calc(var(--w) * -0.2); width: 36%; rotate: -11deg; transform: translateZ(4px); pointer-events: none; }
+    .estojo__coroa svg { display: block; width: 100%; height: auto; overflow: visible; }
+    .estojo__tampa { position: absolute; inset: 0; transform-origin: 0 50%; transform: translateZ(2px); transform-style: preserve-3d; }
+    .tampa__frente, .tampa__verso { position: absolute; inset: 0; overflow: hidden; border-radius: 3px 8px 8px 3px; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+    /* a frente é decorativa: sem ponteiro, senão a capa (com container-type) "vaza" o clique por trás da tampa aberta */
+    .tampa__frente { background: #19171c; box-shadow: inset 0 0 0 3px #2c2a31; pointer-events: none; }
+    .tampa__frente .capa { inset: 4px; }
+    .tampa__frente::after {
+      content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+      background: linear-gradient(115deg, rgb(243 230 216 / 0.12), transparent 32% 70%, rgb(243 230 216 / 0.05));
+    }
+    .tampa__frente .tarja, .tampa__frente .preco, .tampa__frente .carimbo { z-index: 2; }
+    .tampa__frente .preco { right: 8px; top: 8px; }
+    .tampa__frente .carimbo { font-size: calc(var(--w) * 0.06); }
+    .cd {
+      position: absolute; left: 50%; top: 50%; width: 86%; aspect-ratio: 1; margin: -43% 0 0 -43%; border-radius: 50%;
+      background: conic-gradient(from 20deg, #c9c6cf, #e8e6ee, #a9c7d6, #d6c2e0, #f0e2b8, #c9c6cf 50%, #e8e6ee, #b9d6cf, #d9c8e8, #c9c6cf);
+      box-shadow: 0 3px 0 var(--deep), inset 0 0 0 2px rgb(255 255 255 / 0.35);
+    }
+    .cd::after {
+      content: ''; position: absolute; inset: 0; border-radius: 50%; pointer-events: none;
+      background: conic-gradient(transparent 0 20%, rgb(255 255 255 / 0.25) 25%, transparent 30% 70%, rgb(255 255 255 / 0.18) 75%, transparent 80%);
+      animation: brilho-cd 7s linear infinite;
+    }
+    @keyframes brilho-cd { to { rotate: 360deg; } }
+    .cd__rotulo {
+      position: absolute; inset: 7%; display: grid; place-items: end center; padding: 0 18% 17%; overflow: hidden; border-radius: 50%;
+      background: radial-gradient(circle, transparent 0 21%, rgb(255 255 255 / 0.55) 21% 22.5%, transparent 23%), var(--rotulo, #3a2848);
+      color: var(--ink); font: 400 calc(var(--w) * 0.065)/1 var(--f-placa); letter-spacing: 0.06em; text-align: center;
+    }
+    .cd__furo { position: absolute; left: 50%; top: 50%; width: 13%; aspect-ratio: 1; translate: -50% -50%; border-radius: 50%; background: #16151a; box-shadow: 0 0 0 3px #2b2930; }
+    .tampa__verso { transform: rotateY(180deg); padding: 6% 6%; background: linear-gradient(200deg, #222026, #141317); box-shadow: inset 0 0 0 3px #322f37; }
+    .presilha { position: absolute; z-index: 2; left: 50%; width: 22%; height: 10px; translate: -50% 0; border-radius: 3px; background: #2f2c35; }
+    .presilha--cima { top: 3.4%; } .presilha--baixo { bottom: 3.4%; }
+    .manual {
+      position: relative; height: 100%; overflow-y: auto; overscroll-behavior: contain; padding: 14px 14px 18px;
+      background: var(--paper); color: var(--paper-ink); rotate: -0.6deg; box-shadow: 0 4px 0 var(--deep);
+      scrollbar-width: thin; scrollbar-color: var(--paper-muted) transparent;
+    }
+    .manual:focus-visible, .manual :focus-visible { outline-color: var(--paper-ink); }
+    .manual__cabeca {
+      display: flex; justify-content: space-between; align-items: baseline; padding-bottom: 6px; border-bottom: 2px solid var(--paper-ink);
+      font: 400 1.05rem/1 var(--f-placa); letter-spacing: 0.1em; text-transform: uppercase;
+    }
+    .manual__pag { font: 400 0.75rem/1 var(--f-dati); letter-spacing: 0; text-transform: none; }
+    .manual__jogo { margin-top: 8px; font: 400 1.6rem/1 var(--f-placa); letter-spacing: 0.04em; overflow-wrap: anywhere; }
+    .manual__por { margin-top: 4px; color: var(--paper-muted); font: 400 0.85rem/1.3 var(--f-dati); }
+    .manual__sec { margin: 14px 0 0; font: 400 1.05rem/1 var(--f-placa); letter-spacing: 0.08em; text-transform: uppercase; }
+    .manual__txt { margin-top: 4px; font-size: 0.95rem; line-height: 1.4; }
+    .manual__pitch { margin-top: 4px; font: 400 1.05rem/1.3 var(--f-mao); }
+    .manual__fatos { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; margin: 14px 0 0; padding-top: 10px; border-top: 2px dashed rgb(42 29 23 / 0.35); }
+    .manual__fatos dt { font: 700 0.8125rem/1.2 var(--f-texto); color: var(--paper-muted); }
+    .manual__fatos dd { margin: 0; font: 400 1.35rem/1.1 var(--f-placa); letter-spacing: 0.03em; }
+    .manual__plats { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; padding: 0; list-style: none; }
+    .manual__plats li { padding: 3px 8px; border: 2px solid var(--paper-ink); border-radius: 4px; font: 600 0.85rem/1.2 var(--f-texto); }
+    .comentarios { display: flex; flex-direction: column; width: min(100%, 420px); padding: 16px; border-radius: 4px; background: var(--shelf); }
+    /* o painel cresce com os post-its (sem rolagem interna); no mínimo a altura da caixa */
+    @media (min-width: 760px) { .comentarios { width: min(340px, 30vw); min-height: calc(var(--w) * 4 / 3 + 8px); margin-top: calc(var(--w) * 0.2 + 8px); } }
+    .comentarios__titulo { font: 400 1.6rem/1 var(--f-placa); letter-spacing: 0.05em; color: var(--teal); }
+    .comentarios__lista { flex: 1; margin: 12px 0 0; padding: 4px 6px 8px 2px; list-style: none; display: grid; align-content: start; gap: 12px; }
+    .coment {
+      display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: start; padding: 10px 12px 12px;
+      background: var(--papel, #f7e48a); color: var(--paper-ink); rotate: var(--r, -1deg); box-shadow: 0 3px 0 var(--deep);
+    }
+    .coment__quem { font: 400 1rem/1.2 var(--f-mao); }
+    .coment__txt { margin-top: 2px; font: 400 0.95rem/1.35 var(--f-texto); overflow-wrap: anywhere; }
+    .coment.novo { animation: coment-cola 420ms cubic-bezier(0.2, 0.8, 0.2, 1.15) both; }
+    @keyframes coment-cola {
+      0% { transform: translateY(-26px) rotate(-7deg) scale(1.08); opacity: 0; }
+      65% { transform: translateY(2px) scale(0.98); opacity: 1; }
+      100% { transform: none; }
+    }
+    /* balão de conversa: a foto de quem comentou */
+    .balao { position: relative; display: block; width: 36px; height: 36px; border: 3px solid var(--paper-ink); border-radius: 50%; }
+    .balao svg { display: block; width: 100%; height: 100%; border-radius: 50%; }
+    .balao::after { content: ''; position: absolute; left: 1px; bottom: -7px; width: 9px; height: 9px; background: var(--paper-ink); clip-path: polygon(0 0, 100% 0, 0 100%); }
+    .comentarios__form { display: grid; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 2px solid var(--edge); }
+    .comentarios__campo {
+      width: 100%; min-height: 56px; padding: 8px 12px; border: 2px solid var(--edge); border-radius: 4px; resize: vertical;
+      background: var(--deep); color: var(--ink); font: 400 1rem/1.4 var(--f-texto);
+    }
+    .comentarios__campo:hover { border-color: var(--lip); }
+    .comentarios__campo:focus-visible { outline: 3px solid var(--amber); outline-offset: 1px; }
+    .comentarios__erro { color: var(--pink); font-weight: 700; font-size: 0.875rem; }
+    .comentarios__erro:empty { display: none; }
+    .btn--primario { background: var(--amber); border-color: var(--amber); color: var(--deep); }
+    .btn--primario:hover { background: var(--ink); border-color: var(--ink); }
+
+    /* ---------- Vitrine da estatueta: vem pra frente e gira devagar; o recado ao lado ---------- */
+    /* --ry tipado para poder girar (a cabeça-foto lê o mesmo valor e continua de frente) */
+    @property --ry { syntax: '<angle>'; inherits: true; initial-value: 0deg; }
+    .vitrine { position: relative; display: flex; flex-direction: column; align-items: center; gap: 20px; width: min(100%, 760px); }
+    @media (min-width: 760px) { .vitrine { flex-direction: row; justify-content: center; align-items: center; gap: 36px; } }
+    .vitrine__palco { position: relative; flex: none; width: 240px; height: 290px; perspective: 1100px; perspective-origin: 50% 30%; }
+    @media (min-width: 760px) { .vitrine__palco { width: 300px; height: 380px; } }
+    /* poça de luz do abajur embaixo dela (a estatueta acabou de sair da mesa iluminada) */
+    .vitrine__luz {
+      position: absolute; left: 50%; bottom: 2%; width: 120%; height: 30%; translate: -50% 0; border-radius: 50%; pointer-events: none;
+      background: radial-gradient(closest-side, rgb(255 193 94 / 0.32), rgb(255 193 94 / 0.1) 55%, transparent);
+    }
+    .vitrine__chao { position: absolute; left: 50%; bottom: 8%; width: 56%; height: 9%; translate: -50% 0; border-radius: 50%; background: radial-gradient(closest-side, rgb(12 6 9 / 0.85), transparent); }
+    .vitrine__mundo { position: absolute; left: 50%; top: 88%; width: 0; height: 0; transform-style: preserve-3d; transform: rotateX(var(--cam)); }
+    .vitrine .obj.gira { animation: gira 8s ease-in-out infinite; }
+    @keyframes gira { 0% { --ry: 0deg; } 25% { --ry: -30deg; } 75% { --ry: 30deg; } 100% { --ry: 0deg; } }
+    .vitrine__ficha { width: min(100%, 360px); padding: 18px 16px; border-radius: 4px; background: var(--shelf); }
+    .vitrine__topo { display: flex; align-items: center; gap: 12px; }
+    .vitrine__nome { font: 400 clamp(2.4rem, 8vw, 3rem)/0.95 var(--f-placa); letter-spacing: 0.04em; }
+    .vitrine__nome:focus { outline: none; }
+    .vitrine__meta { margin-top: 8px; color: var(--muted); }
+    .vitrine__meta strong { color: var(--ink); font-variant-numeric: tabular-nums; }
+    .recado { margin: 16px 0 0; padding: 12px 14px 14px; rotate: -1.6deg; background: var(--papel, #f7e48a); color: var(--paper-ink); box-shadow: 0 3px 0 var(--deep); }
+    .recado__quem { font: 400 1rem/1.2 var(--f-mao); }
+    .recado__txt { margin: 4px 0 0; font: 400 1.15rem/1.4 var(--f-texto); overflow-wrap: anywhere; }
+    .recado--vazio .recado__txt { color: var(--paper-muted); }
+    .vitrine__ficha .acoes { margin-top: 18px; }
+
+    /* toast */
+    .toast {
+      position: fixed; left: 50%; bottom: 16px; z-index: 200; translate: -50% 0; width: max-content; max-width: min(460px, calc(100% - 32px)); padding: 10px 16px; border-radius: 4px;
+      background: var(--ink); color: var(--deep); font-weight: 700; box-shadow: 0 6px 12px rgb(0 0 0 / 0.55), 0 2px 3px rgb(0 0 0 / 0.5);
+    }
+    .toast[hidden] { display: none; }
+
+    /* ---------- Estante: juntando a prateleira da votação com a mesa da encerrada ---------- */
+    html.trava { overflow: hidden; }
+    figure { margin: 0; }
+    .avatar { display: block; overflow: hidden; background: none; }
+    .avatar svg { display: block; width: 100%; height: 100%; }
+    .btn--papel-primario { background: var(--paper-ink); border-color: var(--paper-ink); color: var(--paper); }
+    .btn--papel-primario:hover { background: var(--stamp); border-color: var(--stamp); color: var(--paper); }
+
+    .tela { max-width: var(--max); margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr); row-gap: 20px; }
+    .tela[hidden] { display: none; }
+    .tela-estante { padding: 28px var(--gutter) 120px; grid-template-areas: "cabeca" "ficha" "tv" "estante"; }
+    @media (min-width: 760px) {
+      .tela-estante {
+        grid-template-columns: minmax(0, 1fr) minmax(250px, 380px); column-gap: 40px; padding-top: 40px;
+        grid-template-areas: "cabeca tv" "ficha tv" "estante estante";
+      }
+    }
+    .tela-estante .cabeca { grid-area: cabeca; }
+    .tela-estante .cabeca h1 { font: 400 clamp(3.25rem, 12vw, 5rem)/0.95 var(--f-placa); letter-spacing: 0.04em; text-wrap: balance; }
+    .tela-estante .cabeca p { margin-top: 6px; color: var(--muted); }
+    .tela-estante .ficha { align-self: start; }
+
+    /* a capa da prateleira usa a mesma capa da mesa; só o nome encolhe pro nicho */
+    .case .capa__nome { font-size: 11.5cqw; }
+    .case .tarja { font-size: 0.75rem; }
+    .case .preco { right: -6px; top: -8px; font-size: 1.1rem; }
+    .case .capa::after {
+      background:
+        radial-gradient(circle at var(--sx, 50%) var(--sy, 0%), rgb(243 230 216 / var(--sa, 0)), transparent 48%),
+        linear-gradient(105deg, rgb(255 193 94 / 0.10), transparent 35%),
+        linear-gradient(110deg, rgb(243 230 216 / 0.08), transparent 30%);
+    }
+    /* a lombada do estojo da mesa pega a cor do jogo */
+    .m-estojo > .l { background: linear-gradient(90deg, hsl(var(--hue, 28) 30% 12%), hsl(var(--hue, 28) 34% 22%) 45%, hsl(var(--hue, 28) 30% 14%)); }
+    .m-estojo > .r { background: hsl(var(--hue, 28) 26% 9%); }
+    .m-estojo > .u { background: linear-gradient(90deg, hsl(var(--hue, 28) 28% 22%), hsl(var(--hue, 28) 24% 15%)); }
+
+    /* embaixo do post-it: a fila de quem zerou, na ordem de chegada (o ouro com aro dourado) */
+    .chegada { display: grid; gap: 6px; }
+    .chegada__fila { display: flex; flex-wrap: wrap; margin: 0; padding: 0 0 0 4px; list-style: none; }
+    .chegada__fila li {
+      width: 28px; height: 28px; margin-left: -6px; overflow: hidden; border-radius: 50%; border: 2px solid var(--ink);
+      box-shadow: 0 2px 0 var(--deep);
+    }
+    .chegada__fila li:first-child { margin-left: 0; border: 3px solid #e3b341; }
+    .chegada__fila svg { display: block; width: 100%; height: 100%; }
+    .chegada__txt { color: var(--muted); font-size: 0.875rem; line-height: 1.3; }
+    @media (min-width: 760px) { .chegada__fila li { width: 32px; height: 32px; } }
+
+    /* ---------- Mesa da rodada revisitada ---------- */
+    .tela-mesa { padding: 16px var(--gutter) 64px; grid-template-areas: "volta" "cabeca" "mesa" "falta"; }
+    @media (min-width: 760px) { .tela-mesa { padding-top: 22px; } }
+    .volta { grid-area: volta; justify-self: start; }
+    /* no PC o botão de voltar sobe pro lado da faixa, pra mesa caber inteira na tela durante a queda */
+    @media (min-width: 760px) {
+      .tela-mesa { position: relative; grid-template-areas: "cabeca" "mesa" "falta"; }
+      .volta { position: absolute; z-index: 1; left: var(--gutter); top: 22px; }
+    }
+    .cabeca--pano { grid-area: cabeca; display: flex; flex-direction: column; align-items: center; text-align: center; }
+    .banner:focus { outline: none; }
+    .falta { justify-self: center; }
+
+    /* o estojo em voo: cópia 2D da capa que viaja entre a prateleira e a mesa (fica acima da cortina) */
+    .voador {
+      position: fixed; z-index: 400; pointer-events: none; transform-origin: 50% 50%;
+      background: #19171c; box-shadow: 0 6px 0 var(--deep);
+    }
+    .voador { container-type: inline-size; }
+    .voador .capa { inset: 3px; }
+    .voador .capa__nome { font-size: 13cqw; }
+    /* tarja e preço acompanham o tamanho da capinha durante o voo (na mesa ela é pequena) */
+    .voador .tarja { font-size: 7cqw; }
+    .voador .preco { right: -4cqw; top: -5cqw; font-size: 10.5cqw; }
+    /* a cortina: o quarto escurece enquanto a capinha muda de lugar */
+    .cortina { position: fixed; inset: 0; z-index: 350; background: var(--ground); pointer-events: none; opacity: 0; }
+    .cortina[hidden] { display: none; }
+    /* com a mesa na tela, a luz é a do abajur (a TV ficou no outro canto do quarto) */
+    .cena-luz.mesa {
+      background:
+        radial-gradient(circle var(--lamp-r, 520px) at var(--lamp-x, 20%) var(--lamp-y, 700px),
+          rgb(255 193 94 / 0.34) 0, rgb(255 193 94 / 0.26) 12%, rgb(255 193 94 / 0.16) 25%,
+          rgb(255 193 94 / 0.065) 50%, rgb(255 193 94 / 0.02) 75%, transparent 100%),
+        radial-gradient(ellipse var(--neon-w, 170px) var(--neon-h, 90px) at var(--neon-x, 90px) var(--neon-y, 40px),
+          rgb(255 92 138 / 0.12), rgb(255 92 138 / 0.05) 50%, transparent 100%);
+    }
+    .quadro__vazio { grid-column: 1 / -1; padding: 16px; background: var(--paper); color: var(--paper-ink); font: 400 1.1rem/1.3 var(--f-mao); text-align: center; rotate: -1deg; }
+    /* ---------- Movimento e efeitos desligáveis ----------
+       reduced-motion e contraste alto desligam: movimento, grão, scanlines e aberração. */
+    /* Parallax por rolagem no celular (V2): a parede anda bem mais devagar que o conteúdo e as caixas
+       flutuam um pouco no nicho. Só onde existe animation-timeline; usa a propriedade translate
+       (família do transform) para não brigar com o translateZ do palco. */
+    @supports (animation-timeline: scroll()) {
+      @media (max-width: 759px) and (prefers-reduced-motion: no-preference) and (not (prefers-contrast: more)) {
+        .cena-parede { animation: par-parede linear both; animation-timeline: scroll(root); }
+        .rack__stage { animation: par-caixa linear both; animation-timeline: view(); }
+      }
+    }
+    @keyframes par-parede { from { transform: translateY(0); } to { transform: translateY(-120px); } }
+    @keyframes par-caixa { from { translate: 0 6px; } to { translate: 0 -6px; } }
+
+    @media (prefers-reduced-motion: reduce), (prefers-contrast: more) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+      .cena-grao, .poeira, .tv__rolo { display: none; }
+      .tv__vidro::after { display: none; }
+      .tv__fase { text-shadow: none; }
+      .neon__l.apaga { opacity: 1; }
+      .rack__slot:hover .case, .rack__slot:has(:focus-visible) .case { --tz: 0px; --lift: 0px; }
+      .btn:active { transform: none; }
+      .ticket:not(:disabled):hover, .ticket:not(:disabled):active { translate: none; }
+    }
+    @media (prefers-contrast: more) {
+      .cena-vinheta { background: radial-gradient(ellipse 85% 80% at 50% 42%, transparent 55%, rgb(12 6 9 / 0.3) 100%); }
+      .cena-luz { display: none; }
+    }
+    /* ---------- Movimento desligável ---------- */
+    @media (prefers-reduced-motion: reduce), (prefers-contrast: more) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+      .cena-grao { display: none; }
+      .neon__l.apaga { opacity: 1; }
+      .obj.ativo > .mola { translate: none; }
+      .btn:active { transform: none; }
+    }
+    @media (prefers-contrast: more) {
+      .cena-luz { display: none; }
+      .cena-vinheta { background: radial-gradient(ellipse 85% 80% at 50% 42%, transparent 55%, rgb(12 6 9 / 0.3) 100%); }
+    }
+  </style>
+  <!-- regra que o parallax do PC atualiza (um seletor, sem mexer em estilos inline) — V2 -->
+  <style id="par">.rack__stage {}</style>
+</head>
+<body>
+  <!-- cena: camadas irmãs da interface, decorativas -->
+  <div class="cena-parede" id="parede" aria-hidden="true"></div>
+  <div class="cena-luz" id="luz" aria-hidden="true"></div>
+  <div class="cena-grao" aria-hidden="true"></div>
+  <div class="cena-vinheta" aria-hidden="true"></div>
+  <div class="app" id="app">
+    <header class="topo">
+      <a class="marca" href="rodada-sugerindo.html" aria-label="Clube dos Jogos, ir para a rodada">
+        <!-- letreiro de neon: o único neon do sistema; um traço por letra, núcleo claro, tubo apagado atrás, glow em 3 camadas -->
+        <svg class="neon" id="neon" viewBox="-10 -10 260 96" role="img" aria-label="Clube dos Jogos">
+          <defs>
+            <filter id="neon-glow" x="-20%" y="-40%" width="140%" height="180%" color-interpolation-filters="sRGB">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="0.8" result="a" />
+              <feGaussianBlur in="SourceGraphic" stdDeviation="3.5" result="b" />
+              <feGaussianBlur in="SourceGraphic" stdDeviation="9" result="c" />
+              <feMerge><feMergeNode in="c" /><feMergeNode in="b" /><feMergeNode in="a" /><feMergeNode in="SourceGraphic" /></feMerge>
+            </filter>
+            <path id="gC" d="M21 5C19 1 15 0 11 0C3 0 1 8 1 16C1 24 3 32 11 32C15 32 19 31 21 27" />
+            <path id="gL" d="M2 0V32H21" />
+            <path id="gU" d="M1 0V21C1 28 5 32 11 32C17 32 21 28 21 21V0" />
+            <path id="gB" d="M2 15H12C17 15 20 12 20 7.5C20 3 17 0 12 0H2V32H12C18 32 21 28.5 21 23.5C21 18.5 18 15 12 15" />
+            <path id="gE" d="M21 0H2V16H16H2V32H21" />
+            <path id="gD" d="M2 0V32H9C17 32 21 25 21 16C21 7 17 0 9 0Z" />
+            <path id="gO" d="M11 0C3 0 1 8 1 16C1 24 3 32 11 32C19 32 21 24 21 16C21 8 19 0 11 0Z" />
+            <path id="gS" d="M20 5C18 1 15 0 11 0C5 0 2 3 2 8C2 14 8 15 11 16C16 17 21 19 21 24C21 29 17 32 11 32C6 32 3 30 1 27" />
+            <path id="gJ" d="M21 0V22C21 29 17 32 11 32C5 32 2 29 1 25" />
+            <path id="gG" d="M20 5C18 1 15 0 11 0C3 0 1 8 1 16C1 24 3 32 11 32C19 32 21 26 21 18H12" />
+          </defs>
+          <!-- fio que sai por trás até o transformador, e os grampos -->
+          <path class="neon__fio" d="M236 18C252 22 252 60 248 86" />
+          <rect class="neon__grampo" x="38" y="33" width="6" height="4" /><rect class="neon__grampo" x="128" y="33" width="6" height="4" /><rect class="neon__grampo" x="205" y="33" width="6" height="4" />
+          <rect class="neon__grampo" x="72" y="75" width="6" height="4" /><rect class="neon__grampo" x="158" y="75" width="6" height="4" />
+          <!-- tubo apagado (aparece quando uma letra pisca) -->
+          <g class="neon__apagado">
+            <use href="#gC" x="0" /><use href="#gL" x="29" /><use href="#gU" x="58" /><use href="#gB" x="87" /><use href="#gE" x="116" />
+            <use href="#gD" x="157" /><use href="#gO" x="186" /><use href="#gS" x="215" />
+            <use href="#gJ" x="49.5" y="42" /><use href="#gO" x="78.5" y="42" /><use href="#gG" x="107.5" y="42" /><use href="#gO" x="136.5" y="42" /><use href="#gS" x="165.5" y="42" />
+          </g>
+          <!-- tubo aceso: cada letra num grupo, para o flicker raro de uma letra só -->
+          <g filter="url(#neon-glow)">
+            <g class="neon__l" transform="translate(0 0)"><use class="neon__tubo" href="#gC" /><use class="neon__nucleo" href="#gC" /></g>
+            <g class="neon__l" transform="translate(29 0)"><use class="neon__tubo" href="#gL" /><use class="neon__nucleo" href="#gL" /></g>
+            <g class="neon__l" transform="translate(58 0)"><use class="neon__tubo" href="#gU" /><use class="neon__nucleo" href="#gU" /></g>
+            <g class="neon__l" transform="translate(87 0)"><use class="neon__tubo" href="#gB" /><use class="neon__nucleo" href="#gB" /></g>
+            <g class="neon__l" transform="translate(116 0)"><use class="neon__tubo" href="#gE" /><use class="neon__nucleo" href="#gE" /></g>
+            <g class="neon__l" transform="translate(157 0)"><use class="neon__tubo" href="#gD" /><use class="neon__nucleo" href="#gD" /></g>
+            <g class="neon__l" transform="translate(186 0)"><use class="neon__tubo" href="#gO" /><use class="neon__nucleo" href="#gO" /></g>
+            <g class="neon__l" transform="translate(215 0)"><use class="neon__tubo" href="#gS" /><use class="neon__nucleo" href="#gS" /></g>
+            <g class="neon__l" transform="translate(49.5 42)"><use class="neon__tubo" href="#gJ" /><use class="neon__nucleo" href="#gJ" /></g>
+            <g class="neon__l" transform="translate(78.5 42)"><use class="neon__tubo" href="#gO" /><use class="neon__nucleo" href="#gO" /></g>
+            <g class="neon__l" transform="translate(107.5 42)"><use class="neon__tubo" href="#gG" /><use class="neon__nucleo" href="#gG" /></g>
+            <g class="neon__l" transform="translate(136.5 42)"><use class="neon__tubo" href="#gO" /><use class="neon__nucleo" href="#gO" /></g>
+            <g class="neon__l" transform="translate(165.5 42)"><use class="neon__tubo" href="#gS" /><use class="neon__nucleo" href="#gS" /></g>
+          </g>
+        </svg>
+      </a>
+      <nav class="nav" aria-label="Principal">
+        <ul>
+          <li><a href="rodada-sugerindo.html">Rodada</a></li>
+          <li><a href="estante.html" aria-current="page">Estante</a></li>
+          <li><a href="stats.html">Stats</a></li>
+        </ul>
+      </nav>
+      <span class="avatar" id="avatar-topo" role="img" aria-label="Você: Yuri"></span>
+    </header>
+
+    <main class="tela tela-estante" id="tela-estante">
+      <div class="cabeca">
+        <h1>Estante</h1>
+        <p id="e-resumo">8 jogos guardados, da rodada mais nova pra mais velha</p>
+      </div>
+
+      <section class="ficha" aria-labelledby="ficha-titulo">
+        <span class="ficha__carimbo">Arquivo</span>
+        <h2 class="ficha__titulo" id="ficha-titulo">Ficha do clube</h2>
+        <p class="ficha__socio" id="e-desde">Desde mar 2026 · 8 rodadas fechadas</p>
+        <p class="ficha__falta">Tira uma capinha da estante pra reviver a resenha.</p>
+        <p class="ficha__resto">Cada jogo volta pra mesa com o quadro de resenhas, a caixinha da votação e as estatuetas de quem zerou, na ordem de chegada.</p>
+      </section>
+
+      <div class="mesa-tv" aria-hidden="true">
+        <div class="tv">
+          <span class="tv__brilho"></span>
+          <span class="tv__antena"></span>
+          <div class="tv__caixa">
+            <div class="tv__moldura">
+              <div class="tv__vidro" id="tv-vidro">
+                <div class="tv__cartaz">
+                  <span class="tv__osd">CH 04</span>
+                  <span class="tv__fase">Estante</span>
+                  <span class="tv__linha">· 8 rodadas ·</span>
+                </div>
+                <span class="tv__rolo"></span>
+              </div>
+            </div>
+            <div class="tv__painel"><span class="tv__botao"></span><span class="tv__botao"></span><span class="tv__grade"></span></div>
+          </div>
+        </div>
+        <div class="poeira" id="poeira"><span class="cisco cisco--a"></span><span class="cisco cisco--b"></span><span class="cisco cisco--c"></span></div>
+        <div class="movel-tv">
+          <span class="movel-tv__tampo"></span>
+          <div class="movel-tv__corpo"><div class="movel-tv__nicho"><span class="console"></span></div></div>
+        </div>
+      </div>
+
+      <section class="estante" aria-labelledby="estante-titulo">
+        <h2 class="estante__titulo" id="estante-titulo">JÁ PASSARAM POR AQUI</h2>
+        <p class="estante__nota">Todo jogo que o clube escolheu. Clica numa capinha pra levar ela pra mesa.</p>
+
+        <div class="cenario" aria-hidden="true">
+          <span class="abajur-mov" id="abajur-mov">
+            <svg viewBox="0 0 60 92">
+              <defs>
+                <linearGradient id="cupula" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe2a6" /><stop offset="1" stop-color="#e8a04a" /></linearGradient>
+              </defs>
+              <path d="M15 6h30l11 34H4z" fill="url(#cupula)" />
+              <path d="M4 40h52v3H4z" fill="#ffd27a" />
+              <path d="M28 43h4v35h-4z" fill="#4a3222" />
+              <path d="M16 78h28l5 8H11z" fill="#3a2618" />
+              <path d="M16 78h28v2H16z" fill="#6b4a2f" />
+            </svg>
+          </span>
+          <!-- híbrido na base: joy-cons azul e vermelho dos lados, tela apagada pegando o teal da TV -->
+          <span class="console-obj console-obj--switch">
+            <svg viewBox="0 0 120 80">
+              <ellipse cx="60" cy="78" rx="56" ry="2.5" fill="#0c0609" />
+              <path d="M25 6h-7A10 10 0 0 0 8 16v48a8 8 0 0 0 8 8h9z" fill="#1d8bad" />
+              <path d="M95 6h7a10 10 0 0 1 10 10v48a8 8 0 0 1-8 8h-9z" fill="#c4423a" />
+              <path d="M25 6h-7A10 10 0 0 0 8 16v2a10 10 0 0 1 10-10h7z" fill="#5cc3e2" opacity="0.5" />
+              <path d="M95 6h7a10 10 0 0 1 10 10v2a10 10 0 0 0-10-10h-7z" fill="#f08a7f" opacity="0.4" />
+              <circle cx="16.5" cy="19" r="3.6" fill="#0f4a5e" />
+              <path d="M15 39h3v3h-3zM15 47h3v3h-3zM11 43h3v3h-3zM19 43h3v3h-3z" fill="#0f4a5e" />
+              <circle cx="103.5" cy="17" r="1.8" fill="#6a1f1a" /><circle cx="103.5" cy="27" r="1.8" fill="#6a1f1a" />
+              <circle cx="98.5" cy="22" r="1.8" fill="#6a1f1a" /><circle cx="108.5" cy="22" r="1.8" fill="#6a1f1a" />
+              <circle cx="103.5" cy="45" r="3.6" fill="#6a1f1a" />
+              <rect x="25" y="6" width="70" height="26" fill="#131216" />
+              <rect x="30" y="10" width="60" height="20" fill="#16282a" />
+              <path d="M70 10h12L64 30H52z" fill="#46c3b5" opacity="0.12" />
+              <path d="M28 25h64l3 53H25z" fill="#232227" />
+              <path d="M28 25h64l.3 3H27.8z" fill="#3a3940" />
+              <path d="M44 25h32" stroke="#0c0609" stroke-width="1.5" />
+              <circle cx="31" cy="72" r="1.1" class="led" fill="#7be36f" />
+            </svg>
+          </span>
+          <!-- console de cartucho empilhado em cima do console de mesa fininho com a barra de luz azul -->
+          <span class="console-obj console-obj--pilha so-pc">
+            <svg class="snes" viewBox="0 0 140 50">
+              <path d="M46 2h48v16H46z" fill="#5c5957" />
+              <rect x="52" y="4" width="36" height="9" fill="#f4ecd2" /><rect x="52" y="4" width="36" height="2.5" fill="#b3213f" />
+              <rect x="36" y="13" width="68" height="12" rx="3" fill="#77736f" />
+              <rect x="4" y="18" width="132" height="30" rx="10" fill="#8f8b86" />
+              <rect x="8" y="18" width="124" height="4" rx="2" fill="#aaa6a0" />
+              <rect x="14" y="25" width="13" height="5" rx="1.5" fill="#54486f" />
+              <rect x="113" y="25" width="13" height="5" rx="1.5" fill="#54486f" />
+              <rect x="62" y="27" width="16" height="4" rx="2" fill="#625e94" />
+              <rect x="20" y="36" width="12" height="7" rx="1.5" fill="#3a3836" /><rect x="36" y="36" width="12" height="7" rx="1.5" fill="#3a3836" />
+              <circle cx="58" cy="39.5" r="1.3" class="led" fill="#ff5c5c" />
+            </svg>
+            <svg class="ps" viewBox="0 0 180 40">
+              <ellipse cx="90" cy="38" rx="86" ry="2" fill="#0c0609" />
+              <path d="M11 4h167l-7 17H4z" fill="#1b1a1e" />
+              <path d="M11 4h167l-.8 2H10.2z" fill="#3c3b42" />
+              <path d="M30 12.5h70" stroke="#0a090c" stroke-width="1.6" />
+              <path d="M4 21h167l-1 3H5z" fill="#0c0b0e" />
+              <rect x="62" y="18.5" width="48" height="8" fill="#4aa8ff" opacity="0.18" class="led" />
+              <rect x="66" y="21.4" width="40" height="2" fill="#6cb8ff" class="led" />
+              <path d="M5 24h165l-5 12H11z" fill="#242328" />
+            </svg>
+          </span>
+          <!-- console branco em pé, com o anel verde aceso -->
+          <span class="console-obj console-obj--x360">
+            <svg viewBox="0 0 44 112">
+              <defs>
+                <linearGradient id="x360" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#c2bdb3" /><stop offset="0.6" stop-color="#a39e94" /><stop offset="1" stop-color="#7f7a72" /></linearGradient>
+              </defs>
+              <rect x="1" y="104" width="42" height="7" rx="2" fill="#2b2a2f" />
+              <path d="M5 4h34q-6 50 0 100H5q6-50 0-100z" fill="url(#x360)" />
+              <path d="M5 4h34" stroke="#ddd8cf" stroke-width="1.5" />
+              <path d="M29 34v58" stroke="#6e6a62" stroke-width="1.6" stroke-linecap="round" />
+              <circle cx="20" cy="18" r="9" fill="#7be36f" opacity="0.16" class="led" />
+              <circle cx="20" cy="18" r="5.6" fill="none" stroke="#7be36f" stroke-width="2.2" class="led" />
+              <circle cx="20" cy="18" r="3.3" fill="#d8d4cb" />
+              <rect x="27" y="14" width="4" height="8" rx="2" fill="#8a857c" />
+              <rect x="13" y="76" width="12" height="20" rx="2" fill="none" stroke="#8a857c" stroke-width="1" />
+            </svg>
+          </span>
+          <!-- console preto em pé na base, frente frisada -->
+          <span class="console-obj console-obj--ps2 so-pc">
+            <svg viewBox="0 0 34 120">
+              <path d="M2 110h30l-2 8H4z" fill="#3a3940" />
+              <rect x="7" y="4" width="20" height="106" fill="#1a191e" />
+              <rect x="7" y="4" width="20" height="2" fill="#3a3941" />
+              <rect x="9" y="9" width="16" height="44" fill="#141318" />
+              <path d="M10 60h14M10 64h14M10 68h14M10 72h14M10 76h14M10 80h14M10 84h14M10 88h14M10 92h14" stroke="#2d2c33" stroke-width="1.6" />
+              <circle cx="13" cy="15" r="1.3" class="led" fill="#62d26a" /><circle cx="21" cy="15" r="1.3" class="led" fill="#3f8cff" />
+            </svg>
+          </span>
+          <!-- portátil de bolso encostado nas capinhas -->
+          <span class="console-obj console-obj--gb so-pc">
+            <svg viewBox="0 0 40 66">
+              <path d="M3 2h34v50q0 12-12 12H5q-2 0-2-2z" fill="#9d998f" />
+              <path d="M3 2h34v2H3z" fill="#bdb9ae" />
+              <rect x="7" y="7" width="26" height="22" rx="2" fill="#46444f" />
+              <rect x="11" y="10" width="18" height="15" fill="#6c7a38" />
+              <path d="M9 40h4v-4h3v4h4v3h-4v4h-3v-4H9z" fill="#232227" />
+              <circle cx="28" cy="42" r="2.7" fill="#7d2643" /><circle cx="33.5" cy="38.5" r="2.7" fill="#7d2643" />
+              <path d="M26 58l6-5M29 60l6-5" stroke="#76726a" stroke-width="1.2" />
+            </svg>
+          </span>
+          <span class="capas-pilha">
+            <span class="capinha capinha--mario">Super Mario World</span>
+            <span class="capinha capinha--sims"><span class="capinha__losango"></span>The Sims 2</span>
+            <span class="capinha capinha--tlou">The Last of Us</span>
+            <span class="capinha capinha--gta">GTA San Andreas</span>
+          </span>
+        </div>
+
+        <div class="chao" aria-hidden="true"><div class="chao__carpete"></div></div>
+        <div class="movel">
+          <span class="movel__coroa" aria-hidden="true"></span>
+          <ul class="rack" id="rack" aria-label="Jogos que o clube já jogou"></ul>
+          <span class="movel__base" aria-hidden="true"></span>
+        </div>
+      </section>
+    </main>
+
+    <!-- a mesa da rodada tirada da estante (só leitura: nada aqui grava) -->
+    <main class="tela tela-mesa" id="tela-mesa" hidden>
+      <div class="volta"><button class="btn" type="button" id="btn-devolver">Devolver pra estante</button></div>
+      <div class="cabeca--pano" id="cabeca-pano">
+        <div class="varal">
+          <span class="varal__corda varal__corda--e" aria-hidden="true"></span>
+          <span class="varal__corda varal__corda--d" aria-hidden="true"></span>
+          <span class="banner-sombra" aria-hidden="true"></span>
+          <h1 class="banner" id="banner" tabindex="-1"><span id="banner-txt">Rodada 2</span></h1>
+        </div>
+        <p id="mesa-sub"></p>
+      </div>
+
+      <p class="falta" id="falta">Clica no quadro pra reler as resenhas e nas estatuetas pra ver os recados.</p>
+
+      <section class="mesa-sec" aria-labelledby="mesa-titulo">
+        <h2 class="sr" id="mesa-titulo">A mesa da rodada</h2>
+        <div class="palco-wrap" id="palco-wrap">
+          <div class="palco" id="palco" aria-hidden="true">
+            <div class="mundo" id="mundo"><div class="mesa" id="mesa"></div></div>
+          </div>
+          <span class="palco-chao" aria-hidden="true"></span>
+          <button class="alvo" type="button" id="alvo-quadro" data-obj="quadro-obj" aria-haspopup="dialog">
+            <span class="sr" id="alvo-quadro-txt">Abrir o quadro de resenhas</span>
+          </button>
+          <button class="alvo" type="button" id="alvo-caso" data-obj="caso-obj" aria-haspopup="dialog">
+            <span class="sr" id="alvo-caso-txt"></span>
+          </button>
+          <div id="alvos-est" style="display: contents"></div>
+        </div>
+        <p class="sr" id="aviso" aria-live="polite"></p>
+      </section>
+
+      <!-- placar em texto: as estatuetas da mesa para quem usa leitor de tela -->
+      <section class="sr" aria-labelledby="placar-titulo">
+        <h2 id="placar-titulo">Quem zerou</h2>
+        <ol id="placar-lista"></ol>
+        <p id="ainda"></p>
+      </section>
+    </main>
+
+    <footer class="rodape">
+      <p>Clube entre amigos, sem fins comerciais. Sem afiliação com fabricantes, estúdios ou plataformas.</p>
+    </footer>
+  </div>
+
+  <div class="cortina" id="cortina" aria-hidden="true" hidden></div>
+
+  <!-- Modal QUADRO: o quadro de cortiça da mesa vem pra frente (só leitura) -->
+  <div class="modal modal--quadro" id="m-quadro" role="dialog" aria-modal="true" aria-labelledby="qd-titulo" hidden>
+    <div class="modal__fundo" data-fecha></div>
+    <div class="quadro-palco">
+      <div class="quadro" id="quadro">
+        <div class="quadro__cortica" id="cortica">
+          <h2 class="quadro__titulo" id="qd-titulo" tabindex="-1"><span class="tacha" aria-hidden="true"></span><span class="tacha" aria-hidden="true"></span><span id="qd-titulo-txt">Resenha</span></h2>
+          <div class="quadro__grade">
+            <ul id="qd-lista" role="list" aria-label="Páginas pregadas"></ul>
+          </div>
+        </div>
+      </div>
+      <div class="modal__acoes"><button class="btn" type="button" data-fecha>Fechar o quadro</button></div>
+    </div>
+  </div>
+
+  <!-- Modal CAIXINHA: o mesmo da votação (a caixinha abre com o manual e o CD; comentários do lado) -->
+  <div class="modal modal--leitura" id="m-leitura" role="dialog" aria-modal="true" aria-labelledby="modal-titulo" hidden>
+    <div class="modal__fundo" id="modal-fundo"></div>
+    <div class="modal__palco">
+      <h2 class="modal__titulo" id="modal-titulo" tabindex="-1">Jogo</h2>
+      <div class="leitura">
+        <div class="leitura__caixa">
+          <div class="estojo" id="estojo">
+            <span class="estojo__sombra" id="estojo-sombra"></span>
+            <div class="estojo__corpo" id="estojo-corpo">
+              <div class="estojo__base">
+                <div class="cd" id="cd" aria-hidden="true"><span class="cd__rotulo" id="cd-rotulo"></span><span class="cd__furo"></span></div>
+              </div>
+              <div class="estojo__tampa" id="tampa">
+                <div class="tampa__frente" id="frente" aria-hidden="true"></div>
+                <div class="tampa__verso" id="verso" inert>
+                  <span class="presilha presilha--cima" aria-hidden="true"></span><span class="presilha presilha--baixo" aria-hidden="true"></span>
+                  <div class="manual" id="manual" tabindex="0" aria-label="Manual do jogo"></div>
+                </div>
+              </div>
+              <div class="estojo__coroa" id="estojo-coroa" aria-hidden="true"></div>
+            </div>
+          </div>
+        </div>
+        <section class="comentarios" id="comentarios" aria-labelledby="coment-titulo">
+          <h3 class="comentarios__titulo" id="coment-titulo">Comentários da votação</h3>
+          <ul class="comentarios__lista" id="coment-lista"></ul>
+        </section>
+      </div>
+      <div class="modal__acoes" id="modal-acoes">
+        <button class="btn" type="button" id="btn-fechar">Fechar a caixinha</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal VITRINE: a estatueta vem pra frente, gira devagar, e o recado de quem zerou fica do lado -->
+  <div class="modal" id="m-est" role="dialog" aria-modal="true" aria-labelledby="vit-nome" hidden>
+    <div class="modal__fundo" data-fecha></div>
+    <div class="vitrine">
+      <div class="vitrine__palco" id="vit-palco" aria-hidden="true">
+        <span class="vitrine__luz"></span><span class="vitrine__chao"></span>
+        <div class="vitrine__mundo" id="vit-mundo"></div>
+      </div>
+      <section class="vitrine__ficha" id="vit-ficha">
+        <div class="vitrine__topo"><span class="pos" id="vit-pos"></span><h2 class="vitrine__nome" id="vit-nome" tabindex="-1"></h2></div>
+        <p class="vitrine__meta" id="vit-meta"></p>
+        <figure class="recado" id="vit-recado"><figcaption class="recado__quem" id="vit-quem"></figcaption><blockquote class="recado__txt" id="vit-txt"></blockquote></figure>
+        <div class="acoes"><button class="btn" type="button" data-fecha>Voltar pra mesa</button></div>
+      </section>
+    </div>
+  </div>
+  <p class="toast" id="toast" role="status" hidden></p>
+  <script>
+    // Mock: só o necessário para a tela parecer viva. Nada aqui grava dados.
+    const $ = (s, el = document) => el.querySelector(s);
+    const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const calma = matchMedia('(prefers-reduced-motion: reduce), (prefers-contrast: more)');
+    const espera = (ms) => new Promise((r) => setTimeout(r, calma.matches ? 0 : ms * LENTO));
+    const largo = matchMedia('(min-width: 760px)');
+    const URL_ = new URLSearchParams(location.search);
+
+    // ---------- dados do mock ----------
+    // no app a foto vem da conta Google (safeUrl); aqui um retratinho desenhado faz o papel
+    const PESSOAS = {
+      Yuri: { bg: '#ff5c8a', pele: '#e0ac83', cabelo: '#2a1a12', estilo: 'curto', roupa: '#2a3b4f' },
+      Mari: { bg: '#f59a5b', pele: '#c58b62', cabelo: '#1c120c', estilo: 'longo', roupa: '#5b2a3a' },
+      Caio: { bg: '#46c3b5', pele: '#8d5a3b', cabelo: '#120b08', estilo: 'cacho', roupa: '#3b2417' },
+      Bia: { bg: '#c58cf0', pele: '#f0c9a8', cabelo: '#a0522d', estilo: 'coque', roupa: '#1f3446' },
+      Duda: { bg: '#ffc15e', pele: '#d9a179', cabelo: '#3b2417', estilo: 'longo', roupa: '#33452a' },
+      Léo: { bg: '#9fd16b', pele: '#f2d2b6', cabelo: '#d9a441', estilo: 'curto', roupa: '#4a1d26' },
+    };
+    // cor do post-it de cada um (a mesma da votação)
+    const PAPEL = { Yuri: '#f6c1cf', Mari: '#f6cf9e', Caio: '#bfe0ea', Bia: '#e3d0f2', Duda: '#f7e48a', Léo: '#cfe7b4' };
+    // ---------- rodadas guardadas (dados do mock; a Estante e os Stats usam os mesmos) ----------
+    // zerados: na ordem de chegada (1º = quem zerou primeiro); min = tempo de jogo até zerar
+    const RODADAS = [
+      { n: 1, mes: 'mar 2026',
+        jogo: { nome: 'Celeste', por: 'Duda', capa: '#3a2848', risca: '#d58ab0', hue: 292, ano: 2018, genero: 'Plataforma', duracao: 'Curto', modo: 'Solo', preco: 'R$ 37',
+          plats: ['PC', 'PlayStation', 'Xbox', 'Nintendo'], motivo: '<path d="M2 88 36 30 54 58 68 40 98 88z" fill="#f2c4d8"/><path d="M36 30 44 44 36 40 28 44z" fill="#fff3fa"/>',
+          desc: 'Uma garota decide escalar uma montanha e acaba enfrentando a própria ansiedade.', pitch: 'Curtinho, difícil na medida e a trilha é absurda.' },
+        zerados: [
+          { quem: 'Léo', min: 430, txt: 'Morri umas 1.900 vezes. Recomendo.' }, { quem: 'Duda', min: 485, txt: 'Sugeri e zerei. Respeitem.' },
+          { quem: 'Mari', min: 520, txt: 'Chorei no capítulo 7.' }, { quem: 'Yuri', min: 570, txt: '' },
+          { quem: 'Caio', min: 735, txt: 'O morango é opcional? Ninguém me avisou.' }, { quem: 'Bia', min: 840, txt: 'Zerei no último dia. Conta.' },
+        ],
+        naoZerou: [],
+        paginas: [
+          { quem: 'Duda', txt: 'Eu disse que era curto. Ninguém disse que era fácil.' }, { quem: 'Mari', txt: 'A trilha da montanha tá no meu repeat até hoje.' },
+          { quem: 'Caio', txt: 'Ódio e amor no mesmo controle.' },
+        ],
+        coment: [{ quem: 'Léo', txt: 'Curtinho, bom pra estrear o clube.' }, { quem: 'Bia', txt: 'Tenho medo de jogo difícil.' }] },
+
+      { n: 2, mes: 'abr 2026',
+        jogo: { nome: 'Outer Wilds', por: 'Léo', capa: '#4a2f1c', risca: '#c99a5e', hue: 28, ano: 2019, genero: 'Exploração', duracao: 'Médio', modo: 'Solo', preco: 'R$ 60',
+          plats: ['PC', 'PlayStation', 'Xbox', 'Nintendo'], motivo: '<circle cx="50" cy="50" r="22" fill="#f4a95a"/><ellipse cx="50" cy="50" rx="46" ry="12" fill="none" stroke="#f3e6d8" stroke-width="5" transform="rotate(-18 50 50)"/>',
+          desc: 'Um sistema solar em miniatura preso num ciclo de 22 minutos. O resto você descobre.', pitch: 'Não pesquisem nada. Só confiem em mim.' },
+        zerados: [
+          { quem: 'Mari', min: 700, txt: 'Fácil. Próximo.' }, { quem: 'Caio', min: 965, txt: 'Demorei porque tive medo do espaço. Me deixem.' },
+          { quem: 'Yuri', min: 860, txt: 'Zerei antes do Léo, que SUGERIU o jogo. Pensem nisso.' }, { quem: 'Léo', min: 590, txt: 'Zerei de novo só pra acompanhar vocês. De nada.' },
+          { quem: 'Bia', min: 1275, txt: 'Cheguei. Atrasada, mas cheguei.' },
+        ],
+        naoZerou: ['Duda'],
+        paginas: [
+          { quem: 'Mari', txt: 'O final me desmontou. Obrigada, Léo. Te odeio, Léo.' }, { quem: 'Léo', txt: 'Eu avisei. Melhor jogo que esse clube já jogou e vai jogar.' },
+          { quem: 'Caio', txt: 'Continuo com medo do espaço, mas valeu cada loop. Até o do buraco negro.' },
+          { quem: 'Duda', txt: 'Não zerei, mas li o quadro inteiro. Me sinto spoilada e feliz.' }, { quem: 'Bia', txt: 'Chorei no museu e não vou explicar.' },
+          { quem: 'Yuri', txt: 'Fiquei uma semana olhando pro céu de noite. Obrigado, Léo.' },
+        ],
+        coment: [
+          { quem: 'Mari', txt: 'NÃO PESQUISEM NADA.' }, { quem: 'Bia', txt: 'concordo com a Mari' },
+          { quem: 'Caio', txt: 'Fiquei curioso, mas tenho medo de jogo espacial.' }, { quem: 'Duda', txt: '+1 pro Léo' },
+        ] },
+
+      { n: 3, mes: 'mai 2026',
+        jogo: { nome: 'Hades', por: 'Caio', capa: '#4a1d26', risca: '#e0704a', hue: 352, ano: 2020, genero: 'Roguelike', duracao: 'Médio', modo: 'Solo', preco: 'R$ 73',
+          plats: ['PC', 'PlayStation', 'Xbox', 'Nintendo'], motivo: '<path d="M50 8 94 86H6z" fill="none" stroke="#f2b07a" stroke-width="7"/><path d="M50 44 68 76H32z" fill="#f2b07a"/>',
+          desc: 'O filho do deus dos mortos tenta fugir do submundo, morrendo e voltando mais forte.', pitch: 'Cada morte é uma piada nova. Dá pra jogar meia hora por noite.' },
+        zerados: [
+          { quem: 'Caio', min: 1110, txt: 'Primeira fuga na run 14. Fácil.' }, { quem: 'Yuri', min: 1330, txt: 'O Zagreus é meu amigo agora.' },
+          { quem: 'Mari', min: 1200, txt: '' }, { quem: 'Léo', min: 1540, txt: 'Zerei. Agora vou zerar de novo. E de novo.' },
+        ],
+        naoZerou: ['Bia', 'Duda'],
+        paginas: [
+          { quem: 'Caio', txt: 'Viram? Roguelike é vida.' }, { quem: 'Bia', txt: 'Larguei no pai dele. Não consigo.' },
+          { quem: 'Yuri', txt: 'Melhor dublagem que já ouvi num jogo.' }, { quem: 'Duda', txt: 'Joguei três horas e entendi o hype. Mas não zerei.' },
+        ],
+        coment: [{ quem: 'Mari', txt: 'Dá pra jogar meia hora por noite, topo.' }, { quem: 'Duda', txt: 'Roguelike me dá ansiedade.' }] },
+
+      { n: 4, mes: 'jun 2026',
+        jogo: { nome: 'Stardew Valley', por: 'Yuri', capa: '#33452a', risca: '#d9b45a', hue: 92, ano: 2016, genero: 'Simulação', duracao: 'Longo', modo: 'Co-op', preco: 'R$ 25',
+          plats: ['PC', 'PlayStation', 'Xbox', 'Nintendo', 'Mobile'], motivo: '<circle cx="82" cy="10" r="12" fill="#f0d27a"/><path d="M4 40h92v7H4zM4 58h92v7H4zM4 76h92v7H4z" fill="#5a7d40"/>',
+          desc: 'Você herda uma fazenda largada e troca a cidade grande por plantação, pesca e vizinhos.', pitch: 'Fazendinha relaxante. Zerar = fechar o segundo ano, regra do clube.' },
+        zerados: [
+          { quem: 'Bia', min: 1800, txt: 'Casei com a Abigail. Zerado.' }, { quem: 'Mari', min: 2100, txt: 'Minha fazenda tá mais organizada que minha vida.' },
+          { quem: 'Duda', min: 2040, txt: '' }, { quem: 'Yuri', min: 2460, txt: 'Sugeri, joguei, amei. Nessa ordem.' },
+        ],
+        naoZerou: ['Caio', 'Léo'],
+        paginas: [
+          { quem: 'Bia', txt: 'Melhor rodada. Quero fazendinha de novo.' }, { quem: 'Léo', txt: 'Fiquei preso na pescaria. Desisti com dignidade.' },
+          { quem: 'Yuri', txt: 'O co-op da call de sábado salvou a rodada.' },
+        ],
+        coment: [{ quem: 'Caio', txt: 'Vou plantar e me arrepender.' }, { quem: 'Bia', txt: 'SIM.' }] },
+
+      { n: 5, mes: 'jul 2026',
+        jogo: { nome: 'Dead Cells', por: 'Caio', capa: '#2b2440', risca: '#7fd6c2', hue: 250, ano: 2018, genero: 'Roguelike', duracao: 'Médio', modo: 'Solo', preco: 'R$ 65',
+          plats: ['PC', 'PlayStation', 'Xbox', 'Nintendo', 'Mobile'], motivo: '<circle cx="50" cy="50" r="30" fill="none" stroke="#7fd6c2" stroke-width="7"/><circle cx="50" cy="50" r="10" fill="#7fd6c2"/>',
+          desc: 'Uma massa de células toma um corpo emprestado e tenta sair de uma ilha que muda a cada morte.', pitch: 'O combate mais gostoso que eu já joguei. Confia.' },
+        zerados: [
+          { quem: 'Léo', min: 980, txt: 'Primeiro chefe na raça, o resto foi ladeira abaixo.' }, { quem: 'Caio', min: 1080, txt: 'Mais um roguelike pra conta.' },
+          { quem: 'Duda', min: 1590, txt: 'Agora eu gosto de roguelike. Culpa do Caio.' },
+        ],
+        naoZerou: ['Yuri', 'Mari', 'Bia'],
+        paginas: [{ quem: 'Mari', txt: 'Caio, chega de roguelike.' }, { quem: 'Caio', txt: 'Nunca.' }, { quem: 'Duda', txt: 'Fui convertida.' }],
+        coment: [{ quem: 'Bia', txt: 'De novo roguelike, Caio?' }, { quem: 'Léo', txt: 'O combate é muito bom, vai.' }] },
+
+      { n: 6, mes: 'ago 2026',
+        jogo: { nome: 'Hollow Knight', por: 'Bia', capa: '#1f3446', risca: '#8fb8c9', hue: 212, ano: 2017, genero: 'Metroidvania', duracao: 'Longo', modo: 'Solo', preco: 'R$ 47',
+          plats: ['PC', 'PlayStation', 'Xbox', 'Nintendo'], motivo: '<path d="M50 4 92 50 50 96 8 50z" fill="none" stroke="#e8f0f2" stroke-width="7"/><path d="M50 30 70 50 50 70 30 50z" fill="#e8f0f2"/>',
+          desc: 'Um cavaleiro pequenininho explora um reino de insetos em ruínas, cheio de caminho escondido.', pitch: 'Explorar aquele mapa sem guia é a melhor coisa que já fiz num controle.' },
+        zerados: [
+          { quem: 'Bia', min: 1920, txt: 'Mapa todo, sem guia. Cadê meu troféu?' }, { quem: 'Léo', min: 2160, txt: '' },
+          { quem: 'Mari', min: 2460, txt: 'Hornet, a gente se vê no próximo.' },
+        ],
+        naoZerou: ['Yuri', 'Caio', 'Duda'],
+        paginas: [
+          { quem: 'Yuri', txt: 'Perdi meu dinheiro quatro vezes seguidas e larguei.' }, { quem: 'Bia', txt: 'Quem largou, volta. Vale cada minuto.' },
+          { quem: 'Caio', txt: 'O mapa me venceu.' }, { quem: 'Mari', txt: 'A trilha sonora é coisa de outro mundo.' },
+        ],
+        coment: [{ quem: 'Caio', txt: 'Joguei metade em 2019 e larguei.' }, { quem: 'Duda', txt: 'Não é longo demais pra um mês?' }] },
+
+      { n: 7, mes: 'set 2026',
+        jogo: { nome: 'It Takes Two', por: 'Mari', capa: '#1d3e3c', risca: '#ff8a6a', hue: 176, ano: 2021, genero: 'Aventura', duracao: 'Médio', modo: 'Co-op', preco: 'R$ 199',
+          plats: ['PC', 'PlayStation', 'Xbox', 'Nintendo'], motivo: '<path d="M8 20h44v44H8z" fill="none" stroke="#ffc2a8" stroke-width="7"/><path d="M48 40h44v44H48z" fill="#ffc2a8"/>',
+          desc: 'Um casal à beira do divórcio vira dois bonequinhos e precisa se acertar pra voltar.', pitch: 'Feito pra jogar em dupla. Quem topa comigo?' },
+        zerados: [
+          { quem: 'Mari', min: 720, txt: 'Eu e o Yuri, dupla imbatível.' }, { quem: 'Yuri', min: 720, txt: 'A Mari carregou. Admito.' },
+          { quem: 'Caio', min: 810, txt: '' }, { quem: 'Duda', min: 810, txt: 'O Caio esqueceu de pular umas 40 vezes.' },
+          { quem: 'Bia', min: 900, txt: '' }, { quem: 'Léo', min: 900, txt: 'Sem comentários sobre a elefanta.' },
+        ],
+        naoZerou: [],
+        paginas: [
+          { quem: 'Mari', txt: 'Todo mundo zerou! Primeira vez desde o Celeste!' }, { quem: 'Duda', txt: 'Melhor jogo de dupla da vida.' },
+          { quem: 'Léo', txt: 'Ainda não superei a elefanta.' },
+        ],
+        coment: [{ quem: 'Léo', txt: 'Precisa de dupla. Quem topa?' }, { quem: 'Yuri', txt: 'Eu topo, Mari.' }] },
+
+      { n: 8, mes: 'out 2026',
+        jogo: { nome: 'Rogue Legacy 2', por: 'Caio', capa: '#3d2a18', risca: '#f2c14e', hue: 38, ano: 2022, genero: 'Roguelike', duracao: 'Médio', modo: 'Solo', preco: 'R$ 89',
+          plats: ['PC', 'PlayStation', 'Xbox', 'Nintendo'], motivo: '<path d="M30 92V40h8v-8h8v8h8v-8h8v8h8v52z" fill="#f2c14e"/><path d="M45 92V70h10v22z" fill="#3d2a18"/>',
+          desc: 'Cada vez que você morre, um herdeiro com um defeito diferente continua a conquista do castelo.', pitch: 'Esse é mais tranquilo, juro. Quase nem é roguelike.' },
+        zerados: [
+          { quem: 'Caio', min: 1200, txt: 'Três de três. O clube é roguelike agora.' }, { quem: 'Duda', min: 1680, txt: 'Minha 40ª herdeira finalmente venceu.' },
+          { quem: 'Léo', min: 1380, txt: '' },
+        ],
+        naoZerou: ['Yuri', 'Mari', 'Bia'],
+        paginas: [
+          { quem: 'Bia', txt: 'Caio, isso é uma intervenção.' }, { quem: 'Caio', txt: 'Próxima rodada: adivinha.' },
+          { quem: 'Mari', txt: 'Votei contra e perdi. Democracia dói.' },
+        ],
+        coment: [{ quem: 'Mari', txt: 'Mais um roguelike??' }, { quem: 'Duda', txt: 'Esse é mais tranquilo, juro.' }] },
+    ];
+    // material por posição: ouro, prata, bronze e depois metais/pedras próprios, cada um com sua cor
+    const METAIS = [
+      { nome: 'ouro', m: '#e3b341', m2: '#fff0b0', m3: '#8a6312' },
+      { nome: 'prata', m: '#c4c9d1', m2: '#f4f6fa', m3: '#6e737c' },
+      { nome: 'bronze', m: '#c27a43', m2: '#f2c08e', m3: '#6d3f1c' },
+      { nome: 'pátina', m: '#8fa36b', m2: '#d8e6b4', m3: '#4c5a32' },
+      { nome: 'ametista', m: '#a585c4', m2: '#e2d2f2', m3: '#55406e' },
+      { nome: 'cobre rosé', m: '#d68a7c', m2: '#f6cdc4', m3: '#7a3f36' },
+      { nome: 'jade', m: '#5fae98', m2: '#bfe7da', m3: '#2c5c4f' },
+      { nome: 'ferro', m: '#9a8e88', m2: '#d6ccc6', m3: '#4a403c' },
+      { nome: 'âmbar', m: '#d79a4a', m2: '#f6d6a2', m3: '#6e4a1c' },
+      { nome: 'cobalto', m: '#7d93c9', m2: '#d0dbf3', m3: '#3a4a74' },
+      { nome: 'latão', m: '#b8a960', m2: '#ece2ad', m3: '#5e5428' },
+      { nome: 'granada', m: '#b9636f', m2: '#ecbcc3', m3: '#5f2b33' },
+    ];
+    const PEDESTAL = [36, 30, 26];
+    const ROT = ['-1.2deg', '0.9deg', '-0.5deg', '1.4deg'];
+    // a rodada que está na mesa: a montagem da mesa (herdada da encerrada) lê estes nomes
+    let JOGO = RODADAS[1].jogo, COMENT = [], ZERADOS = [], NAO_ZEROU = [], PAGINAS = [];
+    const st = { ocupado: false };
+    const frenteHtml = (j) => `<span class="capa" style="--capa:${j.capa};--risca:${j.risca}">
+        <svg class="capa__motivo" viewBox="0 0 100 100">${j.motivo}</svg><span class="capa__nome">${esc(j.nome)}</span></span>
+        <span class="tarja">${j.duracao} · ${j.modo}</span><span class="preco">${j.preco}</span>`;
+    const sugestao = (por) => (por === 'Yuri' ? 'sugestão sua' : `sugestão de ${esc(por)}`);
+
+    // ---------- retratinho (foto falsa) ----------
+    function foto(nome) {
+      const p = PESSOAS[nome];
+      const rosto = `<rect x="27" y="38" width="10" height="10" fill="${p.pele}"/><ellipse cx="32" cy="29" rx="11" ry="13" fill="${p.pele}"/>
+        <circle cx="28" cy="29" r="1.5" fill="#1a1013"/><circle cx="36" cy="29" r="1.5" fill="#1a1013"/>
+        <path d="M28 35q4 3 8 0" fill="none" stroke="#1a1013" stroke-width="1.5" stroke-linecap="round"/>`;
+      const atras = p.estilo === 'longo' ? `<path d="M17 31c-1-12 6-19 15-19s16 7 15 19l1 17H41c0-8-2-14-9-16-7 2-9 8-9 16H16z" fill="${p.cabelo}"/>` : '';
+      const cabelo = {
+        curto: `<path d="M20 27c-1-10 5-15 12-15s13 5 12 15c-2-5-6-8-12-8s-10 3-12 8z" fill="${p.cabelo}"/>`,
+        longo: `<path d="M20 26c2-7 7-10 12-10s10 3 12 10c-4-3-8-4-12-4s-8 1-12 4z" fill="${p.cabelo}"/>`,
+        cacho: `<g fill="${p.cabelo}"><circle cx="22" cy="20" r="7"/><circle cx="32" cy="15" r="8"/><circle cx="42" cy="20" r="7"/><circle cx="20" cy="27" r="4.5"/><circle cx="44" cy="27" r="4.5"/></g>`,
+        coque: `<g fill="${p.cabelo}"><circle cx="32" cy="9" r="6"/><path d="M20 27c-1-10 5-15 12-15s13 5 12 15c-2-5-6-8-12-8s-10 3-12 8z"/></g>`,
+      }[p.estilo];
+      return `<svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" fill="${p.bg}"/>${atras}
+        <path d="M8 64c1-12 11-18 24-18s23 6 24 18z" fill="${p.roupa}"/>${rosto}${cabelo}</svg>`;
+    }
+
+    // ---------- peças 3D ----------
+    // caixa de faces (sem fundo): base no chão do objeto; faces = quais desenhar (f u l r b)
+    function caixa({ w, h, t, x = 0, y = 0, z = 0, cls = '', faces = 'fulr', f = '', u = '', l = '', r = '', s = '' }) {
+      const face = (k, c) => (faces.includes(k) ? `<i class="${k}">${c}</i>` : '');
+      return `<div class="bx ${cls}" style="--w:${w}px;--h:${h}px;--t:${t}px;--bx:${x}px;--by:${y}px;--bz:${z}px;${s}">${face('f', f)}${face('u', u)}${face('l', l)}${face('r', r)}${face('b', '')}</div>`;
+    }
+    const obj = (id, [x, z, ry = 0], s, inner, extra = '') =>
+      `<div class="obj" id="${id}" style="--x:${x}px;--z:${z}px;--ry:${ry}deg;--s:${s};${extra}"><div class="mola">${inner}</div></div>`;
+
+    // duas composições da mesma mesa: PC (larga) e celular (mais funda).
+    // Esquerda: quadro de resenhas · meio: a capinha · direita: estatuetas em pódio (prata, ouro, bronze na frente).
+    const LAYOUTS = {
+      pc: {
+        W: 1040, H: 560, cy: 300, cam: -26, mesa: [1000, 440],
+        lamp: [-150, -185, 0], quadro: [-305, -40, 16], caso: [-10, 40, -4],
+        slots: [[300, 85], [205, 62], [395, 62], [250, -60], [345, -70], [440, -60], [205, -180], [300, -188], [395, -180]],
+        est: { s: 1 }, esc: { quadro: 1, caso: 1 }, nota: [130, 175], marca: [-130, 165],
+      },
+      cel: {
+        W: 600, H: 640, cy: 330, cam: -30, mesa: [580, 560],
+        lamp: [40, -250, 0], quadro: [-150, -150, 14], caso: [-120, 150, -4],
+        slots: [[150, 150], [62, 128], [238, 128], [105, 10], [195, 0], [150, -110], [240, -110], [60, -120], [150, -220]],
+        est: { s: 0.9 }, esc: { quadro: 0.78, caso: 0.85 }, nota: [60, 250], marca: [-240, 240],
+      },
+    };
+    let L = LAYOUTS.pc;
+    const slot = (i) => L.slots[i] ?? [L.slots[i % L.slots.length][0], -200];
+
+    function mesaHtml() {
+      const [W, D] = L.mesa;
+      const ponto = (x, z) => `left:${x + W / 2}px;top:${z + D / 2}px`;
+      // data-de: de quem é a sombra (some junto quando o objeto voa)
+      const sombra = ([x, z], w, d, de) => `<span class="decal decal--sombra" data-de="${de}" style="${ponto(x, z)};width:${w}px;height:${d}px"></span>`;
+      const [lx, lz] = L.lamp, kq = L.esc.quadro;
+      const decals = [
+        `<span class="decal decal--luz" data-de="abajur-obj" style="${ponto(lx + 180, lz + 130)};width:${W * 0.75}px;height:${D * 1.1}px"></span>`,
+        sombra(L.quadro, 360 * kq, 110 * kq, 'quadro-obj'),
+        sombra(L.caso, 190 * L.esc.caso, 60 * L.esc.caso, 'caso-obj'),
+        sombra(L.lamp, 90, 40, 'abajur-obj'),
+        `<span class="decal decal--marca" style="${ponto(...L.marca)};width:58px;height:58px"></span>`,
+        `<span class="decal decal--nota" id="nota-mesa" style="${ponto(...L.nota)}">${ZERADOS.length} de ${ZERADOS.length + NAO_ZEROU.length} zeraram</span>`,
+        ...ZERADOS.map((_, i) => sombra(slot(i), 84 * L.est.s, 84 * L.est.s, `est-${i}`)),
+      ].join('');
+      const pernas = [[-1, -1], [1, -1], [-1, 1], [1, 1]].map(([a, b]) =>
+        caixa({ w: 44, h: 320, t: 44, x: a * (W / 2 - 56), z: b * (D / 2 - 56), y: -348, cls: 'm-perna', faces: 'flr' })).join('');
+      return caixa({ w: W, h: 28, t: D, y: -28, cls: 'm-tampo', u: decals })
+        + caixa({ w: W - 90, h: 54, t: D - 90, y: -82, cls: 'm-saia', faces: 'flr' })
+        + pernas;
+    }
+
+    function abajurHtml() {
+      return `<div class="abajur"><span class="abajur__halo" id="abajur"></span>
+        <svg viewBox="0 0 140 190">
+          <path d="M14 186q32-16 64 0z" fill="#3a2a22"/><path d="M14 186h64" stroke="#1a1013" stroke-width="3"/>
+          <path d="M46 176 L34 104 L92 62" stroke="#8c6646" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="34" cy="104" r="5.5" fill="#8c6646"/><circle cx="92" cy="62" r="5" fill="#8c6646"/>
+          <g transform="rotate(32 96 62)">
+            <path d="M80 44h32l18 36H62z" fill="#2f4a3e"/><path d="M80 44h32l4 8H76z" fill="#3e6152"/>
+            <ellipse cx="96" cy="80" rx="34" ry="7" fill="#ffe3b0"/><ellipse cx="96" cy="80" rx="20" ry="4" fill="#fff6e2"/>
+          </g>
+        </svg></div>`;
+    }
+
+    // quadro de cortiça em cavalete: dois pés de madeira + o quadro inclinado pra trás.
+    // A frente mostra as páginas em miniatura (foto + rabiscos); o texto de verdade fica no modal.
+    const ROTQ = ['-2.4deg', '1.8deg', '-1deg', '2.6deg', '-1.8deg', '0.8deg', '-2.8deg', '1.2deg'];
+    function miniPaginas() {
+      const mostra = PAGINAS.slice(0, 8);
+      return mostra.map((p, i) => {
+        const c = i % 4, r = Math.floor(i / 4), w = ['82%', '64%', '74%', '56%'];
+        const rabiscos = [0, 1, 2].map((k) => `<span class="qm__rabisco" style="--w:${w[(i + k) % 4]}"></span>`).join('');
+        return `<span class="qm" style="left:${26 + c * 70}px;top:${48 + r * 92}px;--r:${ROTQ[i % ROTQ.length]};--tacha:${PESSOAS[p.quem].bg}">
+          <span class="qm__foto">${foto(p.quem)}</span>${rabiscos}<span class="tacha"></span></span>`;
+      }).join('');
+    }
+    function quadroHtml() {
+      const face = `<span class="qm-faixa">Resenha</span>${miniPaginas()}`;
+      return caixa({ w: 40, h: 30, t: 74, x: -112, cls: 'm-perna' }) + caixa({ w: 40, h: 30, t: 74, x: 112, cls: 'm-perna' })
+        + `<div class="quadro3d">${caixa({ w: 320, h: 244, t: 16, y: 24, cls: 'm-quadro', f: face })}</div>`;
+    }
+    // a capinha da mesa: mesmo estojo da encerrada, com a capa do jogo que saiu da estante
+    function casoHtml() {
+      return caixa({ w: 168, h: 224, t: 22, cls: 'm-estojo', f: `${frenteHtml(JOGO)}<span class="carimbo">Vencedor</span>`, l: `<span>${esc(JOGO.nome)}</span>`, s: `--hue:${JOGO.hue}` })
+        + `<div class="coroa" style="--cx:-22px;--cy:224px">${coroaSvg('coroa-ouro')}</div>`;
+    }
+
+    // ouro igual ao da estatueta de 1º lugar; joias nas cores de luz da cena
+    function coroaSvg(id) {
+      return `<svg viewBox="0 0 72 48" aria-hidden="true">
+          <defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff0b0"/><stop offset="0.45" stop-color="#e3b341"/><stop offset="1" stop-color="#8a6312"/></linearGradient></defs>
+          <path d="M8 40 4 14 20 26 36 6 52 26 68 14 64 40Z" fill="url(#${id})" stroke="#0c0609" stroke-width="2.5" stroke-linejoin="round"/>
+          <path d="M14 30 20 26 36 6" fill="none" stroke="#fff6d6" stroke-width="1.5" stroke-linecap="round" opacity="0.7"/>
+          <rect x="6" y="38" width="60" height="9" fill="#c99a2e" stroke="#0c0609" stroke-width="2.5"/>
+          <path d="M9 42h54" stroke="#fff0b0" stroke-width="1.2" opacity="0.6"/>
+          <g stroke="#0c0609" stroke-width="2"><circle cx="4" cy="13" r="3.6" fill="#fff0b0"/><circle cx="36" cy="5" r="4" fill="#fff0b0"/><circle cx="68" cy="13" r="3.6" fill="#fff0b0"/>
+          <circle cx="36" cy="27" r="4.6" fill="#ff5c8a"/><circle cx="21" cy="33" r="2.8" fill="#46c3b5"/><circle cx="51" cy="33" r="2.8" fill="#46c3b5"/></g>
+        </svg>`;
+    }
+
+
+    const metalVars = (i) => { const m = METAIS[i % METAIS.length]; return `--m:${m.m};--m2:${m.m2};--m3:${m.m3}`; };
+    function estatuetaHtml(z, i) {
+      const [x, zz] = slot(i);
+      return obj(`est-${i}`, [x, zz, -8 + (i % 3) * 6], L.est.s, `<div class="est__corpo">${estatuetaCorpo(z, i)}</div>`, metalVars(i));
+    }
+    // o boneco em si (a mesa e a vitrine usam o mesmo)
+    function estatuetaCorpo(z, i) {
+      const ph = PEDESTAL[i] ?? 22, y0 = ph + 6;
+      const corpo = caixa({ w: 58, h: ph, t: 58, cls: 'm-pedra', f: `<span class="placa">${i + 1}º</span>` })
+        + caixa({ w: 62, h: 6, t: 62, y: ph, cls: 'm-metal' })
+        + caixa({ w: 24, h: 34, t: 14, y: y0, cls: 'm-metal est__pernas', faces: 'flr' })
+        + caixa({ w: 34, h: 36, t: 18, y: y0 + 34, cls: 'm-metal' })
+        + `<div class="braco" style="--ax:-15px;--ay:${y0 + 64}px;--a:-34deg">${caixa({ w: 8, h: 30, t: 8, cls: 'm-metal' })}</div>`
+        + `<div class="braco" style="--ax:15px;--ay:${y0 + 64}px;--a:34deg">${caixa({ w: 8, h: 30, t: 8, cls: 'm-metal' })}</div>`
+        + caixa({ w: 12, h: 6, t: 10, y: y0 + 70, cls: 'm-metal', faces: 'flr' })
+        + `<div class="cabeca3d" style="--hy:${y0 + 97}px">${foto(z.quem)}</div>`
+        + Array.from({ length: 8 }, () => '<span class="cisco3d"></span>').join('');
+      return corpo;
+    }
+
+    const posDe = (quem) => ZERADOS.findIndex((z) => z.quem === quem);
+    // ---------- montagem e escala ----------
+    const wrap = $('#palco-wrap'), palco = $('#palco'), mundo = $('#mundo'), mesa = $('#mesa');
+    const alvoQuadro = $('#alvo-quadro');
+    function monta() {
+      L = largo.matches ? LAYOUTS.pc : LAYOUTS.cel;
+      palco.style.width = `${L.W}px`; palco.style.height = `${L.H}px`;
+      mundo.style.top = `${L.cy}px`; mundo.style.setProperty('--cam', `${L.cam}deg`);
+      mesa.innerHTML = mesaHtml()
+        + obj('abajur-obj', L.lamp, 1, abajurHtml())
+        + obj('quadro-obj', L.quadro, L.esc.quadro, quadroHtml())
+        + obj('caso-obj', L.caso, L.esc.caso, casoHtml())
+        + ZERADOS.map((z, i) => estatuetaHtml(z, i)).join('');
+      escala();
+      montaAlvosEst();
+    }
+    function escala() {
+      const k = Math.min(1.08, wrap.clientWidth / L.W);
+      palco.style.scale = k;
+      wrap.style.height = `${Math.round(L.H * k)}px`;
+      posicionaAlvos();
+      placeLights();
+    }
+    // os botões reais ficam por cima da projeção dos objetos (mínimo 44px)
+    function uniao(els) {
+      const rs = els.map((e) => e.getBoundingClientRect());
+      const l = Math.min(...rs.map((r) => r.left)), t = Math.min(...rs.map((r) => r.top));
+      return { l, t, w: Math.max(...rs.map((r) => r.right)) - l, h: Math.max(...rs.map((r) => r.bottom)) - t };
+    }
+    function poe(alvo, els, pad = 6) {
+      const base = wrap.getBoundingClientRect(), r = uniao(els);
+      const w = Math.max(44, r.w + pad * 2), h = Math.max(44, r.h + pad * 2);
+      Object.assign(alvo.style, { left: `${r.l - base.left + r.w / 2 - w / 2}px`, top: `${r.t - base.top + r.h / 2 - h / 2}px`, width: `${w}px`, height: `${h}px` });
+    }
+    function posicionaAlvos() {
+      if (!$('#caso-obj')) return; // mesa ainda vazia (a estante está na tela)
+      poe(alvoQuadro, [$('#quadro-obj .m-quadro > .f')]);
+      poe($('#alvo-caso'), [$('#caso-obj .m-estojo > .f'), $('#caso-obj .coroa')]);
+      $('#alvos-est').querySelectorAll('.alvo').forEach((b) => {
+        const e = $(`#${b.dataset.obj}`);
+        if (e) poe(b, [e.querySelector('.cabeca3d'), e.querySelector('.m-pedra > .f')], 2);
+      });
+    }
+    // um botão real por estatueta já pousada na mesa
+    function montaAlvosEst() {
+      $('#alvos-est').innerHTML = ZERADOS.map((z, i) => `<button class="alvo" type="button" data-obj="est-${i}" data-i="${i}" aria-haspopup="dialog">
+        <span class="sr">Ver a estatueta de ${z.quem === 'Yuri' ? 'você' : esc(z.quem)}, ${i + 1}º lugar, e o recado</span></button>`).join('');
+      posicionaAlvos();
+    }
+    new ResizeObserver(escala).observe(wrap);
+    largo.addEventListener('change', monta);
+
+    // ---------- luz motivada: na estante, a TV e o abajur do móvel; na mesa, o abajur da mesa ----------
+    const luz = $('#luz'), telaE = $('#tela-estante'), telaM = $('#tela-mesa');
+    function placeLights() {
+      const page = document.body.getBoundingClientRect();
+      const at = (el, fy = 0.5) => { const r = el.getBoundingClientRect(); return [r.left - page.left + r.width / 2, r.top - page.top + r.height * fy, r]; };
+      const set = (k, v) => luz.style.setProperty(k, `${Math.round(v)}px`);
+      const [nx, ny, neon] = at($('#neon'));
+      set('--neon-x', nx); set('--neon-y', ny); set('--neon-w', neon.width * 0.85); set('--neon-h', neon.height * 0.9);
+      if (!telaM.hidden && $('#abajur')) {
+        const [lx, ly] = at($('#abajur'));
+        set('--lamp-x', lx + wrap.clientWidth * 0.12); set('--lamp-y', ly + 40); set('--lamp-r', Math.max(420, wrap.clientWidth * 0.75));
+        return;
+      }
+      if (telaE.hidden) return;
+      const [tx, ty, tv] = at($('#tv-vidro')), [lx, ly, lamp] = at($('#abajur-mov'), 0.35);
+      set('--tv-x', tx); set('--tv-y', ty); set('--tv-r', tv.width * 2.6);
+      set('--lamp-x', lx); set('--lamp-y', ly); set('--lamp-r', lamp.width * 4.5);
+    }
+    new ResizeObserver(() => placeLights()).observe(document.body);
+    document.fonts?.ready.then(placeLights);
+
+    // letreiro: uma letra pisca a cada 20–40 s
+    function flickerLater() {
+      setTimeout(() => {
+        const ls = document.querySelectorAll('.neon__l');
+        if (!calma.matches && document.visibilityState === 'visible' && ls.length) {
+          const l = ls[Math.floor(Math.random() * ls.length)];
+          l.classList.add('apaga'); setTimeout(() => l.classList.remove('apaga'), 70);
+        }
+        flickerLater();
+      }, 20000 + Math.random() * 20000);
+    }
+    flickerLater();
+
+    // ---------- parallax da câmera (só PC com mouse, sem reduced-motion) ----------
+    const fino = matchMedia('(hover: hover) and (pointer: fine) and (min-width: 760px)');
+    let cam = { y: 0, p: 0, ay: 0, ap: 0, on: false };
+    function passoCam() {
+      cam.y += (cam.ay - cam.y) * 0.08; cam.p += (cam.ap - cam.p) * 0.08;
+      mundo.style.setProperty('--yaw', `${cam.y.toFixed(3)}deg`); mundo.style.setProperty('--pitch', `${cam.p.toFixed(3)}deg`);
+      posicionaAlvos();
+      if (Math.abs(cam.ay - cam.y) + Math.abs(cam.ap - cam.p) > 0.01) requestAnimationFrame(passoCam); else cam.on = false;
+    }
+    const liga = () => { if (!cam.on) { cam.on = true; requestAnimationFrame(passoCam); } };
+    $('.mesa-sec').addEventListener('pointermove', (e) => {
+      if (!fino.matches || calma.matches || st.ocupado) return;
+      const r = wrap.getBoundingClientRect();
+      cam.ay = ((e.clientX - r.left) / r.width - 0.5) * 8;
+      cam.ap = ((e.clientY - r.top) / r.height - 0.5) * -4;
+      liga();
+    });
+    $('.mesa-sec').addEventListener('pointerleave', () => { cam.ay = 0; cam.ap = 0; liga(); });
+
+    // hover/foco no botão real levanta o objeto (feedback < 200ms)
+    const levanta = (e, sim) => { const b = e.target.closest?.('.alvo'); if (b) $(`#${b.dataset.obj}`)?.classList.toggle('ativo', sim); };
+    wrap.addEventListener('pointerover', (e) => levanta(e, true)); wrap.addEventListener('pointerout', (e) => levanta(e, false));
+    wrap.addEventListener('focusin', (e) => levanta(e, true)); wrap.addEventListener('focusout', (e) => levanta(e, false));
+
+    // ---------- motor de movimento (mesmo dos outros mocks) ----------
+    const SAI = 'cubic-bezier(0.2, 0.8, 0.2, 1)';
+    const NA_TELA = 'cubic-bezier(0.65, 0, 0.35, 1)';
+    const ENTRA_RAPIDO = 'cubic-bezier(0.4, 0, 1, 1)';
+    const GRAVIDADE = 'cubic-bezier(0.55, 0, 1, 0.45)';
+    // só para revisar o movimento: ?lento=8 deixa tudo 8x mais devagar
+    const LENTO = Math.max(1, Number(new URLSearchParams(location.search).get('lento')) || 1);
+    function anim(el, quadros, opts) {
+      if (calma.matches) { const { offset, easing, ...fim } = quadros[quadros.length - 1]; Object.assign(el.style, fim); return Promise.resolve(); }
+      const a = el.animate(quadros, { fill: 'both', ...opts, duration: (opts.duration ?? 0) * LENTO, delay: (opts.delay ?? 0) * LENTO });
+      return a.finished.then(() => { a.commitStyles(); a.cancel(); }).catch(() => {});
+    }
+    if (fino.matches && !calma.matches) {
+      const rack = document.querySelector('.rack');
+      const TILT = ['--tilt-x', '--tilt-y', '--sx', '--sy', '--sa'];
+      const reset = (el) => TILT.forEach((p) => el.style.removeProperty(p));
+      let current = null, last = null, frame = 0;
+      rack.addEventListener('pointermove', (e) => {
+        const box = e.target.closest('.rack__slot')?.querySelector('.case') ?? null;
+        if (current && current !== box) reset(current);
+        current = box; last = e;
+        if (!box || frame) return;
+        frame = requestAnimationFrame(() => {
+          frame = 0;
+          if (!current || calma.matches) return;
+          // mede o palco (não a caixa girada); fora da capa, satura nas bordas
+          const r = current.parentElement.getBoundingClientRect();
+          const clamp = (v) => Math.max(-0.5, Math.min(0.5, v));
+          const x = clamp((last.clientX - r.left) / r.width - 0.5);
+          const y = clamp((last.clientY - r.top) / r.height - 0.5);
+          current.style.setProperty('--tilt-y', `${(x * 12).toFixed(2)}deg`);
+          current.style.setProperty('--tilt-x', `${(-y * 8).toFixed(2)}deg`);
+          current.style.setProperty('--sx', `${((x + 0.5) * 100).toFixed(1)}%`);
+          current.style.setProperty('--sy', `${((y + 0.5) * 100).toFixed(1)}%`);
+          current.style.setProperty('--sa', '0.2');
+        });
+      });
+      rack.addEventListener('pointerleave', () => { if (current) reset(current); current = null; });
+
+      const wall = document.getElementById('parede');
+      const dust = document.getElementById('poeira');
+      const stageRule = document.getElementById('par').sheet.cssRules[0].style;
+      let px = 0, py = 0, pframe = 0;
+      addEventListener('pointermove', (e) => {
+        px = e.clientX / innerWidth - 0.5; py = e.clientY / innerHeight - 0.5;
+        if (pframe) return;
+        pframe = requestAnimationFrame(() => {
+          pframe = 0;
+          if (calma.matches) return;
+          // amplitude ≤ 20 px (dossiê §5); só transform/translate
+          wall.style.transform = `translate3d(${(px * 18).toFixed(1)}px, ${(py * 10).toFixed(1)}px, 0)`;
+          dust.style.transform = `translate3d(${(px * -16).toFixed(1)}px, ${(py * -8).toFixed(1)}px, 0)`;
+          stageRule.translate = `${(px * -5).toFixed(1)}px ${(py * -3).toFixed(1)}px`;
+        });
+      }, { passive: true });
+    }
+
+    // ---------- textos de estado ----------
+    const fmt = (min) => { const h = Math.floor(min / 60), m = min % 60; return h ? `${h}h${String(m).padStart(2, '0')}` : `${m} min`; };
+    const nomeDe = (q) => (q === 'Yuri' ? 'você' : esc(q));
+    function atualizaTextos() {
+      $('#placar-lista').innerHTML = ZERADOS.map((z, i) =>
+        `<li>${i + 1}º lugar (${METAIS[i % METAIS.length].nome}): ${nomeDe(z.quem)}, em ${fmt(z.min)}.${z.txt ? ` Recado: “${esc(z.txt)}”` : ''}</li>`).join('');
+      $('#ainda').textContent = NAO_ZEROU.length ? `Não zerou: ${NAO_ZEROU.map(nomeDe).join(', ')}.` : 'Todo mundo zerou.';
+      const n = PAGINAS.length;
+      $('#alvo-quadro-txt').textContent = n ? `Abrir o quadro de resenhas (${n} página${n > 1 ? 's' : ''})` : 'Abrir o quadro de resenhas (vazio)';
+      $('#alvo-caso-txt').textContent = `Abrir a caixinha de ${JOGO.nome}: manual e comentários da votação`;
+    }
+    const aviso = (t) => { $('#aviso').textContent = ''; setTimeout(() => { $('#aviso').textContent = t; }, 30); };
+
+    // ---------- modais: foco preso, Esc fecha, foco volta ao gatilho ----------
+    const app = $('#app');
+    let modalAberto = null;
+    function prende(modal) {
+      modalAberto = modal; modal.hidden = false; app.inert = true; document.documentElement.classList.add('trava'); st.ocupado = true;
+    }
+    function solta(modal, gatilho) {
+      modal.hidden = true; app.inert = false; document.documentElement.classList.remove('trava'); modalAberto = null; st.ocupado = false;
+      gatilho?.focus({ preventScroll: true });
+    }
+    document.addEventListener('keydown', (e) => {
+      if (!modalAberto) return;
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        ({ 'm-quadro': () => fechaQuadro(), 'm-leitura': () => fechaLeitura(), 'm-est': () => fechaEst() })[modalAberto.id]();
+        return;
+      }
+      if (e.key !== 'Tab') return;
+      const fs = [...modalAberto.querySelectorAll('button, input, textarea, [tabindex="0"]')].filter((el) => !el.disabled && el.offsetParent);
+      const i = fs.indexOf(document.activeElement);
+      if (e.shiftKey && i <= 0) { e.preventDefault(); fs.at(-1).focus(); }
+      else if (!e.shiftKey && i === fs.length - 1) { e.preventDefault(); fs[0].focus(); }
+    });
+
+
+    // ---------- pulinho: o objeto assenta na mesa quando volta de um modal ----------
+    function pulinho(mola, alto, atraso, giro = 0) {
+      if (!mola) return Promise.resolve();
+      return anim(mola, [
+        { transform: 'none' },
+        { transform: `translateY(${-alto}px) rotateZ(${giro}deg)`, offset: 0.35, easing: GRAVIDADE },
+        { transform: `translateY(0) rotateZ(${-giro * 0.5}deg)`, offset: 0.7, easing: SAI },
+        { transform: `translateY(${-alto * 0.18}px)`, offset: 0.85 },
+        { transform: 'none' },
+      ], { duration: 520, delay: atraso, easing: SAI });
+    }
+
+    // ---------- QUADRO: o quadro da mesa vem pra frente pra reler as resenhas (só leitura) ----------
+    const mQ = $('#m-quadro'), quadro = $('#quadro'), fundoQ = mQ.querySelector('.modal__fundo');
+    const listaQ = $('#qd-lista'), acoesQ = mQ.querySelector('.modal__acoes');
+    const faceQuadro = () => $('#quadro-obj .m-quadro > .f');
+    function paginaHtml(p, i) {
+      const z = posDe(p.quem), voce = p.quem === 'Yuri';
+      const meta = z >= 0 ? `zerou em ${fmt(ZERADOS[z].min)} · ${z + 1}º` : 'não zerou';
+      return `<li class="pagina" style="--r:${ROTQ[i % ROTQ.length]};--tacha:${PESSOAS[p.quem].bg}">
+        <span class="tacha" aria-hidden="true"></span>
+        <div class="pagina__topo">${balao(p.quem)}<p class="pagina__quem">${voce ? 'Você' : esc(p.quem)}</p></div>
+        <p class="pagina__txt">${esc(p.txt)}</p><p class="pagina__meta">${meta}</p></li>`;
+    }
+    const deQuadro = () => {
+      const a = faceQuadro().getBoundingClientRect(), b = quadro.getBoundingClientRect();
+      return `translate(${a.left + a.width / 2 - (b.left + b.width / 2)}px, ${a.top + a.height / 2 - (b.top + b.height / 2)}px) scale(${a.width / b.width}, ${a.height / b.height})`;
+    };
+    async function abreQuadro() {
+      if (st.ocupado) return;
+      $('#qd-titulo-txt').textContent = `Resenha do ${JOGO.nome}`;
+      listaQ.innerHTML = PAGINAS.length ? PAGINAS.map(paginaHtml).join('') : '<li class="quadro__vazio">Ninguém pregou nada. Clube preguiçoso.</li>';
+      prende(mQ); mQ.scrollTop = 0;
+      const longe = deQuadro();
+      $('#quadro-obj').style.visibility = 'hidden';
+      const pags = [...listaQ.children];
+      pags.forEach((p) => { p.style.opacity = calma.matches ? '' : '0'; });
+      anim(fundoQ, [{ opacity: 0 }, { opacity: 1 }], { duration: 300, easing: SAI });
+      anim(acoesQ, [{ opacity: 0 }, { opacity: 1 }], { duration: 240, delay: 380, easing: SAI });
+      await anim(quadro, [
+        { transform: `${longe} rotateX(9deg)`, opacity: 0.7 },
+        { opacity: 1, offset: 0.2 },
+        { transform: 'translateY(-22px) scale(1.02) rotateX(-4deg)', offset: 0.66 },
+        { transform: 'none', opacity: 1 },
+      ], { duration: 600, easing: NA_TELA });
+      pags.forEach((p, k) => anim(p, [{ opacity: 0, transform: 'translateY(-12px) scale(1.03)' }, { opacity: 1, transform: 'none' }], { duration: 220, delay: k * 40, easing: SAI }));
+      $('#qd-titulo').focus({ preventScroll: true });
+    }
+    async function fechaQuadro() {
+      if (!modalAberto) return;
+      anim(fundoQ, [{ opacity: 1 }, { opacity: 0 }], { duration: 300, easing: ENTRA_RAPIDO });
+      anim(acoesQ, [{ opacity: 1 }, { opacity: 0 }], { duration: 140, easing: ENTRA_RAPIDO });
+      mQ.scrollTop = 0;
+      await anim(quadro, [
+        { transform: 'none', opacity: 1 },
+        { transform: 'translateY(-12px) scale(1.01) rotateX(-3deg)', offset: 0.25 },
+        { transform: `${deQuadro()} rotateX(9deg)`, opacity: 1, offset: 0.9 },
+        { transform: `${deQuadro()} rotateX(9deg)`, opacity: 0 },
+      ], { duration: 460, easing: NA_TELA });
+      $('#quadro-obj').style.visibility = '';
+      solta(mQ, alvoQuadro);
+      [quadro, fundoQ, acoesQ].forEach((el) => { el.getAnimations().forEach((a) => a.cancel()); el.style.removeProperty('transform'); el.style.removeProperty('opacity'); });
+      pulinho($('#quadro-obj .mola'), 10, 0);
+    }
+    alvoQuadro.addEventListener('click', abreQuadro);
+    mQ.addEventListener('click', (e) => { if (e.target.closest('[data-fecha]') || e.target === mQ || e.target.matches('.quadro-palco')) fechaQuadro(); });
+
+    // um objeto sai voando: agacha (antecipação), estica e sobe acelerando até sumir por cima da tela
+    function voa(o, atraso) {
+      const mola = o.querySelector('.mola'), s = parseFloat(o.style.getPropertyValue('--s')) || 1;
+      const partes = [...o.querySelectorAll('.bx > i, .abajur, .cabeca3d, .coroa')];
+      const baixo = Math.max(...partes.map((p) => p.getBoundingClientRect().bottom));
+      const k = (parseFloat(palco.style.scale) || 1) * s * Math.cos((L.cam * Math.PI) / 180);
+      const alto = (Math.max(300, baixo) + 120) / k;
+      const giro = (Math.random() < 0.5 ? -1 : 1) * (6 + Math.random() * 12);
+      const dur = Math.round(Math.min(1100, Math.max(760, 520 + baixo * 0.5)));
+      mesa.querySelectorAll(`[data-de="${o.id}"]`).forEach((sb) =>
+        anim(sb, [{ opacity: 1, transform: 'scale(1)' }, { opacity: 0, transform: 'scale(0.3)' }], { duration: dur * 0.55, delay: atraso + dur * 0.2, easing: ENTRA_RAPIDO }));
+      return anim(mola, [
+        { transform: 'none', easing: SAI },
+        { transform: 'translateY(6px) scale(1.06, 0.9)', offset: 0.16, easing: 'cubic-bezier(0.3, 0, 0.6, 1)' },
+        { transform: `translateY(${-alto * 0.05}px) scale(0.94, 1.1)`, offset: 0.3, easing: ENTRA_RAPIDO },
+        { transform: `translateY(${-alto}px) rotateZ(${giro}deg) scale(0.97, 1.05)` },
+      ], { duration: dur, delay: atraso }).then(() => { o.style.visibility = 'hidden'; });
+    }
+    // ---------- CAIXINHA: a capinha da mesa abre igual na votação (comentários da votação, só leitura) ----------
+    const mL = $('#m-leitura'), estojo = $('#estojo'), corpoE = $('#estojo-corpo'), tampa = $('#tampa'), frente = $('#frente');
+    const verso = $('#verso'), sombraE = $('#estojo-sombra'), cd = $('#cd'), manual = $('#manual'), painel = $('#comentarios');
+    const listaC = $('#coment-lista'), tituloL = $('#modal-titulo'), acoesL = $('#modal-acoes'), fundoL = $('#modal-fundo');
+    const lt = { ocupado: false };
+    // O Chrome não rola sozinho uma área de rolagem dentro de contexto 3D (preserve-3d) da caixinha:
+    // a roda do mouse e o dedo rolam o manual na mão (no fim do manual, a rolagem passa pra página).
+    function rolaNaMao(el) {
+      el.addEventListener('wheel', (e) => {
+        const d = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? el.clientHeight : 1), max = el.scrollHeight - el.clientHeight;
+        if ((d < 0 && el.scrollTop <= 0) || (d > 0 && el.scrollTop >= max - 1)) return;
+        e.preventDefault();
+        el.scrollTop = Math.max(0, Math.min(max, el.scrollTop + d));
+      }, { passive: false });
+      let y0 = null, s0 = 0;
+      el.addEventListener('touchstart', (e) => { y0 = e.touches[0].clientY; s0 = el.scrollTop; }, { passive: true });
+      el.addEventListener('touchmove', (e) => {
+        if (y0 === null) return;
+        const max = el.scrollHeight - el.clientHeight, novo = s0 + (y0 - e.touches[0].clientY);
+        if (novo < 0 || novo > max) return;
+        e.preventDefault();
+        el.scrollTop = novo;
+      }, { passive: false });
+      el.addEventListener('touchend', () => { y0 = null; });
+    }
+    rolaNaMao(manual);
+    const entrar = (els, atraso = 0, passo = 0) => Promise.all(els.map((el, i) =>
+      anim(el, [{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }], { duration: 260, delay: atraso + i * passo, easing: SAI })));
+    const sumir = (els, dur = 160) => Promise.all(els.map((el) =>
+      anim(el, [{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(6px)' }], { duration: dur, easing: ENTRA_RAPIDO })));
+    const fonteCaso = () => $('#caso-obj .m-estojo > .f');
+    // de onde a caixa sai: a frente da capinha 3D, já projetada na tela
+    function deCaixa(el) {
+      const s = el.getBoundingClientRect(), t = estojo.getBoundingClientRect();
+      const dx = s.left + s.width / 2 - (t.left + t.width / 2), dy = s.top + s.height / 2 - (t.top + t.height / 2);
+      const k = s.height / t.height;
+      return {
+        longe: `translate(${dx}px, ${dy}px) scale(${k}) rotateY(22deg)`,
+        meio: `translate(${dx * 0.4}px, ${dy * 0.4 - 56}px) scale(${0.5 + k * 0.5}) rotateY(8deg)`,
+      };
+    }
+    // no PC a caixa pousa na metade direita e a tampa abre pra esquerda; no celular a caixa anda e o CD espia na borda
+    const abertura = () => (innerWidth < 760 ? estojo.offsetWidth * 0.92 : 0);
+    function abreTampa() {
+      const x = abertura(), w = estojo.offsetWidth;
+      giraCd();
+      return Promise.all([
+        anim(tampa, [{ transform: 'translateZ(2px) rotateY(0deg)' }, { transform: 'translateZ(2px) rotateY(4deg)', offset: 0.12 }, { transform: 'translateZ(2px) rotateY(-180deg)' }], { duration: 760, easing: NA_TELA }),
+        anim(corpoE, [{ transform: 'translateX(0px)' }, { transform: `translateX(${x}px)` }], { duration: 760, easing: NA_TELA }),
+        anim(sombraE, [{ transform: 'none' }, { transform: `translateX(${x - w / 2}px) scaleX(2)` }], { duration: 760, easing: NA_TELA }),
+      ]);
+    }
+    let giro = null;
+    function giraCd() {
+      if (calma.matches) return;
+      cd.getAnimations().forEach((a) => a.cancel());
+      giro = cd.animate([{ transform: 'rotate(0deg)' }, { transform: 'rotate(360deg)' }], { duration: 1400 * LENTO, delay: 200 * LENTO, easing: 'cubic-bezier(0.1, 0.6, 0.2, 1)' });
+      giro.finished.then(() => { giro = cd.animate([{ transform: 'rotate(0deg)' }, { transform: 'rotate(360deg)' }], { duration: 9000, iterations: Infinity }); }).catch(() => {});
+    }
+    function paraCd() {
+      if (!giro) return;
+      const atual = getComputedStyle(cd).transform;
+      giro.cancel(); giro = null;
+      if (calma.matches || atual === 'none') return;
+      const m = new DOMMatrix(atual), ang = Math.atan2(m.b, m.a) * 180 / Math.PI;
+      cd.animate([{ transform: `rotate(${ang}deg)` }, { transform: `rotate(${ang + 40}deg)` }], { duration: 500, easing: SAI, fill: 'forwards' });
+    }
+    function fechaTampa(dur = 520) {
+      const x = abertura(), w = estojo.offsetWidth;
+      paraCd();
+      return Promise.all([
+        anim(tampa, [{ transform: 'translateZ(2px) rotateY(-180deg)' }, { transform: 'translateZ(2px) rotateY(0deg)' }], { duration: dur, easing: NA_TELA }),
+        anim(corpoE, [{ transform: `translateX(${x}px)` }, { transform: 'translateX(0px)' }], { duration: dur, easing: NA_TELA }),
+        anim(sombraE, [{ transform: `translateX(${x - w / 2}px) scaleX(2)` }, { transform: 'none' }], { duration: dur, easing: NA_TELA }),
+      ]);
+    }
+    const balao = (quem) => `<span class="balao">${foto(quem)}</span>`;
+    const comentHtml = (c, i, novo = false) => `<li class="coment${novo ? ' novo' : ''}" style="--papel: ${PAPEL[c.quem]}; --r: ${ROT[i % ROT.length]}">
+        ${balao(c.quem)}<div><p class="coment__quem">${c.quem === 'Yuri' ? 'Você' : esc(c.quem)}</p><p class="coment__txt">${esc(c.txt)}</p></div></li>`;
+    function preencheCaixa() {
+      frente.innerHTML = fonteCaso().innerHTML; // a frente no modal é cópia da capinha da mesa
+      tituloL.textContent = JOGO.nome;
+      $('#estojo-coroa').innerHTML = coroaSvg('coroa-ouro-modal');
+      $('#cd-rotulo').innerHTML = `<span>${esc(JOGO.nome)}</span>`;
+      cd.style.setProperty('--rotulo', JOGO.capa);
+      manual.innerHTML = `
+        <p class="manual__cabeca" aria-hidden="true"><span>Manual de instruções</span><span class="manual__pag">pág. 1</span></p>
+        <p class="manual__jogo">${esc(JOGO.nome)}</p>
+        <p class="manual__por">${sugestao(JOGO.por)} · o escolhido</p>
+        <h4 class="manual__sec">Do que se trata</h4><p class="manual__txt">${esc(JOGO.desc)}</p>
+        <h4 class="manual__sec">Por que jogar</h4><p class="manual__pitch">“${esc(JOGO.pitch)}”</p>
+        <dl class="manual__fatos">
+          <div><dt>Ano</dt><dd>${JOGO.ano}</dd></div><div><dt>Gênero</dt><dd>${esc(JOGO.genero)}</dd></div>
+          <div><dt>Tempo pra zerar</dt><dd>${JOGO.duracao}</dd></div><div><dt>Modo</dt><dd>${JOGO.modo}</dd></div>
+          <div><dt>Preço</dt><dd>${JOGO.preco}</dd></div>
+        </dl>
+        <h4 class="manual__sec">Plataformas</h4><ul class="manual__plats">${JOGO.plats.map((p) => `<li>${p}</li>`).join('')}</ul>`;
+      manual.scrollTop = 0;
+      listaC.innerHTML = COMENT.map((c, i) => comentHtml(c, i)).join('');
+      $('#coment-titulo').textContent = `Comentários da votação (${COMENT.length})`;
+    }
+    // Abrir: voa em arco da mesa até o lugar, segura de frente, a tampa abre sozinha;
+    // o manual entra em cascata e o painel de comentários desliza da direita.
+    async function abreLeitura() {
+      if (lt.ocupado || modalAberto) return;
+      lt.ocupado = true;
+      preencheCaixa();
+      verso.inert = true;
+      prende(mL); mL.scrollTop = 0;
+      painel.style.opacity = '0';
+      [...manual.children].forEach((el) => (el.style.opacity = '0'));
+      const de = deCaixa(fonteCaso());
+      $('#caso-obj').style.visibility = 'hidden';
+      await Promise.all([
+        anim(estojo, [{ transform: de.longe }, { transform: de.meio, offset: 0.55 }, { transform: 'none' }], { duration: 680, easing: SAI }),
+        anim(sombraE, [{ transform: 'scale(0.3)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 680, easing: SAI }),
+        anim(fundoL, [{ opacity: 0 }, { opacity: 1 }], { duration: 320, easing: 'ease-out' }),
+        entrar([tituloL, acoesL], 240, 60),
+      ]);
+      await espera(calma.matches ? 0 : 140);
+      verso.inert = false;
+      await Promise.all([
+        abreTampa(),
+        entrar([...manual.children], 460, 35),
+        anim(painel, [{ opacity: 0, transform: 'translateX(28px)' }, { opacity: 1, transform: 'none' }], { duration: 420, delay: 420, easing: SAI }),
+      ]);
+      lt.ocupado = false;
+      tituloL.focus({ preventScroll: true });
+    }
+    // Fechar: o painel sai, a tampa fecha e a caixinha volta pra mesa, que dá um pulinho ao receber.
+    async function fechaLeitura() {
+      if (lt.ocupado) return;
+      lt.ocupado = true;
+      verso.inert = true;
+      await anim(painel, [{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateX(20px)' }], { duration: 200, easing: ENTRA_RAPIDO });
+      await fechaTampa();
+      const para = deCaixa(fonteCaso());
+      await Promise.all([
+        anim(estojo, [{ transform: 'none' }, { transform: para.meio, offset: 0.45 }, { transform: para.longe }], { duration: 540, easing: 'cubic-bezier(0.45, 0, 0.2, 1)' }),
+        anim(sombraE, [{ transform: 'none', opacity: 1 }, { transform: 'scale(0.3)', opacity: 0 }], { duration: 540, easing: 'ease-in' }),
+        anim(fundoL, [{ opacity: 1 }, { opacity: 0 }], { duration: 340, delay: 200, easing: 'ease-in' }),
+        sumir([tituloL, acoesL]),
+      ]);
+      $('#caso-obj').style.visibility = '';
+      solta(mL, $('#alvo-caso'));
+      [estojo, corpoE, sombraE, fundoL, cd, tituloL, acoesL, painel].forEach((el) => { el.getAnimations().forEach((a) => a.cancel()); el.style.removeProperty('transform'); el.style.removeProperty('opacity'); });
+      tampa.style.transform = 'translateZ(2px)';
+      pulinho($('#caso-obj .mola'), 8, 0);
+      lt.ocupado = false;
+    }
+    $('#alvo-caso').addEventListener('click', abreLeitura);
+    $('#btn-fechar').addEventListener('click', fechaLeitura);
+    // clicar fora da caixinha e dos comentários (no fundo escuro ou no vão em volta) fecha
+    $('#m-leitura').addEventListener('click', (e) => {
+      if (e.target.matches('#m-leitura, #modal-fundo, .modal__palco, .leitura, .leitura__caixa')) fechaLeitura();
+    });
+
+    // ---------- VITRINE: a estatueta sai da mesa, vem pra frente e gira devagar; o recado aparece do lado ----------
+    const mE = $('#m-est'), vitPalco = $('#vit-palco'), vitMundo = $('#vit-mundo'), vitFicha = $('#vit-ficha'), fundoE = mE.querySelector('.modal__fundo');
+    const ve = { i: -1, gatilho: null, ocupado: false };
+    const partesEst = (el) => [el.querySelector('.cabeca3d'), el.querySelector('.m-pedra > .f')];
+    // leva o palco da vitrine para cima da estatueta da mesa (mesma área na tela), em torno do centro dela
+    function vooEst() {
+      vitPalco.style.transform = 'none';
+      const a = uniao(partesEst($(`#est-${ve.i}`))), b = uniao(partesEst(vitMundo)), p = vitPalco.getBoundingClientRect();
+      vitPalco.style.removeProperty('transform');
+      vitPalco.style.transformOrigin = `${b.l - p.left + b.w / 2}px ${b.t - p.top + b.h / 2}px`;
+      const dx = a.l + a.w / 2 - (b.l + b.w / 2), dy = a.t + a.h / 2 - (b.t + b.h / 2), k = a.h / b.h;
+      return { longe: `translate(${dx}px, ${dy}px) scale(${k})`, meio: `translate(${dx * 0.3}px, ${dy * 0.3 - 40}px) scale(${0.6 + k * 0.4})` };
+    }
+    async function abreEst(i, gatilho) {
+      if (ve.ocupado || modalAberto || !$(`#est-${i}`)) return;
+      ve.ocupado = true; ve.i = i; ve.gatilho = gatilho;
+      const z = ZERADOS[i], m = METAIS[i % METAIS.length], voce = z.quem === 'Yuri';
+      const pos = $('#vit-pos'); pos.style.setProperty('--m', m.m); pos.innerHTML = `${i + 1}º<span class="sr"> lugar</span>`;
+      $('#vit-nome').textContent = voce ? 'Você' : z.quem;
+      $('#vit-meta').innerHTML = `Zerou em <strong>${fmt(z.min)}</strong> · estatueta de ${m.nome}${i === 0 ? ' · primeiro a zerar' : ''}`;
+      const recado = $('#vit-recado');
+      recado.style.setProperty('--papel', PAPEL[z.quem]);
+      recado.classList.toggle('recado--vazio', !z.txt);
+      $('#vit-quem').textContent = voce ? 'Seu recado' : `Recado de ${z.quem}`;
+      $('#vit-txt').textContent = z.txt ? `“${z.txt}”` : 'Zerou e não deixou recado. Frio.';
+      prende(mE);
+      // a estatueta da vitrine é o mesmo modelo da mesa, maior
+      const s = (vitPalco.clientHeight * 0.78) / 165;
+      vitMundo.style.setProperty('--cam', '-12deg');
+      vitMundo.innerHTML = obj('vit-est', [0, 0, 0], s, `<div class="est__corpo">${estatuetaCorpo(z, i)}</div>`, metalVars(i));
+      const v = vooEst();
+      $(`#est-${i}`).style.visibility = 'hidden';
+      [vitFicha, ...vitFicha.children].forEach((el) => (el.style.opacity = calma.matches ? '' : '0'));
+      await Promise.all([
+        anim(fundoE, [{ opacity: 0 }, { opacity: 1 }], { duration: 300, easing: SAI }),
+        anim(vitFicha, [{ opacity: 0, transform: 'translateX(32px)' }, { opacity: 1, transform: 'none' }], { duration: 360, delay: 240, easing: SAI }),
+        anim(vitPalco, [{ transform: v.longe }, { transform: v.meio, offset: 0.55 }, { transform: 'none' }], { duration: 620, easing: SAI }),
+        Promise.all([...vitFicha.children].map((el, k) => anim(el, [{ opacity: 0, transform: 'translateX(24px)' }, { opacity: 1, transform: 'none' }], { duration: 320, delay: 300 + k * 60, easing: SAI }))),
+      ]);
+      // pousou: começa a girar devagar no pedestal (ambiente; desliga com reduced-motion)
+      if (!calma.matches) $('#vit-est').classList.add('gira');
+      ve.ocupado = false;
+      $('#vit-nome').focus({ preventScroll: true });
+    }
+    async function fechaEst() {
+      if (ve.ocupado) return;
+      ve.ocupado = true;
+      const vit = $('#vit-est');
+      // para o giro onde estiver e volta de frente antes de voar de volta
+      const ang = getComputedStyle(vit).getPropertyValue('--ry').trim() || '0deg';
+      vit.classList.remove('gira');
+      await anim(vit, [{ '--ry': ang }, { '--ry': '0deg' }], { duration: 260, easing: SAI });
+      const v = vooEst();
+      await Promise.all([
+        anim(vitPalco, [{ transform: 'none' }, { transform: v.meio, offset: 0.45 }, { transform: v.longe }], { duration: 480, easing: 'cubic-bezier(0.45, 0, 0.2, 1)' }),
+        anim(fundoE, [{ opacity: 1 }, { opacity: 0 }], { duration: 300, delay: 160, easing: ENTRA_RAPIDO }),
+        sumir([vitFicha], 180),
+      ]);
+      $(`#est-${ve.i}`).style.visibility = '';
+      solta(mE, ve.gatilho);
+      [vitPalco, fundoE, vitFicha, ...vitFicha.children].forEach((el) => { el.getAnimations().forEach((a) => a.cancel()); el.style.removeProperty('transform'); el.style.removeProperty('opacity'); });
+      vitMundo.innerHTML = '';
+      pulinho($(`#est-${ve.i} .mola`), 10, 0); // pousa de volta com um pulinho
+      ve.ocupado = false;
+    }
+    $('#alvos-est').addEventListener('click', (e) => { const b = e.target.closest('.alvo'); if (b) abreEst(Number(b.dataset.i), b); });
+    mE.addEventListener('click', (e) => { if (e.target.closest('[data-fecha]')) fechaEst(); });
+
+    // ---------- A ESTANTE: cada rodada fechada vira uma capinha no nicho, da mais nova pra mais velha ----------
+    const rackEl = $('#rack');
+    const FACES = '<span class="rack__face rack__wall"></span><span class="rack__face rack__ceil"></span><span class="rack__face rack__floor"></span><span class="rack__face rack__side rack__side--l"></span><span class="rack__face rack__side rack__side--r"></span>';
+    function slotHtml(R, i) {
+      const j = R.jogo, total = R.zerados.length + R.naoZerou.length;
+      const fila = R.zerados.map((z) => `<li>${foto(z.quem)}</li>`).join('');
+      return `<li class="rack__slot" data-i="${i}">
+        <div class="rack__vitrine">
+          <div class="rack__bay" aria-hidden="true"><div class="rack__scene">${FACES}
+            <div class="rack__stage"><div class="case" style="--hue:${j.hue}">
+              <span class="case__face case__front">${frenteHtml(j)}</span>
+              <span class="case__face case__spine"><span>${esc(j.nome)}</span></span>
+              <span class="case__face case__side"></span><span class="case__face case__top"></span>
+            </div></div>
+          </div></div>
+          <button class="rack__abrir" type="button" aria-label="Levar ${esc(j.nome)} pra mesa: rodada ${R.n}, resenhas e quem zerou"></button>
+        </div>
+        <div class="rack__beico" aria-hidden="true"></div>
+        <div class="rack__info">
+          <div class="postit">
+            <h3 class="rack__nome">${esc(j.nome)}</h3>
+            <p class="rack__meta">Rodada ${R.n} · ${R.mes}</p>
+            <p class="rack__meta">${sugestao(j.por)}</p>
+          </div>
+          <div class="rack__acoes chegada">
+            <ol class="chegada__fila" aria-hidden="true">${fila}</ol>
+            <p class="chegada__txt">${R.zerados.length === total ? 'Todo mundo zerou' : `${R.zerados.length} de ${total} zeraram`}</p>
+          </div>
+        </div>
+      </li>`;
+    }
+    function desenhaEstante() {
+      const ordem = RODADAS.map((R, i) => [R, i]).reverse();
+      // nichos vazios completam a tábua de 4 no PC
+      const sobra = (4 - (ordem.length % 4)) % 4;
+      rackEl.innerHTML = ordem.map(([R, i]) => slotHtml(R, i)).join('')
+        + Array.from({ length: sobra }, () => `<li class="rack__slot rack__slot--vazio so-pc" aria-hidden="true"><div class="rack__bay"><div class="rack__scene">${FACES}<div class="rack__stage"><span class="rack__spacer"></span></div></div></div><div class="rack__beico"></div><div class="rack__info"></div></li>`).join('');
+      $('#e-resumo').textContent = `${RODADAS.length} jogos guardados, da rodada mais nova pra mais velha`;
+      $('#e-desde').textContent = `Desde ${RODADAS[0].mes} · ${RODADAS.length} rodadas fechadas`;
+    }
+
+    // ---------- a capinha em voo: cópia 2D que viaja entre a prateleira e a mesa ----------
+    // mede a frente da capa já projetada na tela e devolve um retângulo 3:4 em volta do centro dela
+    function retCapa(el) {
+      const r = el.getBoundingClientRect(), h = r.height, w = h * 0.75;
+      return { x: r.left + r.width / 2, y: r.top + h / 2, w, h };
+    }
+    function criaVoador(j, r) {
+      const v = document.createElement('div');
+      v.className = 'voador'; v.setAttribute('aria-hidden', 'true');
+      Object.assign(v.style, { left: `${r.x - r.w / 2}px`, top: `${r.y - r.h / 2}px`, width: `${r.w}px`, height: `${r.h}px` });
+      v.innerHTML = frenteHtml(j);
+      document.body.append(v);
+      return v;
+    }
+    // caminho em arco: sobe por cima e desce acelerando até o destino (de "de" pra "para", relativo à base do voador)
+    function voo(v, base, de, para, dur) {
+      const dx = para.x - base.x, dy = para.y - base.y, k = para.h / base.h;
+      const meio = `translate(${dx * 0.5}px, ${Math.min(dy * 0.5, 0) - 110}px) scale(${(de.k + k) / 2 + 0.08}) rotate(${de.giro * -1.5}deg)`;
+      return anim(v, [
+        { transform: `translate(0px, ${de.y}px) scale(${de.k}) rotate(${de.giro}deg)`, easing: SAI },
+        { transform: meio, offset: 0.48, easing: GRAVIDADE },
+        { transform: `translate(${dx}px, ${dy}px) scale(${k}) rotate(0deg)` },
+      ], { duration: dur });
+    }
+    const cortina = $('#cortina');
+    const escurece = (sim, dur = 360, delay = 0) => {
+      cortina.hidden = false;
+      return anim(cortina, [{ opacity: sim ? 0 : 1 }, { opacity: sim ? 1 : 0 }], { duration: dur, delay, easing: sim ? 'ease-in' : 'ease-out' })
+        .then(() => { if (!sim) cortina.hidden = true; });
+    };
+
+    // ---------- queda: o objeto aparece lá em cima e cai na mesa com impacto (motor do mock "jogando") ----------
+    const pousados = new Set(), quicando = new Set();
+    const sombrasDe = (o) => [...mesa.querySelectorAll(`[data-de="${o.id}"]`)];
+    async function cai(o, peso = 1) {
+      const mola = o.querySelector('.mola');
+      if (calma.matches) { o.style.visibility = ''; sombrasDe(o).forEach((s) => (s.style.opacity = '')); pousados.add(o); return; }
+      const partes = [...o.querySelectorAll('.bx > i, .abajur, .cabeca3d, .coroa')];
+      const baixo = Math.max(...partes.map((p) => p.getBoundingClientRect().bottom));
+      const s = parseFloat(o.style.getPropertyValue('--s')) || 1;
+      const k = (parseFloat(palco.style.scale) || 1) * s * Math.cos((L.cam * Math.PI) / 180);
+      const tela = Math.max(260, baixo + 40);   // distância na tela até sumir por cima
+      const alto = tela / k;                    // a mesma distância no espaço da mesa
+      const QUEDA = Math.round(Math.min(720, Math.max(460, 340 + tela * 0.42)));
+      const giro = (Math.random() < 0.5 ? -1 : 1) * (6 + Math.random() * 8);
+      mola.style.transform = `translateY(${-alto}px)`;
+      o.style.visibility = '';
+      // a sombra cresce e escurece conforme ele chega (a poça de luz do abajur vem junto)
+      sombrasDe(o).forEach((sb) => anim(sb, [{ transform: 'scale(0.2)', opacity: 0 }, { transform: 'scale(1)', opacity: 1 }], { duration: QUEDA, easing: GRAVIDADE }));
+      await anim(mola, [
+        { transform: `translateY(${-alto}px) rotateZ(${giro}deg) scale(0.97, 1.03)` },
+        { transform: `translateY(${-alto * 0.18}px) rotateZ(${giro * 0.3}deg) scale(0.94, 1.08)`, offset: 0.8 },
+        { transform: 'translateY(0) rotateZ(0deg) scale(0.93, 1.1)' },
+      ], { duration: QUEDA, easing: GRAVIDADE });
+      impacto(o, peso);
+      pousados.add(o); quicando.add(o);
+      await anim(mola, [
+        { transform: 'translateY(0) scale(0.93, 1.1)', easing: 'cubic-bezier(0.2, 0, 0.4, 1)' },
+        { transform: `translateY(0) scale(${1 + 0.16 * peso}, ${1 - 0.2 * peso})`, offset: 0.1, easing: 'cubic-bezier(0.2, 0.8, 0.3, 1)' },
+        { transform: `translateY(${-36 * peso}px) rotateZ(${giro * -0.25}deg) scale(0.97, 1.05)`, offset: 0.4, easing: GRAVIDADE },
+        { transform: 'translateY(0) rotateZ(0deg) scale(1.06, 0.92)', offset: 0.64, easing: 'cubic-bezier(0.2, 0.8, 0.3, 1)' },
+        { transform: `translateY(${-8 * peso}px) scale(0.99, 1.02)`, offset: 0.8, easing: GRAVIDADE },
+        { transform: 'none' },
+      ], { duration: 720 });
+      quicando.delete(o);
+    }
+    function impacto(o, peso) {
+      // a mesa afunda com o peso e dá um pulo no recuo; a câmera leva um tranco curto
+      anim(mesa, [
+        { transform: 'none', easing: 'cubic-bezier(0.2, 0.8, 0.3, 1)' },
+        { transform: `translateY(${7 * peso}px)`, offset: 0.12, easing: 'cubic-bezier(0.2, 0.8, 0.3, 1)' },
+        { transform: `translateY(${-12 * peso}px)`, offset: 0.42, easing: GRAVIDADE },
+        { transform: 'translateY(2px)', offset: 0.68, easing: SAI },
+        { transform: 'none' },
+      ], { duration: 600 });
+      anim(palco, [{ translate: '0 0' }, { translate: `0 ${4 * peso}px` }, { translate: '0 -2px' }, { translate: '0 0' }], { duration: 240, easing: 'ease-out' });
+      // onda: quem já está na mesa e mais perto pula antes e mais alto
+      const ix = parseFloat(o.style.getPropertyValue('--x')), iz = parseFloat(o.style.getPropertyValue('--z'));
+      pousados.forEach((p) => {
+        if (p === o || quicando.has(p)) return;
+        const d = Math.hypot(parseFloat(p.style.getPropertyValue('--x')) - ix, parseFloat(p.style.getPropertyValue('--z')) - iz);
+        const forca = peso / (1 + d / 260);
+        pulinho(p.querySelector('.mola'), 5 + 18 * forca, 60 + d * 0.12, p.id.startsWith('est-') ? (Math.random() < 0.5 ? -4 : 4) * forca : 0);
+      });
+      // ciscos voando da estatueta
+      o.querySelectorAll('.cisco3d').forEach((c, k) => {
+        const a = (k / 8) * Math.PI * 2 + Math.random() * 0.5, dist = 40 + Math.random() * 40;
+        anim(c, [
+          { transform: 'translate3d(0, -4px, 0)', opacity: 0.9 },
+          { transform: `translate3d(${Math.cos(a) * dist}px, ${-24 - Math.random() * 30}px, ${Math.sin(a) * dist}px)`, opacity: 0.6, offset: 0.5 },
+          { transform: `translate3d(${Math.cos(a) * dist * 1.3}px, -2px, ${Math.sin(a) * dist * 1.3}px)`, opacity: 0 },
+        ], { duration: 560 + Math.random() * 200, easing: SAI });
+      });
+    }
+
+    // ---------- TIRAR DA ESTANTE: pega a capinha, o quarto escurece, ela pousa na mesa e o resto cai do céu ----------
+    const ui = () => [$('#btn-devolver'), $('#cabeca-pano'), $('#falta')];
+    const volta = { gatilho: null, rolagem: 0, i: -1 };
+    async function tiraDaEstante(i, gatilho) {
+      if (st.ocupado) return;
+      st.ocupado = true;
+      const R = RODADAS[i], caso = gatilho.closest('.rack__slot').querySelector('.case');
+      volta.gatilho = gatilho; volta.rolagem = scrollY; volta.i = i;
+      aviso(`Levando ${R.jogo.nome} pra mesa.`);
+      const base = retCapa(caso.querySelector('.case__front'));
+      const v = criaVoador(R.jogo, base);
+      caso.style.visibility = 'hidden';
+      // pega: sai do nicho subindo e vindo pra frente
+      await Promise.all([
+        anim(v, [{ transform: 'none' }, { transform: 'translateY(-8px) scale(1.04, 0.97)', offset: 0.25 }, { transform: 'translateY(-40px) scale(1.16) rotate(-4deg)' }], { duration: 440, easing: SAI }),
+        escurece(true, 380, 60),
+      ]);
+
+      // atrás da cortina: troca de canto do quarto e monta a mesa vazia
+      JOGO = R.jogo; COMENT = R.coment; ZERADOS = R.zerados; NAO_ZEROU = R.naoZerou; PAGINAS = R.paginas;
+      telaE.hidden = true; telaM.hidden = false;
+      luz.classList.add('mesa');
+      scrollTo({ top: 0, behavior: 'instant' });
+      $('#banner-txt').textContent = `Rodada ${R.n}`;
+      $('#mesa-sub').textContent = `${R.jogo.nome} · ${R.mes} · ${R.jogo.por === 'Yuri' ? 'sugestão sua' : `sugestão de ${R.jogo.por}`}`;
+      $('.mesa-sec').inert = true;
+      ui().forEach((el) => (el.style.opacity = calma.matches ? '' : '0'));
+      monta();
+      atualizaTextos();
+      pousados.clear();
+      mesa.querySelectorAll(':scope > .obj').forEach((o) => (o.style.visibility = 'hidden'));
+      mesa.querySelectorAll('[data-de], #nota-mesa').forEach((s) => (s.style.opacity = '0'));
+      luz.style.opacity = '0.25';
+      // a mesa inteira à vista antes de começar a cair coisa
+      const rm = wrap.getBoundingClientRect();
+      if (rm.bottom > innerHeight) scrollTo({ top: Math.min(rm.top - 8, rm.bottom - innerHeight + 16), behavior: 'instant' });
+
+      // a capinha voa até o lugar dela na mesa (de cima pra baixo, acelerando)
+      const caso3d = $('#caso-obj'), para = retCapa($('#caso-obj .m-estojo > .f'));
+      await Promise.all([
+        voo(v, base, { y: -40, k: 1.16, giro: -4 }, para, 760),
+        escurece(false, 420, 120),
+      ]);
+      v.remove();
+      caso3d.style.visibility = '';
+      pousados.add(caso3d);
+      sombrasDe(caso3d).forEach((s) => (s.style.opacity = ''));
+      impacto(caso3d, 0.6);
+      await anim(caso3d.querySelector('.mola'), [{ transform: 'scale(1.08, 0.9)' }, { transform: 'translateY(-10px) scale(0.98, 1.03)', offset: 0.45 }, { transform: 'none' }], { duration: 360, easing: SAI });
+
+      // o resto cai do céu: o abajur primeiro (e a luz acende), o quadro, depois as estatuetas na ordem de chegada
+      const quedas = [
+        [0, '#abajur-obj', 0.9], [420, '#quadro-obj', 1],
+        ...ZERADOS.map((_, k) => [900 + k * 300, `#est-${k}`, k === 0 ? 1 : 0.8]),
+      ].map(([t, sel, peso]) => espera(t).then(() => cai($(sel), peso)));
+      espera(560).then(() => anim(luz, [{ opacity: 0.25 }, { opacity: 0.6, offset: 0.2 }, { opacity: 0.4, offset: 0.3 }, { opacity: 1 }], { duration: 520, easing: 'ease-out' }));
+      await Promise.all(quedas);
+      // o bilhete "N de M zeraram" cai flutuando por último (papel é leve)
+      anim($('#nota-mesa'), [{ opacity: 0, transform: 'translateY(-60px) rotate(14deg)' }, { opacity: 1, transform: 'translateY(6px) rotate(-10deg)', offset: 0.7 }, { opacity: 1, transform: 'none' }], { duration: 520, easing: SAI });
+      // a faixa de pano desce e balança; o resto da interface entra
+      await Promise.all([
+        anim($('#cabeca-pano'), [{ opacity: 0, transform: 'translateY(-48px) rotate(-2deg)' }, { opacity: 1, transform: 'translateY(4px) rotate(1deg)', offset: 0.7 }, { opacity: 1, transform: 'none' }], { duration: 520, easing: SAI }),
+        anim($('#falta'), [{ opacity: 0, transform: 'translateY(-12px) rotate(-4deg)' }, { opacity: 1, transform: 'none' }], { duration: 320, delay: 200, easing: SAI }),
+        anim($('#btn-devolver'), [{ opacity: 0 }, { opacity: 1 }], { duration: 260, delay: 260, easing: SAI }),
+      ]);
+      $('.mesa-sec').inert = false;
+      posicionaAlvos();
+      st.ocupado = false;
+      $('#banner').focus({ preventScroll: true });
+      aviso(`Rodada ${R.n} na mesa: ${R.jogo.nome}.`);
+    }
+
+    // ---------- DEVOLVER: tudo da mesa voa pra cima e a capinha volta pro nicho dela ----------
+    async function devolve() {
+      if (st.ocupado || modalAberto) return;
+      st.ocupado = true;
+      $('.mesa-sec').inert = true;
+      const r = wrap.getBoundingClientRect();
+      if (r.top < 0 || r.bottom > innerHeight) {
+        wrap.scrollIntoView({ block: 'center', behavior: calma.matches ? 'auto' : 'smooth' });
+        await espera(450);
+      }
+      aviso('Guardando de volta na estante.');
+      anim($('#cabeca-pano'), [{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(-30px)' }], { duration: 300, easing: ENTRA_RAPIDO });
+      [$('#falta'), $('#btn-devolver')].forEach((el) => anim(el, [{ opacity: 1 }, { opacity: 0 }], { duration: 200, easing: ENTRA_RAPIDO }));
+      const ordem = [...ZERADOS.map((_, k) => `#est-${ZERADOS.length - 1 - k}`), '#quadro-obj', '#abajur-obj'].map((s) => $(s));
+      const passo = calma.matches ? 0 : 110;
+      const voos = ordem.map((o, n) => voa(o, n * passo));
+      anim($('#nota-mesa'), [{ transform: 'none', opacity: 1 }, { transform: 'translateY(-120px) rotate(-20deg)', opacity: 0 }], { duration: 560, delay: 120, easing: ENTRA_RAPIDO });
+      anim(luz, [{ opacity: 1 }, { opacity: 0.25 }], { duration: 600, delay: (ordem.length - 1) * passo + 200, easing: ENTRA_RAPIDO });
+      await Promise.all(voos);
+
+      // a capinha é a última: pega de novo e volta pra estante
+      const caso3d = $('#caso-obj'), base = retCapa($('#caso-obj .m-estojo > .f'));
+      const v = criaVoador(JOGO, base);
+      caso3d.style.visibility = 'hidden';
+      sombrasDe(caso3d).forEach((s) => anim(s, [{ opacity: 1 }, { opacity: 0 }], { duration: 300, easing: ENTRA_RAPIDO }));
+      await Promise.all([
+        anim(v, [{ transform: 'none' }, { transform: 'translateY(6px) scale(1.05, 0.92)', offset: 0.25 }, { transform: 'translateY(-36px) scale(1.1) rotate(3deg)' }], { duration: 420, easing: SAI }),
+        escurece(true, 360, 80),
+      ]);
+      telaM.hidden = true; telaE.hidden = false;
+      luz.classList.remove('mesa'); luz.style.removeProperty('opacity');
+      scrollTo({ top: volta.rolagem, behavior: 'instant' });
+      placeLights();
+      const slot = rackEl.querySelector(`.rack__slot[data-i="${volta.i}"]`), caso = slot.querySelector('.case');
+      const para = retCapa(caso.querySelector('.case__front'));
+      await Promise.all([voo(v, base, { y: -36, k: 1.1, giro: 3 }, para, 700), escurece(false, 420, 100)]);
+      v.remove();
+      caso.style.visibility = '';
+      // assenta no nicho com um tuc
+      anim(caso, [{ translate: '0 -12px' }, { translate: '0 2px', offset: 0.6 }, { translate: '0 0' }], { duration: 320, easing: SAI });
+      mesa.innerHTML = '';
+      ui().forEach((el) => { el.getAnimations().forEach((a) => a.cancel()); el.style.removeProperty('opacity'); el.style.removeProperty('transform'); });
+      st.ocupado = false;
+      volta.gatilho.focus({ preventScroll: true });
+      aviso(`${JOGO.nome} guardado de volta na estante.`);
+    }
+
+    // ---------- eventos e início ----------
+    rackEl.addEventListener('click', (e) => {
+      const b = e.target.closest('.rack__abrir');
+      if (b) tiraDaEstante(Number(b.closest('.rack__slot').dataset.i), b);
+    });
+    $('#btn-devolver').addEventListener('click', devolve);
+    $('#avatar-topo').innerHTML = foto('Yuri');
+    desenhaEstante();
+
+    // Atalhos só do mock, para revisar: ?demo=tirar | quadro | caixinha | estatueta | devolver, &rodada=N (padrão 2)
+    const demo = URL_.get('demo');
+    if (demo) document.fonts.ready.then(async () => {
+      const i = Math.max(0, RODADAS.findIndex((R) => R.n === Number(URL_.get('rodada') || 2)));
+      const b = rackEl.querySelector(`.rack__slot[data-i="${i}"] .rack__abrir`);
+      b.closest('.rack__slot').scrollIntoView({ block: 'center', behavior: 'instant' });
+      await espera(400);
+      await tiraDaEstante(i, b);
+      await espera(300);
+      if (demo === 'quadro') abreQuadro();
+      if (demo === 'caixinha') abreLeitura();
+      if (demo === 'estatueta') abreEst(0, $('#alvos-est .alvo'));
+      if (demo === 'devolver') { await espera(900); devolve(); }
+    });
+  </script>
+</body>
+</html>

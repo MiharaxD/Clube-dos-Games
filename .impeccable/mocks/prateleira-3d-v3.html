@@ -1,0 +1,1149 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mock: prateleira 3D v3 (Y2K)</title>
+  <link rel="icon" href="data:," />
+  <!-- tema antes do primeiro paint (sem piscar o vapor quando o pedido é aero/y2k) -->
+  <script>
+    (function () {
+      var t = new URLSearchParams(location.search).get('tema');
+      document.documentElement.dataset.tema = ['vapor', 'aero', 'y2k'].indexOf(t) >= 0 ? t : 'vapor';
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <!-- Permanent Marker segue porque a etiqueta de preço da capa não muda.
+       Novas: Michroma (letreiro cromado) e M PLUS Rounded 1c (rótulos e katakana). -->
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700&family=Jersey+10&family=Permanent+Marker&family=Michroma&family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/src/styles.css" />
+  <style>
+    /* Mock v3: o mundo "quarto de 2003 às três da manhã". Prateleira de vidro e cromo, clima de
+       estojo de CD. As caixas são as da v1/v2; mudam só materiais, cores e cenário.
+       Três temas por ?tema= (vapor | aero | y2k). Só mock: nada disso vai para src/ ainda. */
+    :root {
+      --font-ui: 'M PLUS Rounded 1c', 'Barlow', system-ui, sans-serif;
+      --font-chrome: 'Michroma', 'Barlow', sans-serif;
+      --scn: 200px;   /* altura da faixa de cenário em cima do móvel */
+      --hz: 262px;    /* linha do horizonte no fundo (coordenadas da sala) */
+      --up: 22px;     /* largura do montante cromado */
+    }
+    @media (max-width: 759px) { :root { --scn: 124px; --hz: 186px; --up: 9px; } }
+
+    /* ---------- Temas: só variáveis ---------- */
+    /* vapor (padrão): noite roxa, vidro fumê, LED ciano/rosa */
+    :root {
+      --page: #150a30; --page-ink: #f6f0ff; --page-muted: #cbbcf5;
+      --room: #170b3a;
+      --frame: #1c0f42;
+      --glass: 110 236 255; --glass-hi: #a8fbff;
+      --led: #6ff6ff; --led2: #ff6ad5; --led-glow: 111 246 255; --led-glow2: 255 106 213;
+      --wall-1: #44207c; --wall-2: #2b125b; --wall-3: #1f0f48; --wall-glow: 0.34; --wall-glow2: 0.2; --wall-shadow: 12 4 32;
+      --c-hi: #f4f0ff; --c-md: #a99ad6; --c-lo: #6a5aa8; --c-dk: #2b1d5c;
+      --rail-bg: #1c0f42;
+      --label-bg: rgb(30 16 70 / 0.94); --label-line: rgb(150 240 255 / 0.35); --lg: 0.1;
+      --label-ink: #f6f0ff; --label-muted: #cfc0f7; --label-hover: #7ff8ff;
+      --bar-1: #b81c80; --bar-2: #5a2bc9; --bar-ink: #ffffff; --bar-gloss: 0.1;
+      --focus: #7ff8ff; --focus-halo: #150a30;
+      --div-a: rgb(255 106 213 / 0.74); --div-b: rgb(111 246 255 / 0.72);
+      --vig: 10 4 30; --vig-a: 0.78; --cast: 4 0 16; --decal-sh: 10 4 30;
+      --s1: #ffffff; --s2: #d6dcff; --s3: #a596ee; --s4: #ffd1f1; --s5: #ffffff; --s-shadow: #ff3fae;
+      --plate-1: #1a0a3e; --plate-2: #2d0f5c; --plate-edge: rgb(127 248 255 / 0.55); --sub-ink: #7ff8ff;
+      --spine-s: 46%;
+      --dev-bg: rgb(255 255 255 / 0.08); --dev-on: #7ff8ff; --dev-on-ink: #150a30;
+    }
+    /* aero: dia, céu de papel de parede, vidro aqua com faixa de brilho */
+    :root[data-tema="aero"] {
+      --page: #e7f6fd; --page-ink: #0b2f52; --page-muted: #2c5677;
+      --room: #bfe7f8;
+      --frame: #a9d9ee;
+      --glass: 150 222 250; --glass-hi: #ffffff;
+      --led: #29cfff; --led2: #a8f3ff; --led-glow: 41 207 255; --led-glow2: 168 243 255;
+      --wall-1: #f4fcff; --wall-2: #d3eef9; --wall-3: #aed8ec; --wall-glow: 0.42; --wall-glow2: 0.2; --wall-shadow: 20 70 110;
+      --c-hi: #ffffff; --c-md: #c4dbe8; --c-lo: #8fb2c7; --c-dk: #5d849c;
+      --rail-bg: #cbe9f6;
+      --label-bg: rgb(245 252 255 / 0.95); --label-line: rgb(80 170 220 / 0.5); --lg: 0.75;
+      --label-ink: #08304f; --label-muted: #275575; --label-hover: #0a5fa8;
+      --focus: #0a3d8f; --focus-halo: #ffffff;
+      --div-a: rgb(130 220 80 / 0.8); --div-b: rgb(255 200 90 / 0.82);
+      --vig: 70 140 190; --vig-a: 0.35; --cast: 20 80 120; --decal-sh: 20 80 120;
+      --s1: #ffffff; --s2: #e6f7ff; --s3: #b0e3ff; --s4: #d6f3ff; --s5: #ffffff; --s-shadow: #04345e;
+      --plate-1: #0a3f73; --plate-2: #0b5b9a; --plate-edge: rgb(255 255 255 / 0.75); --sub-ink: #ffffff;
+      --spine-s: 50%;
+      --dev-bg: rgb(11 47 82 / 0.08); --dev-on: #0b2f52; --dev-on-ink: #ffffff;
+      color-scheme: light;
+    }
+    /* y2k: prata, blobs de cromo, acrílico colorido (uma cor por tábua) */
+    :root[data-tema="y2k"] {
+      --page: #e8ebf0; --page-ink: #14182a; --page-muted: #3d4459;
+      --room: #cfd4dc;
+      --frame: #aeb6c3;
+      --glass: 0 149 182; --glass-hi: #ffffff;
+      --led: #f2fdff; --led2: #ffffff; --led-glow: 225 248 255; --led-glow2: 255 255 255;
+      --wall-1: #dfe4ec; --wall-2: #959eb0; --wall-3: #737c8f; --wall-glow: 0.55; --wall-glow2: 0.2; --wall-shadow: 30 34 48;
+      --c-hi: #ffffff; --c-md: #b7bfcb; --c-lo: #7d8696; --c-dk: #4a5262;
+      --rail-bg: #c2c8d2;
+      --label-bg: rgb(249 250 252 / 0.95); --label-line: rgb(80 90 110 / 0.4); --lg: 0.6;
+      --label-ink: #14182a; --label-muted: #3b4257; --label-hover: #a3155a;
+      --bar-1: #f7f9fb; --bar-2: #b9c1cd; --bar-ink: #14182a; --bar-gloss: 0.5;
+      --focus: #14182a; --focus-halo: #ffffff;
+      --div-a: rgb(255 150 40 / 0.82); --div-b: rgb(150 210 50 / 0.82);
+      --vig: 60 66 82; --vig-a: 0.4; --cast: 30 34 48; --decal-sh: 30 34 48;
+      --s1: #ffffff; --s2: #e3e7ee; --s3: #a4adbb; --s4: #f2f4f8; --s5: #ffffff; --s-shadow: #6b4fd8;
+      --plate-1: #10131f; --plate-2: #2a3040; --plate-edge: rgb(255 255 255 / 0.7); --sub-ink: #e3e7ee;
+      --spine-s: 55%;
+      --dev-bg: rgb(20 24 42 / 0.07); --dev-on: #14182a; --dev-on-ink: #ffffff;
+      color-scheme: light;
+    }
+    /* cromo horizontal reaproveitado (suportes, tampa da lâmpada, conector) */
+    :root { --chrome-h: linear-gradient(90deg, var(--c-dk), var(--c-hi) 18%, var(--c-md) 40%, var(--c-hi) 58%, var(--c-lo) 80%, var(--c-dk)); }
+
+    /* acrílico do y2k: uma cor por tábua (fileira). Celular 2 por tábua, PC 4. */
+    :root[data-tema="y2k"] .rack__slot:nth-child(10n + 3), :root[data-tema="y2k"] .rack__slot:nth-child(10n + 4) { --glass: 242 140 40; }
+    :root[data-tema="y2k"] .rack__slot:nth-child(10n + 5), :root[data-tema="y2k"] .rack__slot:nth-child(10n + 6) { --glass: 120 70 180; }
+    :root[data-tema="y2k"] .rack__slot:nth-child(10n + 7), :root[data-tema="y2k"] .rack__slot:nth-child(10n + 8) { --glass: 130 200 30; }
+    :root[data-tema="y2k"] .rack__slot:nth-child(10n + 9), :root[data-tema="y2k"] .rack__slot:nth-child(10n + 10) { --glass: 236 60 100; }
+    @media (min-width: 760px) {
+      :root[data-tema="y2k"] .rack__slot:nth-child(n) { --glass: 0 149 182; }
+      :root[data-tema="y2k"] .rack__slot:nth-child(20n + 5), :root[data-tema="y2k"] .rack__slot:nth-child(20n + 6),
+      :root[data-tema="y2k"] .rack__slot:nth-child(20n + 7), :root[data-tema="y2k"] .rack__slot:nth-child(20n + 8) { --glass: 242 140 40; }
+      :root[data-tema="y2k"] .rack__slot:nth-child(20n + 9), :root[data-tema="y2k"] .rack__slot:nth-child(20n + 10),
+      :root[data-tema="y2k"] .rack__slot:nth-child(20n + 11), :root[data-tema="y2k"] .rack__slot:nth-child(20n + 12) { --glass: 120 70 180; }
+      :root[data-tema="y2k"] .rack__slot:nth-child(20n + 13), :root[data-tema="y2k"] .rack__slot:nth-child(20n + 14),
+      :root[data-tema="y2k"] .rack__slot:nth-child(20n + 15), :root[data-tema="y2k"] .rack__slot:nth-child(20n + 16) { --glass: 130 200 30; }
+      :root[data-tema="y2k"] .rack__slot:nth-child(20n + 17), :root[data-tema="y2k"] .rack__slot:nth-child(20n + 18),
+      :root[data-tema="y2k"] .rack__slot:nth-child(20n + 19), :root[data-tema="y2k"] .rack__slot:nth-child(20n + 20) { --glass: 236 60 100; }
+    }
+
+    /* ---------- Página do mock ---------- */
+    body { background: var(--page); color: var(--page-ink); scrollbar-color: var(--c-lo) var(--page); }
+    main.mock { max-width: none; padding: 0 0 64px; }
+    .mock__head { max-width: var(--max); margin: 0 auto; padding: 24px var(--gutter) 8px; }
+    .mock__head .page-head { margin-bottom: 12px; }
+    .mock__head h1 { color: var(--page-ink); }
+    .mock__head .muted { color: var(--page-muted); }
+    /* barra só de desenvolvimento: troca tema e quantidade sem perder o outro parâmetro */
+    .devbar { display: flex; gap: 6px 14px; flex-wrap: wrap; align-items: center; margin: 0 0 16px; font: 700 0.8rem/1 var(--font-body); color: var(--page-muted); }
+    .devbar__group { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+    .devbar a {
+      display: inline-flex; align-items: center; min-height: 44px; padding: 0 12px; border-radius: 999px;
+      background: var(--dev-bg); color: var(--page-ink); text-decoration: none; box-shadow: inset 0 0 0 1px var(--page-muted);
+    }
+    .devbar a[aria-current="page"] { background: var(--dev-on); color: var(--dev-on-ink); box-shadow: none; }
+    .devbar a:focus-visible { outline: 3px solid var(--page-ink); outline-offset: 2px; }
+
+    /* ---------- A cena: fundo, chão e ar ---------- */
+    .store { position: relative; overflow: clip; padding-top: 22px; background: var(--room); isolation: isolate; }
+    .store__room { position: absolute; inset: -48px -24px; z-index: 0; pointer-events: none; }
+    .store__room > * { position: absolute; display: block; pointer-events: none; }
+
+    /* vapor: degradê roxo → rosa → ciano no horizonte, céu estrelado */
+    [data-tema="vapor"] .store__room {
+      background:
+        url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='520' height='230'><g fill='%23fff'><circle cx='14' cy='20' r='1.1'/><circle cx='88' cy='64' r='.8'/><circle cx='150' cy='14' r='1.3'/><circle cx='212' cy='92' r='.8'/><circle cx='268' cy='38' r='1'/><circle cx='330' cy='120' r='.7'/><circle cx='372' cy='26' r='1.2'/><circle cx='440' cy='76' r='.9'/><circle cx='498' cy='18' r='.8'/><circle cx='46' cy='140' r='.7'/><circle cx='120' cy='168' r='.6'/><circle cx='404' cy='160' r='.6'/></g><path d='M236 150l2 7 7 2-7 2-2 7-2-7-7-2 7-2z' fill='%23ffd1f1'/><path d='M470 120l1.5 5 5 1.5-5 1.5-1.5 5-1.5-5-5-1.5 5-1.5z' fill='%23bff9ff'/></svg>") 0 34px / 520px 230px repeat-x,
+        linear-gradient(180deg, #12052f 0, #2a0a5c 110px, #5d1688 calc(var(--hz) - 80px), #c2388f calc(var(--hz) - 28px),
+          #ff7cb5 calc(var(--hz) - 8px), #ffc1d9 calc(var(--hz) - 2px), #5ef0ff var(--hz), #2b0f66 calc(var(--hz) + 4px),
+          #1d0b48 calc(var(--hz) + 160px), var(--room) calc(var(--hz) + 600px));
+    }
+    /* sol listrado, sentado no horizonte */
+    .sun { left: 50%; top: calc(var(--hz) - 196px); width: 270px; height: 196px; translate: -50% 0; overflow: hidden; }
+    .sun__disc {
+      position: absolute; left: 0; top: 0; width: 270px; height: 270px; border-radius: 50%;
+      background: linear-gradient(180deg, #fff3a6, #ffb34d 38%, #ff5f8f 70%, #c2388f);
+      -webkit-mask: linear-gradient(#000 0 46%, transparent 0), repeating-linear-gradient(180deg, transparent 0 calc(46% + 0px), #000 0 calc(46% + 12px), transparent 0 calc(46% + 17px));
+      mask: linear-gradient(#000 0 46%, transparent 0), repeating-linear-gradient(180deg, #000 0 11px, transparent 11px 17px);
+    }
+    .palm { top: calc(var(--hz) - 210px); width: 160px; }
+    .palm svg { display: block; width: 100%; height: auto; }
+    .palm--l { left: 1.5%; }
+    .palm--r { right: 1.5%; scale: -1 1; }
+    .palm--s { left: 13%; top: calc(var(--hz) - 120px); width: 92px; opacity: 0.8; }
+
+    /* aero: céu azul, nuvens, colina verde brilhante, reflexo de lente */
+    [data-tema="aero"] .store__room {
+      background:
+        var(--cloud) 6% 34px / 250px 106px no-repeat,
+        var(--cloud) 74% 72px / 210px 90px no-repeat,
+        var(--cloud) 40% 10px / 170px 72px no-repeat,
+        var(--cloud) 96% 6px / 150px 64px no-repeat,
+        radial-gradient(circle at 86% 64px, #fff 0 14px, rgb(255 255 255 / 0.65) 30px, rgb(255 255 255 / 0) 150px),
+        linear-gradient(180deg, #1e8fe0 0, #55b9f2 110px, #a9e2ff calc(var(--hz) - 30px), #e8f8ff var(--hz),
+          #8fdc74 var(--hz), #4fae45 calc(var(--hz) + 160px), #9fd6c8 calc(var(--hz) + 420px), var(--room) calc(var(--hz) + 700px));
+      --cloud: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 260 110'><defs><linearGradient id='g' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='%23fff'/><stop offset='.7' stop-color='%23f2fbff'/><stop offset='1' stop-color='%23cfeaff'/></linearGradient></defs><path d='M30 98C8 98 4 72 26 66 22 42 52 32 68 48 76 20 120 12 136 40 150 24 186 28 190 54 214 48 236 64 228 84 246 88 244 102 226 102Z' fill='url(%23g)'/></svg>");
+    }
+    .hill { top: calc(var(--hz) - 46px); height: 340px; border-radius: 50% 50% 0 0 / 46px 46px 0 0;
+      background:
+        radial-gradient(ellipse 50% 22% at 42% 8%, rgb(255 255 255 / 0.55), transparent 70%),
+        linear-gradient(180deg, #a6ee58, #5fc23f 30%, #3c9a34); }
+    .hill--l { left: -12%; width: 70%; }
+    .hill--r { right: -14%; width: 66%; top: calc(var(--hz) - 30px); filter: none; background:
+        radial-gradient(ellipse 50% 22% at 58% 8%, rgb(255 255 255 / 0.45), transparent 70%),
+        linear-gradient(180deg, #8fe24c, #4fb13a 30%, #2f8a2e); }
+
+    /* y2k: prata metálica com faixa de foil holográfico */
+    [data-tema="y2k"] .store__room {
+      background:
+        linear-gradient(112deg, transparent 18%, rgb(255 140 230 / 0.3) 30%, rgb(120 230 255 / 0.32) 41%, rgb(255 250 160 / 0.28) 51%, rgb(180 140 255 / 0.3) 62%, transparent 76%) 0 0 / 100% calc(var(--hz) + 40px) no-repeat,
+        radial-gradient(ellipse 40% 70px at 50% 40px, rgb(255 255 255 / 0.8), transparent 80%),
+        linear-gradient(180deg, #f7f8fb 0, #cfd5de 70px, #f2f4f8 130px, #a4adbb calc(var(--hz) - 50px), #e6e9ef var(--hz),
+          #b7bec9 calc(var(--hz) + 260px), var(--room) calc(var(--hz) + 700px));
+    }
+    .blob svg { display: block; width: 100%; height: auto; }
+    .blob--l { left: 1%; top: calc(var(--hz) - 196px); width: 170px; }
+    .blob--r { right: 2%; top: calc(var(--hz) - 214px); width: 150px; }
+    .blob--s { left: 16%; top: calc(var(--hz) - 120px); width: 64px; }
+    .holo-star { width: var(--w, 30px); }
+    .holo-star svg { display: block; width: 100%; height: auto; }
+
+    /* chão na frente do móvel */
+    .store__floor { position: absolute; left: -24px; right: -24px; bottom: 0; height: 132px; z-index: 1; perspective: 420px; pointer-events: none; }
+    .store__floor::before {
+      content: ''; position: absolute; left: 0; right: 0; top: 0; height: 10px; z-index: 1;
+      background: linear-gradient(180deg, var(--c-hi) 0 1px, var(--c-md) 1px 4px, var(--c-lo) 4px 7px, var(--c-dk));
+    }
+    .store__plane { position: absolute; inset: 10px 0 -60px; transform-origin: top; transform: rotateX(56deg); }
+    [data-tema="vapor"] .store__plane {
+      background:
+        linear-gradient(180deg, rgb(255 106 213 / 0.35), transparent 40%),
+        repeating-linear-gradient(90deg, rgb(255 106 213 / 0.6) 0 2px, transparent 2px 64px),
+        repeating-linear-gradient(0deg, rgb(255 106 213 / 0.6) 0 2px, transparent 2px 44px),
+        #150838;
+      background-position: 0 0, 50% 0, 0 0, 0 0;
+    }
+    [data-tema="aero"] .store__plane {
+      background:
+        radial-gradient(ellipse 46% 60% at 50% 0%, rgb(255 255 255 / 0.8), transparent 72%),
+        repeating-radial-gradient(ellipse 60px 16px at 30% 40%, rgb(255 255 255 / 0.18) 0 2px, transparent 2px 14px),
+        linear-gradient(180deg, #d8f3ff, #8fd0ea);
+    }
+    [data-tema="y2k"] .store__plane {
+      background:
+        radial-gradient(ellipse 46% 60% at 50% 0%, rgb(255 255 255 / 0.7), transparent 72%),
+        repeating-linear-gradient(90deg, rgb(255 255 255 / 0.5) 0 1px, transparent 1px 72px),
+        repeating-linear-gradient(0deg, rgb(255 255 255 / 0.5) 0 1px, transparent 1px 72px),
+        linear-gradient(180deg, #c7ced8, #9aa3b2);
+    }
+
+    /* coisas que flutuam (poucas): brilhos, bolhas, estrelas */
+    .store__fx { position: absolute; left: 0; right: 0; top: 0; height: min(100%, 1100px); z-index: 4; pointer-events: none; }
+    .store__fx > * { position: absolute; display: block; }
+    .spark {
+      width: var(--s, 18px); height: var(--s, 18px);
+      background: radial-gradient(circle, #fff 0 18%, var(--spark, #bff9ff) 55%);
+      clip-path: polygon(50% 0, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0 50%, 40% 40%);
+      animation: drift 11s ease-in-out infinite alternate;
+    }
+    .bubble {
+      width: var(--s, 30px); height: var(--s, 30px); border-radius: 50%;
+      background:
+        radial-gradient(circle at 32% 28%, rgb(255 255 255 / 0.95) 0 9%, rgb(255 255 255 / 0) 24%),
+        radial-gradient(circle, rgb(255 255 255 / 0.04) 56%, rgb(190 240 255 / 0.5) 72%, rgb(255 255 255 / 0.9) 79%, rgb(255 255 255 / 0) 81%);
+      animation: rise 14s ease-in-out infinite alternate;
+    }
+    .ring { width: var(--s, 40px); height: var(--s, 40px); border-radius: 50%; background: radial-gradient(circle, rgb(255 255 255 / 0.16) 60%, rgb(255 255 255 / 0.4) 66%, transparent 70%); }
+    @keyframes drift { from { transform: translate3d(0, 0, 0) rotate(0deg); } to { transform: translate3d(14px, -20px, 0) rotate(45deg); } }
+    @keyframes rise { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(16px, -60px, 0); } }
+
+    /* vinheta da sala só nas bordas */
+    .store__vignette {
+      position: absolute; inset: 0; z-index: 5; pointer-events: none;
+      background:
+        linear-gradient(90deg, rgb(var(--vig) / var(--vig-a)), transparent 9%, transparent 91%, rgb(var(--vig) / var(--vig-a))),
+        linear-gradient(180deg, var(--page), transparent 60px),
+        linear-gradient(0deg, rgb(var(--vig) / var(--vig-a)), transparent 90px);
+    }
+    @media (max-width: 759px) {
+      .store__vignette {
+        background:
+          linear-gradient(90deg, rgb(var(--vig) / 0.5), transparent 3%, transparent 97%, rgb(var(--vig) / 0.5)),
+          linear-gradient(180deg, var(--page), transparent 40px),
+          linear-gradient(0deg, rgb(var(--vig) / var(--vig-a)), transparent 80px);
+      }
+      .store__fx .is-pc { display: none; }
+    }
+
+    .store__inner { position: relative; z-index: 2; max-width: 1072px; margin: 0 auto; padding: 0 var(--gutter) 74px; }
+    @media (max-width: 759px) { .store__inner { padding: 0 0 64px; } }
+
+    /* ---------- Cenário em cima do móvel (aria-hidden, sem clique) ---------- */
+    .cabinet { position: relative; }
+    .scenery { position: relative; height: var(--scn); pointer-events: none; }
+    .scenery > * { position: absolute; bottom: 0; display: block; }
+
+    /* letreiro cromado */
+    /* placa escura brilhante atrás do cromo: garante leitura do letreiro sobre céu, sol ou prata */
+    .sign {
+      bottom: auto; top: 10px; left: 50%; translate: -50% 0; z-index: 3; text-align: center; white-space: nowrap;
+      padding: 8px 20px 10px; border-radius: 16px;
+      background:
+        linear-gradient(180deg, rgb(255 255 255 / 0.16), rgb(255 255 255 / 0.04) 48%, transparent 50%),
+        linear-gradient(180deg, var(--plate-1), var(--plate-2));
+      box-shadow: inset 0 0 0 1px var(--plate-edge), inset 0 -3px 0 rgb(0 0 0 / 0.25), 0 8px 18px rgb(var(--cast) / 0.35);
+    }
+    .sign__chrome {
+      display: block; padding: 0 6px; font: 3.1rem/1.15 var(--font-chrome); letter-spacing: 0.04em;
+      background: linear-gradient(180deg, var(--s1) 0%, var(--s2) 44%, var(--s3) 50%, var(--s4) 56%, var(--s5) 100%);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+      filter: drop-shadow(0 3px 0 var(--s-shadow));
+    }
+    .sign__kana { display: block; margin-top: 4px; padding-left: 0.5em; font: 800 0.95rem/1 var(--font-ui); letter-spacing: 0.5em; color: var(--sub-ink); }
+    .sign__sub { display: block; margin-top: 4px; padding-left: 0.3em; font: 700 0.75rem/1 var(--font-ui); letter-spacing: 0.3em; color: var(--sub-ink); }
+
+    /* monitor de tubo de plástico translúcido (forma própria, sem marca) */
+    .monitor { --mon: 90 60 200; left: 4%; width: 178px; z-index: 1; }
+    [data-tema="y2k"] .monitor { --mon: 0 149 182; }
+    .monitor__body {
+      position: relative; display: block; height: 140px; padding: 12px 14px 24px; border-radius: 24px 24px 18px 18px;
+      background:
+        linear-gradient(180deg, rgb(255 255 255 / 0.55) 0 2px, rgb(255 255 255 / 0.2) 2px 38%, transparent 38%),
+        repeating-linear-gradient(90deg, rgb(255 255 255 / 0.18) 0 2px, transparent 2px 6px) 50% calc(100% - 8px) / 60px 8px no-repeat,
+        radial-gradient(circle at 88% calc(100% - 12px), #9dff6a 0 3px, transparent 3.5px),
+        linear-gradient(160deg, rgb(var(--mon) / 0.82), rgb(var(--mon) / 0.5) 60%, rgb(var(--mon) / 0.74));
+      box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.55), inset 0 -6px 10px rgb(0 0 0 / 0.18), 0 10px 18px rgb(0 0 0 / 0.28);
+    }
+    .monitor__screen {
+      position: relative; display: block; height: 100%; overflow: hidden; border-radius: 12px / 9px; background: #0b0f1e;
+      box-shadow: 0 0 0 3px rgb(0 0 0 / 0.35), 0 0 0 5px rgb(255 255 255 / 0.3);
+    }
+    .monitor__feed { position: absolute; inset: 0; background: 30% 50% / cover; }
+    .monitor__screen::after {
+      content: ''; position: absolute; inset: 0; z-index: 2;
+      background:
+        radial-gradient(ellipse 70% 50% at 30% 16%, rgb(255 255 255 / 0.24), transparent 60%),
+        radial-gradient(ellipse at 50% 50%, transparent 58%, rgb(0 0 0 / 0.5) 100%),
+        repeating-linear-gradient(180deg, rgb(0 0 0 / 0.3) 0 1px, transparent 1px 3px);
+    }
+    .monitor__foot {
+      display: block; width: 76px; height: 14px; margin: 0 auto; border-radius: 0 0 14px 14px;
+      background: linear-gradient(180deg, rgb(var(--mon) / 0.9), rgb(var(--mon) / 0.6)); box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.4);
+    }
+
+    /* CD girando com brilho iridescente: só no cenário, nunca sobre a capa */
+    .cd { width: var(--cd, 66px); height: calc(var(--cd, 66px) + 10px); z-index: 2; }
+    .cd__disc {
+      position: absolute; left: 0; top: 0; width: var(--cd, 66px); height: var(--cd, 66px); border-radius: 50%;
+      background:
+        radial-gradient(circle, transparent 0 13%, rgb(255 255 255 / 0.95) 13% 15%, rgb(210 218 230 / 0.92) 15% 26%, rgb(255 255 255 / 0.5) 26% 27%, transparent 27%),
+        conic-gradient(#eef3ff, #ffb3e6, #b3fff0, #fff5b3, #c9b3ff, #b3e6ff, #ffd1b3, #eef3ff);
+      -webkit-mask: radial-gradient(circle, transparent 0 9%, #000 9.5%);
+      mask: radial-gradient(circle, transparent 0 9%, #000 9.5%);
+      animation: spin 6s linear infinite;
+    }
+    /* brilho fixo por cima (não gira junto) + suporte de acrílico */
+    .cd::after { content: ''; position: absolute; left: 0; top: 0; width: var(--cd, 66px); height: var(--cd, 66px); border-radius: 50%;
+      background: linear-gradient(135deg, rgb(255 255 255 / 0.55), transparent 38%, transparent 62%, rgb(255 255 255 / 0.25)); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.7); }
+    .cd::before { content: ''; position: absolute; left: 18%; right: 18%; bottom: 0; height: 14px; border-radius: 3px;
+      background: linear-gradient(180deg, rgb(255 255 255 / 0.7), rgb(200 230 255 / 0.3)); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.6); }
+    @keyframes spin { to { transform: rotate(1turn); } }
+
+    /* vapor: busto de gesso pixelado em cima de um tabuleiro quadriculado, golfinho pixel */
+    .bust-set { right: 18%; width: 132px; height: 150px; z-index: 1; }
+    .checker {
+      position: absolute; left: 0; right: 0; bottom: 0; height: 34px;
+      background: conic-gradient(#f6f0ff 25%, #2a1458 0 50%, #f6f0ff 0 75%, #2a1458 0) 0 0 / 22px 22px;
+      transform: perspective(180px) rotateX(52deg); transform-origin: bottom;
+      box-shadow: 0 0 0 2px #ff6ad5;
+    }
+    .plinth { position: absolute; left: 36px; right: 36px; bottom: 14px; height: 40px;
+      background: linear-gradient(90deg, #b7b0cc, #f4eff9 40%, #d6d0e4 70%, #9d96b8); box-shadow: inset 0 3px 0 #fff; }
+    .bust { position: absolute; left: 30px; right: 30px; bottom: 53px; }
+    .bust svg, .dolphin svg { display: block; width: 100%; height: auto; }
+    .dolphin { right: 4%; bottom: 74px; width: 96px; z-index: 2; animation: bob 7s ease-in-out infinite alternate; }
+    @keyframes bob { from { transform: translate3d(0, 0, 0) rotate(-4deg); } to { transform: translate3d(0, -10px, 0) rotate(4deg); } }
+    .cd--vapor { left: 21%; }
+
+    /* aero: planta, copo d'água, pilha de CDs */
+    .plant { left: 5%; width: 104px; z-index: 1; }
+    .water { left: 19%; width: 62px; z-index: 1; }
+    .plant svg, .water svg, .pendrive svg { display: block; width: 100%; height: auto; }
+    .discs { right: 20%; width: 104px; z-index: 1; }
+    .discs span {
+      display: block; height: 9px; margin-top: -3px; border-radius: 50%;
+      background: linear-gradient(90deg, #c9d4e3, #fff 20%, #ffc4ec 38%, #c4fff2 56%, #fff 72%, #aab8cc);
+      box-shadow: 0 1px 0 rgb(40 90 130 / 0.35), inset 0 -2px 0 rgb(40 90 130 / 0.25);
+    }
+    .discs span:nth-child(2) { margin-left: 4px; margin-right: -4px; }
+    .discs span:nth-child(4) { margin-left: -3px; margin-right: 3px; }
+    .discs span:nth-child(6) { margin-left: 5px; margin-right: -2px; }
+    .cd--aero { right: 7%; --cd: 72px; }
+    .drop {
+      position: absolute; z-index: 2; width: 10px; height: 13px; pointer-events: none;
+      border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+      background: radial-gradient(circle at 35% 30%, #fff 0 18%, rgb(255 255 255 / 0.35) 40%, rgb(120 200 240 / 0.45) 80%);
+      box-shadow: 0 1px 0 rgb(20 80 120 / 0.3);
+    }
+
+    /* y2k: lâmpada de lava, pilha de CD-R, pen drive, código de barras */
+    .lava { left: 20%; width: 56px; height: 156px; z-index: 1; }
+    .lava__cap { position: absolute; top: 0; left: 16px; width: 24px; height: 16px; background: var(--chrome-h); clip-path: polygon(22% 0, 78% 0, 100% 100%, 0 100%); }
+    .lava__glass {
+      position: absolute; top: 15px; left: 6px; width: 44px; height: 94px; overflow: hidden;
+      clip-path: polygon(30% 0, 70% 0, 100% 100%, 0 100%);
+      background:
+        linear-gradient(90deg, rgb(255 255 255 / 0.45), transparent 30%, transparent 70%, rgb(255 255 255 / 0.25)),
+        linear-gradient(180deg, #ffbe6b, #ff8a1f 60%, #e0560c);
+    }
+    .lava__blob { position: absolute; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #e3a6ff, #7a2fc0); animation: lava 15s ease-in-out infinite alternate; }
+    .lava__blob--a { width: 18px; height: 22px; left: 14px; bottom: 6px; }
+    .lava__blob--b { width: 12px; height: 14px; left: 22px; bottom: 44px; animation-duration: 19s; animation-delay: -7s; }
+    .lava__blob--c { width: 30px; height: 12px; left: 7px; bottom: -4px; animation: none; }
+    @keyframes lava { from { transform: translate3d(0, 0, 0) scale(1, 1); } to { transform: translate3d(2px, -56px, 0) scale(0.9, 1.15); } }
+    .lava__base { position: absolute; bottom: 0; left: 0; width: 56px; height: 50px; background: var(--chrome-h); clip-path: polygon(14% 0, 86% 0, 100% 100%, 0 100%); }
+    .spindle { right: 25%; width: 98px; height: 78px; z-index: 1; }
+    .spindle__base { position: absolute; left: 0; right: 0; bottom: 0; height: 12px; border-radius: 50%; background: linear-gradient(180deg, #3a4150, #1d222d); }
+    .spindle__stack {
+      position: absolute; left: 7px; right: 7px; bottom: 6px; height: 46px; border-radius: 50% / 7px;
+      background:
+        linear-gradient(90deg, rgb(0 0 0 / 0.25), transparent 30%, transparent 70%, rgb(0 0 0 / 0.3)),
+        repeating-linear-gradient(180deg, #eef1f6 0 2px, #9aa4b3 2px 3px, #e0c878 3px 4px);
+    }
+    .spindle__dome {
+      position: absolute; left: 0; right: 0; bottom: 4px; height: 72px; border-radius: 49px 49px 50% 50% / 34px 34px 10px 10px;
+      background: linear-gradient(90deg, rgb(255 255 255 / 0.55), rgb(255 255 255 / 0.08) 30%, rgb(255 255 255 / 0.03) 70%, rgb(255 255 255 / 0.38));
+      box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.75);
+    }
+    .cd--y2k { right: 38%; --cd: 60px; }
+    .pendrive { right: 12%; bottom: 2px; width: 104px; rotate: -7deg; z-index: 1; }
+    .barcode {
+      right: 2%; bottom: 8px; z-index: 1; padding: 5px 7px 4px; background: #fff; rotate: 4deg;
+      font: 700 0.75rem/1 var(--font-body); color: #14182a; text-align: center; box-shadow: 0 2px 0 rgb(30 34 48 / 0.35);
+    }
+    .barcode__bars {
+      display: block; width: 74px; height: 26px; margin-bottom: 3px;
+      background: repeating-linear-gradient(90deg, #14182a 0 2px, transparent 2px 3px, #14182a 3px 4px, transparent 4px 7px, #14182a 7px 10px, transparent 10px 11px, #14182a 11px 12px, transparent 12px 15px);
+    }
+
+    @media (max-width: 759px) {
+      .sign { left: 62%; top: 6px; padding: 5px 12px 7px; border-radius: 12px; }
+      .sign__chrome { font-size: 1.6rem; }
+      .sign__kana { font-size: 0.75rem; letter-spacing: 0.35em; }
+      .monitor { left: 6px; transform: scale(0.6); transform-origin: bottom left; }
+      .plant { left: 6px; width: 64px; }
+      .dolphin { right: 6px; bottom: 50px; width: 62px; }
+      .cd--aero { right: 10px; --cd: 50px; }
+      .lava { left: 118px; transform: scale(0.62); transform-origin: bottom left; }
+      .cd--y2k { right: 10px; --cd: 46px; }
+      .bust-set, .cd--vapor, .water, .discs, .spindle, .pendrive, .barcode, .palm--s, .blob--s, .drop { display: none; }
+      .palm { width: 110px; top: calc(var(--hz) - 146px); }
+      .blob--l, .blob--r { width: 100px; top: calc(var(--hz) - 150px); }
+      .sun { width: 180px; height: 130px; top: calc(var(--hz) - 130px); }
+      .sun__disc { width: 180px; height: 180px; }
+    }
+
+    /* ---------- Móvel: montantes cromados, tampo e base de vidro ---------- */
+    .cabinet__body {
+      position: relative; padding: 38px var(--up) 52px;
+      background: linear-gradient(90deg,
+        var(--c-dk), var(--c-hi) calc(var(--up) * 0.2), var(--c-md) calc(var(--up) * 0.42), var(--c-hi) calc(var(--up) * 0.6),
+        var(--c-lo) calc(var(--up) * 0.82), var(--c-dk) var(--up), var(--frame) var(--up) calc(100% - var(--up)),
+        var(--c-dk) calc(100% - var(--up)), var(--c-lo) calc(100% - var(--up) * 0.82), var(--c-hi) calc(100% - var(--up) * 0.6),
+        var(--c-md) calc(100% - var(--up) * 0.42), var(--c-hi) calc(100% - var(--up) * 0.2), var(--c-dk));
+    }
+    @media (max-width: 759px) { .cabinet__body { padding: 32px var(--up) 44px; } }
+    /* sombra do móvel no chão */
+    .cabinet__body::before {
+      content: ''; position: absolute; z-index: -1; left: -4%; right: -4%; top: calc(100% - 6px); height: 46px; pointer-events: none;
+      background: radial-gradient(ellipse 50% 100% at 50% 0%, rgb(var(--cast) / 0.6), transparent 100%);
+    }
+    .cabinet__crown, .cabinet__base { position: absolute; left: -10px; right: -10px; z-index: 1; pointer-events: none; border-radius: 6px; }
+    /* tampo: vidro grosso, quina brilhante, faixa de brilho na metade de cima, filete cromado embaixo */
+    .cabinet__crown {
+      top: 0; height: 38px;
+      background:
+        linear-gradient(180deg, var(--glass-hi) 0 1px, rgb(255 255 255 / 0.6) 1px 2px, transparent 2px calc(100% - 4px), var(--c-hi) calc(100% - 4px) calc(100% - 3px), var(--c-lo) calc(100% - 3px)),
+        linear-gradient(180deg, rgb(255 255 255 / 0.42), rgb(255 255 255 / 0.12) 46%, transparent 48%),
+        linear-gradient(90deg, transparent 8%, rgb(255 255 255 / 0.18) 12% 14%, transparent 18% 70%, rgb(255 255 255 / 0.14) 74% 75%, transparent 78%),
+        linear-gradient(180deg, rgb(var(--glass) / 0.55), rgb(var(--glass) / 0.3) 60%, rgb(var(--glass) / 0.62)),
+        var(--frame);
+      box-shadow: 0 4px 0 rgb(var(--cast) / 0.3), 0 0 0 1px rgb(255 255 255 / 0.35);
+    }
+    .cabinet__base {
+      bottom: 0; height: 52px;
+      background:
+        linear-gradient(180deg, var(--glass-hi) 0 1px, transparent 1px calc(100% - 14px), var(--c-hi) calc(100% - 14px) calc(100% - 13px), var(--c-md) calc(100% - 13px) calc(100% - 9px), var(--c-dk) calc(100% - 9px)),
+        linear-gradient(180deg, rgb(255 255 255 / 0.32), rgb(255 255 255 / 0.08) 32%, transparent 34%),
+        linear-gradient(180deg, rgb(var(--glass) / 0.5), rgb(var(--glass) / 0.3)),
+        var(--frame);
+      box-shadow: 0 0 0 1px rgb(255 255 255 / 0.3);
+    }
+    /* pés cromados */
+    .cabinet__base::before, .cabinet__base::after {
+      content: ''; position: absolute; bottom: -8px; width: 42px; height: 10px; border-radius: 0 0 8px 8px; background: var(--chrome-h);
+    }
+    .cabinet__base::before { left: 26px; } .cabinet__base::after { right: 26px; }
+    @media (max-width: 759px) { .cabinet__crown { height: 32px; left: -4px; right: -4px; } .cabinet__base { height: 44px; left: -4px; right: -4px; } }
+
+    /* estantes vizinhas cortadas pela borda (só PC) */
+    .neighbor { display: none; }
+    @media (min-width: 760px) {
+      .neighbor {
+        display: block; position: absolute; top: var(--scn); bottom: 0; width: 620px; z-index: -1; pointer-events: none;
+        background: linear-gradient(rgb(var(--vig) / 0.5), rgb(var(--vig) / 0.5)), var(--neighbor) 0 38px / 480px 250px repeat-y, var(--frame);
+        box-shadow: inset 0 38px 0 rgb(var(--glass) / 0.45), inset 0 39px 0 var(--glass-hi);
+      }
+      .neighbor--l { right: calc(100% + 30px); background-position: 0 0, 20px 38px, 0 0; }
+      .neighbor--r { left: calc(100% + 30px); }
+      [data-tema="vapor"] .neighbor { --neighbor: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='480' height='250'><rect width='480' height='250' fill='%23281257'/><rect x='22' y='44' width='92' height='122' fill='%234a2f8a'/><rect x='22' y='44' width='9' height='122' fill='%232e1a5e'/><rect x='142' y='44' width='92' height='122' fill='%23752a80'/><rect x='142' y='44' width='9' height='122' fill='%234a1a55'/><rect x='262' y='44' width='92' height='122' fill='%23205a80'/><rect x='262' y='44' width='9' height='122' fill='%23143a55'/><rect x='382' y='44' width='92' height='122' fill='%235a2f7a'/><rect x='382' y='44' width='9' height='122' fill='%233a1a52'/><rect y='166' width='480' height='22' fill='%2353b8d8' fill-opacity='.45'/><rect y='166' width='480' height='2' fill='%23a8fbff'/><rect y='186' width='480' height='2' fill='%23ff6ad5' fill-opacity='.7'/><rect y='190' width='480' height='60' fill='%231c0f42'/><g fill='%232e1c66'><rect x='10' y='198' width='104' height='44' rx='5'/><rect x='130' y='198' width='104' height='44' rx='5'/><rect x='250' y='198' width='104' height='44' rx='5'/><rect x='370' y='198' width='104' height='44' rx='5'/></g></svg>"); }
+      [data-tema="aero"] .neighbor { --neighbor: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='480' height='250'><rect width='480' height='250' fill='%23d6eff9'/><rect x='22' y='44' width='92' height='122' fill='%237fb8d6'/><rect x='22' y='44' width='9' height='122' fill='%23609ab8'/><rect x='142' y='44' width='92' height='122' fill='%239acb7a'/><rect x='142' y='44' width='9' height='122' fill='%237aab5a'/><rect x='262' y='44' width='92' height='122' fill='%23c9a3d9'/><rect x='262' y='44' width='9' height='122' fill='%23a983b9'/><rect x='382' y='44' width='92' height='122' fill='%23f2c48a'/><rect x='382' y='44' width='9' height='122' fill='%23d2a46a'/><rect y='166' width='480' height='22' fill='%23aee4fa'/><rect y='166' width='480' height='9' fill='%23fff' fill-opacity='.6'/><rect y='190' width='480' height='60' fill='%23cbe9f6'/><g fill='%23f4fcff'><rect x='10' y='198' width='104' height='44' rx='6'/><rect x='130' y='198' width='104' height='44' rx='6'/><rect x='250' y='198' width='104' height='44' rx='6'/><rect x='370' y='198' width='104' height='44' rx='6'/></g></svg>"); }
+      [data-tema="y2k"] .neighbor { --neighbor: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='480' height='250'><rect width='480' height='250' fill='%23a3abba'/><rect x='22' y='44' width='92' height='122' fill='%236f8fa8'/><rect x='22' y='44' width='9' height='122' fill='%23506f88'/><rect x='142' y='44' width='92' height='122' fill='%23b0806a'/><rect x='142' y='44' width='9' height='122' fill='%23906050'/><rect x='262' y='44' width='92' height='122' fill='%238a78a8'/><rect x='262' y='44' width='9' height='122' fill='%236a5888'/><rect x='382' y='44' width='92' height='122' fill='%2390a868'/><rect x='382' y='44' width='9' height='122' fill='%23708848'/><rect y='166' width='480' height='22' fill='%23e88a3a' fill-opacity='.7'/><rect y='166' width='480' height='2' fill='%23fff'/><rect y='190' width='480' height='60' fill='%23c2c8d2'/><g fill='%23f4f6fa'><rect x='10' y='198' width='104' height='44' rx='4'/><rect x='130' y='198' width='104' height='44' rx='4'/><rect x='250' y='198' width='104' height='44' rx='4'/><rect x='370' y='198' width='104' height='44' rx='4'/></g></svg>"); }
+    }
+
+    /* ---------- Prateleira 3D ---------- */
+    .rack {
+      position: relative; z-index: 1;
+      list-style: none; padding: 0; margin: 0;
+      display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+      background: var(--frame);
+      box-shadow: 0 0 0 2px var(--c-dk);
+    }
+    @media (min-width: 760px) { .rack { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+
+    /* Cada nicho é uma caixa 3D com ponto de fuga único por fileira (as tábuas emendam sem degrau). */
+    .rack__slot {
+      --vx: 100%;
+      --seam: linear-gradient(transparent, transparent);
+      --screw: linear-gradient(transparent, transparent);
+      container-type: inline-size;
+      position: relative; display: flex; flex-direction: column; min-width: 0;
+    }
+    .rack__slot:nth-child(2n) { --vx: 0%; }
+    .rack__slot:nth-child(6n + 4) { --seam: linear-gradient(90deg, rgb(255 255 255 / 0.7) 0 1px, rgb(0 0 0 / 0.2) 1px 2px, transparent 2px); --screw: radial-gradient(circle 5px at 0 13px, var(--c-hi), var(--c-md) 2.5px, var(--c-dk) 4.5px, transparent 5px); }
+    @media (min-width: 760px) {
+      .rack__slot:nth-child(n) { --seam: linear-gradient(transparent, transparent); --screw: linear-gradient(transparent, transparent); }
+      .rack__slot:nth-child(4n + 1) { --vx: 200%; }
+      .rack__slot:nth-child(4n + 2) { --vx: 100%; }
+      .rack__slot:nth-child(4n + 3) { --vx: 0%; }
+      .rack__slot:nth-child(4n + 4) { --vx: -100%; }
+      .rack__slot:nth-child(12n + 7) { --seam: linear-gradient(90deg, rgb(255 255 255 / 0.7) 0 1px, rgb(0 0 0 / 0.2) 1px 2px, transparent 2px); --screw: radial-gradient(circle 5px at 0 13px, var(--c-hi), var(--c-md) 2.5px, var(--c-dk) 4.5px, transparent 5px); }
+    }
+    .rack__slot:hover, .rack__slot:focus-within { z-index: 2; }
+    .rack__slot--ghost.is-pc-only { display: none; }
+    @media (min-width: 760px) { .rack__slot--ghost.is-pc-only { display: flex; } }
+
+    .rack__bay { --D: 30cqw; position: relative; perspective: 900px; perspective-origin: var(--vx) 35%; }
+    /* sombra fina da tábua de cima + fita de LED + o brilho que ela solta no ar */
+    .rack__bay::after {
+      content: ''; position: absolute; z-index: 2; left: 0; right: 0; top: 0; height: 50px; pointer-events: none;
+      background:
+        linear-gradient(180deg, rgb(0 0 0 / 0.3) 0 2px, transparent 2px),
+        linear-gradient(90deg, transparent 2%, var(--led) 2%, var(--led2) 50%, var(--led) 98%, transparent 98%) 0 3px / 100% 2px no-repeat,
+        linear-gradient(180deg, transparent 5px, rgb(var(--led-glow) / 0.3) 5px, rgb(var(--led-glow) / 0.1) 24px, transparent 50px);
+    }
+    /* presilha cromada que segura o vidro nas pontas da fileira */
+    .rack__bay::before {
+      content: none; position: absolute; z-index: 2; top: 6px; width: 12px; height: 16px; pointer-events: none;
+      border-radius: 3px; background: linear-gradient(180deg, var(--c-hi), var(--c-md) 40%, var(--c-lo) 70%, var(--c-hi));
+      box-shadow: 0 1px 0 rgb(0 0 0 / 0.3);
+    }
+    .rack__slot:nth-child(2n + 1) .rack__bay::before { content: ''; left: 0; }
+    .rack__slot:nth-child(2n) .rack__bay::before { content: ''; right: 0; }
+    @media (min-width: 760px) {
+      .rack__slot:nth-child(n) .rack__bay::before { content: none; }
+      .rack__slot:nth-child(4n + 1) .rack__bay::before { content: ''; left: 0; right: auto; }
+      .rack__slot:nth-child(4n) .rack__bay::before { content: ''; right: 0; left: auto; }
+    }
+
+    /* o plano da cena fica na frente da caixa: só a caixa recebe clique */
+    .rack__scene { position: relative; transform-style: preserve-3d; padding: 30px 11% 0; pointer-events: none; }
+    .rack__scene .case { pointer-events: auto; }
+    .rack__face { position: absolute; display: block; pointer-events: none; }
+
+    /* fundo do nicho: aceso junto do LED, escurecendo para o fundo (nunca preto chapado) */
+    .rack__wall {
+      inset: 0; transform: translateZ(calc(var(--D) * -1));
+      background:
+        linear-gradient(180deg, rgb(0 0 0 / 0.22), transparent 12%),
+        radial-gradient(ellipse 90% 62% at 50% 0%, rgb(var(--led-glow) / var(--wall-glow)), transparent 76%),
+        radial-gradient(ellipse 60% 40% at 50% 0%, rgb(var(--led-glow2) / var(--wall-glow2)), transparent 80%),
+        linear-gradient(180deg, rgb(var(--glass) / 0.16), rgb(var(--glass) / 0.08)),
+        linear-gradient(180deg, var(--wall-1), var(--wall-2) 46%, var(--wall-3));
+    }
+    /* sombra macia da caixa na parede (gradiente fixo, sem blur) */
+    .rack__wall::after {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(ellipse 36% 38% at 55% 66%, rgb(var(--wall-shadow) / 0.42), transparent 100%);
+    }
+    .rack__slot--ghost .rack__wall::after { display: none; }
+    /* teto = fundo do vidro de cima; o LED fica preso na quina da frente */
+    .rack__ceil {
+      top: 0; left: 0; right: 0; height: var(--D);
+      transform-origin: top; transform: rotateX(-90deg);
+      background:
+        linear-gradient(180deg, var(--led) 0 2px, rgb(var(--led-glow) / 0.4) 2px 6px, transparent 6px),
+        linear-gradient(180deg, rgb(var(--glass) / 0.5), rgb(var(--glass) / 0.22)),
+        var(--frame);
+    }
+    /* chão = tampo de vidro: translúcido, deixa ver o reflexo da caixa por baixo */
+    .rack__floor {
+      bottom: 0; left: 0; right: 0; height: var(--D);
+      transform-origin: bottom; transform: rotateX(90deg);
+      background:
+        linear-gradient(0deg, var(--glass-hi) 0 2px, rgb(var(--glass) / 0.9) 2px 3px, transparent 3px),
+        radial-gradient(ellipse 46% 34% at 52% 58%, rgb(var(--wall-shadow) / 0.35), transparent 100%),
+        linear-gradient(100deg, transparent 0 22%, rgb(255 255 255 / 0.16) 30% 33%, transparent 42%),
+        var(--seam),
+        linear-gradient(180deg, rgb(var(--glass) / 0.2), rgb(var(--glass) / 0.46) 88%);
+    }
+    .rack__slot--ghost .rack__floor { background-image: linear-gradient(0deg, var(--glass-hi) 0 2px, transparent 2px), var(--seam), linear-gradient(180deg, rgb(var(--glass) / 0.2), rgb(var(--glass) / 0.46) 88%); }
+    /* laterais do móvel, só nas pontas da fileira: vidro lateral */
+    .rack__side { display: none; top: 0; bottom: 0; width: var(--D);
+      background: linear-gradient(90deg, rgb(var(--glass) / 0.45), rgb(var(--glass) / 0.2)), var(--frame); }
+    .rack__side--l { left: 0; transform-origin: left; transform: rotateY(90deg); }
+    .rack__side--r { right: 0; transform-origin: right; transform: rotateY(-90deg); background: linear-gradient(270deg, rgb(var(--glass) / 0.45), rgb(var(--glass) / 0.2)), var(--frame); }
+    .rack__slot:nth-child(2n + 1) .rack__side--l, .rack__slot:nth-child(2n) .rack__side--r { display: block; }
+    @media (min-width: 760px) {
+      .rack__slot:nth-child(n) .rack__side { display: none; }
+      .rack__slot:nth-child(4n + 1) .rack__side--l, .rack__slot:nth-child(4n) .rack__side--r { display: block; }
+    }
+
+    /* A caixa tem o próprio ponto de vista (lombada sempre à mostra) e entra no nicho
+       como um plano em pé no meio da tábua. */
+    .rack__stage {
+      position: relative; transform: translateZ(calc(var(--D) * -0.45));
+      perspective: 640px; perspective-origin: -40% -30%;
+    }
+    /* Reflexo no vidro: box-reflect onde existe (Chromium/Safari) e, sem ele, um reflexo falso
+       com gradiente espelhado na cor da lombada (Firefox). Os dois aparecem através do tampo. */
+    @supports (-webkit-box-reflect: below) {
+      .rack__stage { -webkit-box-reflect: below 0 linear-gradient(transparent 76%, rgb(0 0 0 / 0.58)); }
+    }
+    @supports not (-webkit-box-reflect: below) {
+      .rack__stage::after {
+        content: ''; position: absolute; left: 0; right: 0; top: 100%; height: 20%; pointer-events: none;
+        background: linear-gradient(180deg, hsl(var(--hue, 220) 40% 50% / 0.34), hsl(var(--hue, 220) 40% 60% / 0.08) 70%, transparent);
+      }
+      .rack__slot--ghost .rack__stage::after { content: none; }
+    }
+    .rack__spacer { display: block; aspect-ratio: 3 / 4; }
+
+    /* divisória de plástico translúcido entre gêneros: atrás da caixa, só a aba aparece */
+    .divider {
+      position: absolute; left: -5%; bottom: 0; width: 44%; height: calc(100% + 24px); z-index: 0;
+      background: linear-gradient(100deg, rgb(255 255 255 / 0.45), transparent 34%), var(--tone);
+      box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.5);
+      clip-path: polygon(0 0, 74% 0, 80% 24px, 100% 24px, 100% 100%, 0 100%);
+    }
+    .divider span { position: absolute; top: 6px; left: 7px; font: 800 0.75rem/1 var(--font-ui); letter-spacing: 0.08em; color: #120d2a; }
+    .divider--acao { --tone: var(--div-a); }
+    .divider--coop { --tone: var(--div-b); }
+
+    /* Frente do vidro: quina brilhante, faixa de brilho na metade de cima, filete de luz embaixo.
+       Sem position: assim o reflexo da caixa (que pertence ao nicho) é pintado por cima do vidro. */
+    .rack__plank {
+      height: 26px;
+      background:
+        var(--screw),
+        linear-gradient(180deg, var(--glass-hi) 0 1px, rgb(255 255 255 / 0.55) 1px 2px, transparent 2px),
+        linear-gradient(180deg, rgb(255 255 255 / 0.36), rgb(255 255 255 / 0.1) 46%, transparent 50%),
+        linear-gradient(0deg, rgb(var(--glass) / 0.95) 0 2px, transparent 2px),
+        var(--seam),
+        linear-gradient(180deg, rgb(var(--glass) / 0.52), rgb(var(--glass) / 0.24) 55%, rgb(var(--glass) / 0.5));
+    }
+
+    /* Trilho cromado com a etiqueta de vidro (ou janelinha) encaixada. */
+    .rack__rail {
+      flex: 1; position: relative; z-index: 1; display: flex; padding: 7px 7px 9px;
+      background:
+        linear-gradient(180deg, var(--c-hi) 0 1px, var(--c-md) 1px 3px, var(--c-dk) 3px 4px, transparent 4px),
+        linear-gradient(0deg, var(--c-dk) 0 1px, var(--c-md) 1px 3px, var(--c-hi) 3px 4px, transparent 4px),
+        var(--rail-bg);
+    }
+    .rack__label {
+      flex: 1; position: relative; min-width: 0; overflow: hidden; border-radius: 7px;
+      background:
+        linear-gradient(180deg, rgb(255 255 255 / var(--lg)), rgb(255 255 255 / calc(var(--lg) * 0.35)) 44%, transparent 46%),
+        var(--label-bg);
+      box-shadow: inset 0 0 0 1px var(--label-line), 0 2px 0 rgb(var(--cast) / 0.3);
+      color: var(--label-ink);
+    }
+    /* barra de título de sistema antigo (genérica): vapor e y2k */
+    .rack__bar {
+      display: flex; align-items: center; gap: 6px; height: 20px; padding: 0 4px 0 8px;
+      background:
+        linear-gradient(180deg, rgb(255 255 255 / var(--bar-gloss)) 0 45%, transparent 45%),
+        linear-gradient(90deg, var(--bar-1), var(--bar-2));
+      color: var(--bar-ink); font: 700 0.75rem/1 var(--font-ui); letter-spacing: 0.02em;
+      box-shadow: inset 0 -1px 0 rgb(0 0 0 / 0.25);
+    }
+    .rack__file { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .rack__ctl { display: flex; gap: 3px; margin-left: auto; flex: none; }
+    .rack__ctl i {
+      display: block; width: 13px; height: 12px; border-radius: 3px;
+      background: linear-gradient(180deg, rgb(255 255 255 / 0.85), rgb(255 255 255 / 0.4) 50%, rgb(255 255 255 / 0.6));
+      box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.3);
+    }
+    .rack__ctl i + i { background: linear-gradient(45deg, transparent 42%, rgb(0 0 0 / 0.55) 42% 58%, transparent 58%), linear-gradient(-45deg, transparent 42%, rgb(0 0 0 / 0.55) 42% 58%, transparent 58%), linear-gradient(180deg, rgb(255 255 255 / 0.85), rgb(255 255 255 / 0.4) 50%, rgb(255 255 255 / 0.6)); }
+    .rack__body { display: flex; align-items: center; gap: 8px; padding: 6px 9px 7px; }
+    .rack__txt { min-width: 0; flex: 1; }
+    /* selo "orb" aqua do aero */
+    .rack__orb {
+      display: none; position: relative; flex: none; width: 28px; height: 28px; border-radius: 50%;
+      background:
+        radial-gradient(ellipse 60% 40% at 50% 22%, rgb(255 255 255 / 0.95), rgb(255 255 255 / 0) 70%),
+        linear-gradient(180deg, #2fc0f0, #0a6fb3 62%, #3fb6e6);
+      box-shadow: inset 0 -2px 3px rgb(0 40 80 / 0.3), 0 1px 2px rgb(0 40 80 / 0.4);
+    }
+    .rack__orb::after {
+      content: ''; position: absolute; left: 10px; top: 6px; width: 7px; height: 12px;
+      border: solid #fff; border-width: 0 3px 3px 0; rotate: 42deg;
+    }
+    [data-tema="aero"] .rack__bar { display: none; }
+    [data-tema="aero"] .rack__orb { display: block; }
+    .rack__name { font: 800 1rem/1.2 var(--font-ui); color: var(--label-ink); overflow-wrap: anywhere; text-wrap: balance; }
+    .rack__by, .rack__meta { font: 500 0.8rem/1.3 var(--font-ui); color: var(--label-muted); }
+    .rack__by { margin-top: 2px; }
+    @media (hover: hover) { .rack__slot:hover .rack__name { color: var(--label-hover); } }
+    @media (max-width: 759px) {
+      .rack__rail { padding: 7px 5px 9px; }
+      .rack__body { padding: 5px 7px 6px; gap: 6px; }
+      .rack__orb { width: 18px; height: 18px; }
+      .rack__orb::after { left: 6px; top: 3px; width: 5px; height: 9px; border-width: 0 2px 2px 0; }
+      [data-tema="aero"] .rack__body { gap: 5px; padding-left: 5px; }
+      .rack__name { font-size: 0.95rem; }
+    }
+
+    /* ---------- Adesivos agrupados nos cantos do móvel (decoração, aria-hidden) ---------- */
+    .cluster { position: absolute; z-index: 2; width: 150px; height: 90px; pointer-events: none; }
+    .cluster--tl { left: -12px; top: 2px; }
+    .cluster--tr { right: -10px; top: 4px; width: 130px; }
+    .cluster--br { right: 24px; bottom: 2px; width: 190px; }
+    .decal {
+      position: absolute; display: block; width: var(--w, 50px); pointer-events: none;
+      rotate: var(--r, -4deg);
+      filter: drop-shadow(0 2px 0 rgb(var(--decal-sh) / 0.4));
+    }
+    .decal svg { display: block; width: 100%; height: auto; overflow: visible; }
+    @media (max-width: 759px) {
+      .cluster { scale: 0.6; }
+      .cluster--tl { transform-origin: top left; left: -6px; }
+      .cluster--br { transform-origin: bottom right; right: 4px; }
+      .cluster--tr { display: none; }
+    }
+
+    /* ---------- Caixa fechada (espessura 3D) — a mesma da v1/v2 ---------- */
+    .case {
+      --ry: 18deg; --t: 15cqw;
+      position: relative; display: block; width: 100%; aspect-ratio: 3 / 4;
+      padding: 0; border: 0; background: none; color: inherit; cursor: pointer; font: inherit;
+      transform-style: preserve-3d; transform-origin: 50% 100%;
+      transform: translateY(var(--lift, 0px)) translateZ(var(--tz, 0px))
+                 rotateX(var(--tilt-x, 0deg)) rotateY(calc(var(--ry) + var(--tilt-y, 0deg)));
+      transition: transform 280ms cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    @media (min-width: 760px) { .case { --ry: 24deg; } }
+    @media (hover: hover) { .case:hover { --ry: 0deg; --tz: 34px; --lift: -6px; } }
+    @media (hover: none) { .case:active { --ry: 0deg; --tz: 18px; --lift: -3px; transition-duration: 120ms; } }
+    /* anel duplo: halo de cor oposta por dentro garante o contraste do anel sobre qualquer cena */
+    .case:focus-visible { --ry: 0deg; --tz: 34px; --lift: -6px; outline: 3px solid var(--focus); outline-offset: 4px; box-shadow: 0 0 0 4px var(--focus-halo); }
+
+    .case__face { position: absolute; display: block; backface-visibility: hidden; }
+    .case__front { inset: 0; }
+    .case__front .cover { display: block; box-shadow: none; height: 100%; }
+    /* luz do LED batendo no topo da frente (é luz da cena, não muda a capa) */
+    .case__front::before {
+      content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+      background: linear-gradient(180deg, rgb(var(--led-glow) / 0.22), rgb(var(--led-glow) / 0.05) 22%, transparent 42%);
+    }
+    /* brilho do plástico + reflexo que segue o ponteiro (só PC) */
+    .case__front::after {
+      content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+      background:
+        radial-gradient(circle at var(--sx, 50%) var(--sy, 0%), rgb(255 255 255 / var(--sa, 0)), transparent 48%),
+        linear-gradient(110deg, rgb(255 255 255 / 0.14), transparent 32%);
+      box-shadow: inset 0 0 0 2px rgb(0 0 0 / 0.3);
+    }
+    .case__front .price, .case__front .tag, .case__front .stamp, .case__front .note { z-index: 2; }
+    .case__front .tag { left: 0; }
+
+    /* lombada e lado: plástico translúcido colorido com faixa de brilho */
+    .case__spine {
+      top: 0; bottom: 0; right: 100%; width: var(--t);
+      transform-origin: right center; transform: rotateY(-90deg);
+      display: flex; align-items: center; justify-content: center; overflow: hidden;
+      font: calc(var(--t) * 0.62) / 1 var(--font-display);
+      background:
+        linear-gradient(90deg, transparent 18%, rgb(255 255 255 / 0.42) 24%, rgb(255 255 255 / 0.12) 34%, transparent 40%),
+        linear-gradient(90deg, hsl(var(--hue) var(--spine-s) 18% / 0.86), hsl(var(--hue) var(--spine-s) 32% / 0.8) 45%, hsl(var(--hue) var(--spine-s) 20% / 0.88));
+      box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.3);
+    }
+    .case__spine span {
+      writing-mode: vertical-rl; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      max-height: 90%; color: var(--ink); letter-spacing: 0.04em;
+    }
+    .case__side {
+      top: 0; bottom: 0; left: 100%; width: var(--t);
+      transform-origin: left center; transform: rotateY(90deg);
+      background: linear-gradient(90deg, rgb(255 255 255 / 0.2), transparent 30%), hsl(var(--hue) var(--spine-s) 14% / 0.82);
+    }
+    .case__top {
+      left: 0; right: 0; bottom: 100%; height: var(--t);
+      transform-origin: center bottom; transform: rotateX(90deg);
+      background: linear-gradient(90deg, hsl(var(--hue) var(--spine-s) 36% / 0.84), hsl(var(--hue) var(--spine-s) 24% / 0.86));
+    }
+    /* o topo da caixa pega a luz do LED de cima */
+    .case__top::after { content: ''; position: absolute; inset: 0; background: linear-gradient(0deg, rgb(var(--led-glow) / 0.3), rgb(0 0 0 / 0.2)); }
+
+    /* Celular: caixa maior que a capa plana de hoje (160 px a 390): menos recuo e menos giro. */
+    @media (max-width: 759px) {
+      .rack__bay { --D: 24cqw; }
+      .rack__scene { padding: 26px 2% 0 3%; }
+      .rack__stage { transform: translateZ(calc(var(--D) * -0.3)); }
+      .case { --ry: 11deg; }
+    }
+
+    /* Parallax no celular: o fundo anda mais devagar que as caixas, preso à rolagem. */
+    @supports (animation-timeline: view()) {
+      @media (max-width: 759px) and (prefers-reduced-motion: no-preference) {
+        .store__room { animation: par-wall linear both; animation-timeline: view(); }
+        .rack__stage { animation: par-box linear both; animation-timeline: view(); }
+      }
+    }
+    @keyframes par-wall { from { translate: 0 -40px; } to { translate: 0 40px; } }
+    @keyframes par-box { from { translate: 0 5px; } to { translate: 0 -5px; } }
+
+    /* movimento reduzido: cena parada e completa */
+    @media (prefers-reduced-motion: reduce) {
+      .case { transition: none; }
+      .spark, .bubble, .cd__disc, .lava__blob, .dolphin { animation: none; }
+    }
+  </style>
+  <!-- regra que o parallax do PC atualiza (um seletor, sem mexer em 50 estilos inline) -->
+  <style id="par">.rack__stage {}</style>
+</head>
+<body>
+  <main class="mock">
+    <div class="mock__head">
+      <div class="page-head"><h1>Estante</h1><p class="muted" id="count"></p></div>
+      <nav class="devbar" id="devbar" aria-label="Controles do mock"></nav>
+    </div>
+
+    <section class="store" id="store">
+      <div class="store__room" id="room" aria-hidden="true"></div>
+      <div class="store__floor" aria-hidden="true"><div class="store__plane"></div></div>
+      <div class="store__inner">
+        <div class="cabinet" id="cabinet">
+          <div class="scenery" id="scenery" aria-hidden="true"></div>
+          <div class="neighbor neighbor--l" aria-hidden="true"></div>
+          <div class="neighbor neighbor--r" aria-hidden="true"></div>
+          <div class="cabinet__body" id="body">
+            <span class="cabinet__crown" aria-hidden="true"></span>
+            <ul class="rack" id="rack" aria-label="Estante do clube"></ul>
+            <span class="cabinet__base" aria-hidden="true"></span>
+          </div>
+        </div>
+      </div>
+      <div class="store__fx" id="fx" aria-hidden="true"></div>
+      <div class="store__vignette" aria-hidden="true"></div>
+    </section>
+  </main>
+
+  <script type="module">
+    // Mock: dados falsos e "artes" horizontais em SVG (imitam o background_image do RAWG).
+    const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+
+    const ART = [
+      ['#1d3b53', '#f4a259', '#2b2d42'], ['#3d1c2e', '#ff7a1a', '#120d0b'],
+      ['#0f3d3e', '#b6f03c', '#1a1411'], ['#2c2a4a', '#ff3d6e', '#4f518c'],
+      ['#4a3a30', '#ffc36b', '#2a1d17'], null,
+    ];
+    function fakeArt(colors, seed) {
+      const [sky, sun, hill] = colors;
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360">
+        <rect width="640" height="360" fill="${sky}"/>
+        <circle cx="${200 + (seed * 70) % 300}" cy="120" r="64" fill="${sun}"/>
+        <path d="M0 260 L120 180 L240 250 L380 150 L520 240 L640 190 L640 360 L0 360Z" fill="${hill}"/>
+        <rect x="${80 + (seed * 53) % 400}" y="200" width="36" height="90" fill="${sun}" opacity=".7"/>
+      </svg>`;
+      return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+    }
+
+    const NAMES = ['Corredor Sem Fim', 'Fazendinha do Vale', 'Torre dos Ecos', 'Kart da Firma',
+      'Masmorra 64', 'Detetive de Pijama', 'O Último Ônibus', 'Pássaros Brabos'];
+    const PEOPLE = ['Yuri', 'Bia', 'Caio', 'Duda', 'Léo', 'Mari'];
+
+    function spineHue(name) {
+      let h = 0;
+      for (const ch of name) h = (h * 31 + ch.codePointAt(0)) >>> 0;
+      return h % 360;
+    }
+
+    const params = new URLSearchParams(location.search);
+    const tema = document.documentElement.dataset.tema; // já validado no <head>
+    const n = Math.min(Number(params.get('n')) || 6, 80);
+
+    // ---------- Pixel art própria (só quadradinhos). Nada de logo, personagem ou marca.
+    const BUST = { rows: [
+      '....XXXXXX....', '...XXXXXXXX...', '..XXXWWWWXXX..', '..XXWWWWWWXX..', '..XWWWWWWWWX..', '..XWDDWWDDWX..',
+      '..XWWWWWWWWX..', '..XWWWDDWWWX..', '...XWWWWWWX...', '...XWWddWWX...', '....XWWWWX....', '.....WWWW.....',
+      '...DWWWWWWD...', '.DWWWWWWWWWWD.', 'DWWWWDWWDWWWWD', 'DWWWWWWWWWWWWD'],
+      colors: { X: '#bdb5d6', W: '#f4eef9', D: '#a59ec2', d: '#857ca8' } };
+    const DOLPHIN = { rows: [
+      '........XX......', '.......XXX......', 'X...XXXXXXXXX...', 'XX.XXXXXXXXXXXX.',
+      '.XXXXXXXXXXXkXXX', 'XX.XXLLLLLLLLXX.', 'X....LLLLLLL....'],
+      colors: { X: '#55d6ec', L: '#e9fbff', k: '#1a0838' } };
+
+    function pixelSvg({ rows, colors }) {
+      const w = rows[0].length, h = rows.length;
+      const by = {};
+      rows.forEach((row, y) => [...row].forEach((c, x) => { if (c !== '.') (by[c] ??= []).push(`M${x} ${y}h1v1h-1z`); }));
+      const fills = Object.entries(by).map(([c, d]) => `<path d="${d.join('')}" fill="${colors[c]}"/>`).join('');
+      return `<svg viewBox="0 0 ${w} ${h}" shape-rendering="crispEdges" aria-hidden="true">${fills}</svg>`;
+    }
+
+    // ---------- Desenhos do cenário (formas próprias)
+    const PALM = `<svg viewBox="0 0 160 200" aria-hidden="true"><g fill="#1a0838">
+      <path d="M74 200C78 150 84 110 90 62l8 1c-4 49-10 89-12 137z"/>
+      <path d="M94 60C70 40 40 42 14 62c26-10 52-8 80 2z"/><path d="M94 60c26-22 56-20 64 6-20-14-42-12-64-2z"/>
+      <path d="M94 58C84 30 62 14 40 12c22 12 38 28 52 50z"/><path d="M96 58c12-30 34-42 54-40-20 10-38 24-52 44z"/>
+      <path d="M94 62C76 70 60 92 56 118c14-22 26-38 40-52z"/><path d="M96 62c20 12 32 34 32 60-10-22-22-38-34-56z"/></g></svg>`;
+    const PLANT = `<svg viewBox="0 0 100 150" aria-hidden="true"><defs>
+      <linearGradient id="lf" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c8f76a"/><stop offset=".55" stop-color="#5cc43c"/><stop offset="1" stop-color="#2f8f2e"/></linearGradient>
+      <linearGradient id="pot" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity=".7"/><stop offset=".3" stop-color="#d8f4ff" stop-opacity=".25"/><stop offset=".8" stop-color="#bfeaff" stop-opacity=".3"/><stop offset="1" stop-color="#fff" stop-opacity=".6"/></linearGradient></defs>
+      <g fill="url(#lf)" stroke="#2f8f2e" stroke-width=".8"><path d="M50 98C30 82 18 58 22 30c14 16 24 40 28 68z"/><path d="M50 98c20-18 34-40 32-68-16 16-26 40-32 68z"/>
+      <path d="M50 98c-4-30-2-60 8-90 6 28 2 58-8 90z"/><path d="M50 98C34 94 14 88 4 68c20 4 36 14 46 30z"/><path d="M50 98c16-4 36-8 48-26-20 2-36 10-48 26z"/></g>
+      <g fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="1.4" stroke-linecap="round"><path d="M28 40c6 16 12 32 18 50"/><path d="M76 40c-6 16-14 32-22 50"/><path d="M56 20c0 22-2 44-4 66"/></g>
+      <rect x="20" y="94" width="60" height="54" rx="9" fill="url(#pot)" stroke="#fff" stroke-opacity=".9" stroke-width="1.6"/>
+      <rect x="23" y="112" width="54" height="33" rx="7" fill="#45c3f0" fill-opacity=".4"/>
+      <g fill="#f3e6c8"><circle cx="32" cy="139" r="4"/><circle cx="42" cy="141" r="3.5"/><circle cx="54" cy="139" r="4.5"/><circle cx="66" cy="141" r="3.5"/></g>
+      <rect x="27" y="98" width="5" height="44" rx="2.5" fill="#fff" fill-opacity=".7"/></svg>`;
+    const WATER = `<svg viewBox="0 0 60 92" aria-hidden="true">
+      <path d="M10 36h40l-3 48c0 3-2 5-5 5H18c-3 0-5-2-5-5z" fill="#3ab8f0" fill-opacity=".38"/>
+      <ellipse cx="30" cy="36" rx="20" ry="3" fill="#c8f0ff" fill-opacity=".8"/>
+      <path d="M6 6h48l-5 78c0 4-3 6-6 6H17c-3 0-6-2-6-6z" fill="#e6f8ff" fill-opacity=".22" stroke="#fff" stroke-width="2" stroke-opacity=".95"/>
+      <g fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="1.2"><circle cx="24" cy="70" r="2.4"/><circle cx="34" cy="58" r="1.8"/><circle cx="29" cy="48" r="1.4"/><circle cx="38" cy="76" r="2"/></g>
+      <rect x="12" y="10" width="4" height="70" rx="2" fill="#fff" fill-opacity=".6"/></svg>`;
+    const PENDRIVE = `<svg viewBox="0 0 104 36" aria-hidden="true"><defs>
+      <linearGradient id="usb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff"/><stop offset=".45" stop-color="#b7bfcb"/><stop offset=".55" stop-color="#7d8696"/><stop offset="1" stop-color="#e3e7ed"/></linearGradient></defs>
+      <rect x="72" y="10" width="28" height="16" rx="2" fill="url(#usb)" stroke="#4a5262" stroke-width=".8"/><rect x="80" y="14" width="5" height="4" fill="#4a5262"/><rect x="90" y="14" width="5" height="4" fill="#4a5262"/>
+      <rect x="4" y="5" width="72" height="26" rx="11" fill="#8cd22a" fill-opacity=".72" stroke="#fff" stroke-width="1.6"/>
+      <rect x="22" y="11" width="44" height="14" rx="3" fill="#2f6b1e" fill-opacity=".55"/><rect x="36" y="14" width="12" height="8" fill="#14182a" fill-opacity=".7"/>
+      <circle cx="14" cy="18" r="4" fill="none" stroke="#fff" stroke-width="1.6"/><circle cx="60" cy="13" r="1.8" fill="#ff5f8f"/>
+      <rect x="8" y="8" width="62" height="5" rx="2.5" fill="#fff" fill-opacity=".5"/></svg>`;
+    const BLOB = (d, id) => `<svg viewBox="0 0 200 200" aria-hidden="true"><defs>
+      <linearGradient id="${id}" x1="0" y1="0" x2=".4" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".28" stop-color="#c4cbd6"/><stop offset=".42" stop-color="#5e6778"/><stop offset=".52" stop-color="#eef1f5"/><stop offset=".72" stop-color="#9aa4b2"/><stop offset="1" stop-color="#f4f6f9"/></linearGradient></defs>
+      <path d="${d}" fill="url(#${id})" stroke="#4a5262" stroke-width="1.5"/><path d="M60 52c18-14 44-16 60-6" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" opacity=".8"/></svg>`;
+    const STAR4 = (fill) => `<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M50 2C54 38 62 46 98 50 62 54 54 62 50 98 46 62 38 54 2 50 38 46 46 38 50 2Z" fill="${fill}" stroke="#4a5262" stroke-width="2"/></svg>`;
+
+    const cd = (cls) => `<span class="cd ${cls}"><span class="cd__disc"></span></span>`;
+    const monitor = () => `<div class="monitor"><span class="monitor__body"><span class="monitor__screen">
+        <span class="monitor__feed" style="background-image:url('${fakeArt(ART[3], 3)}')"></span></span></span><span class="monitor__foot"></span></div>`;
+
+    // Cenário por tema: fundo (sala), objetos em cima do móvel e o que flutua.
+    const ROOM = {
+      vapor: `<span class="sun"><span class="sun__disc"></span></span><span class="palm palm--l">${PALM}</span><span class="palm palm--r">${PALM}</span><span class="palm palm--s">${PALM}</span>`,
+      aero: `<span class="hill hill--l"></span><span class="hill hill--r"></span>`,
+      y2k: `<span class="blob blob--l">${BLOB('M100 14c40-6 82 22 84 62s-30 52-26 84-44 40-74 24-66-6-70-46 8-50 30-74 22-46 56-50z', 'bl')}</span>
+        <span class="blob blob--r">${BLOB('M70 20c30-16 76-8 96 24s4 60 20 90-20 60-60 56-48-24-80-36-38-50-18-82 12-36 42-52z', 'br')}</span>
+        <span class="blob blob--s">${BLOB('M100 20c44 0 80 36 80 80s-36 80-80 80-80-36-80-80 36-80 80-80z', 'bs')}</span>`,
+    };
+    const SCENERY = {
+      vapor: `<div class="sign"><span class="sign__chrome">ZERADOS</span><span class="sign__kana">ゲーム・クラブ</span></div>
+        ${monitor()}${cd('cd--vapor')}
+        <div class="bust-set"><span class="checker"></span><span class="plinth"></span><span class="bust">${pixelSvg(BUST)}</span></div>
+        <span class="dolphin">${pixelSvg(DOLPHIN)}</span>`,
+      aero: `<div class="sign"><span class="sign__chrome">ZERADOS</span></div>
+        <span class="plant">${PLANT}</span><span class="water">${WATER}</span>
+        <span class="discs"><span></span><span></span><span></span><span></span><span></span><span></span></span>${cd('cd--aero')}`,
+      y2k: `<div class="sign"><span class="sign__chrome">ZERADOS</span><span class="sign__sub">EDIÇÃO 2003</span></div>
+        ${monitor()}
+        <span class="lava"><span class="lava__cap"></span><span class="lava__glass"><span class="lava__blob lava__blob--a"></span><span class="lava__blob lava__blob--b"></span><span class="lava__blob lava__blob--c"></span></span><span class="lava__base"></span></span>
+        ${cd('cd--y2k')}
+        <span class="spindle"><span class="spindle__base"></span><span class="spindle__stack"></span><span class="spindle__dome"></span></span>
+        <span class="pendrive">${PENDRIVE}</span>
+        <span class="barcode"><span class="barcode__bars"></span>© 2003</span>`,
+    };
+    const FX = {
+      vapor: `<span class="spark" style="left:9%;top:120px;--s:22px"></span><span class="spark is-pc" style="left:30%;top:40px;--s:14px;--spark:#ffd1f1;animation-delay:-4s"></span>
+        <span class="spark" style="right:12%;top:150px;--s:18px;animation-delay:-7s"></span><span class="spark is-pc" style="right:28%;top:60px;--s:12px;--spark:#ffd1f1;animation-delay:-2s"></span>
+        <span class="spark is-pc" style="left:3%;top:620px;--s:16px;animation-delay:-9s"></span>`,
+      aero: `<span class="bubble" style="left:4%;top:120px;--s:34px"></span><span class="bubble is-pc" style="left:24%;top:120px;--s:20px;animation-delay:-5s"></span>
+        <span class="bubble is-pc" style="right:3%;top:330px;--s:26px;animation-delay:-9s"></span><span class="bubble is-pc" style="right:22%;top:70px;--s:16px;animation-delay:-3s"></span>
+        <span class="bubble is-pc" style="left:3%;top:640px;--s:24px;animation-delay:-11s"></span>
+        <span class="ring is-pc" style="right:18%;top:110px;--s:30px"></span><span class="ring is-pc" style="right:24%;top:150px;--s:16px"></span><span class="ring is-pc" style="right:30%;top:180px;--s:44px"></span>`,
+      y2k: `<span class="spark" style="left:12%;top:40px;--s:24px;--spark:#e3e7ee"></span><span class="spark is-pc" style="left:34%;top:150px;--s:14px;--spark:#ffd1f1;animation-delay:-5s"></span>
+        <span class="spark" style="right:8%;top:30px;--s:20px;--spark:#c4f4ff;animation-delay:-8s"></span><span class="spark is-pc" style="right:31%;top:150px;--s:12px;--spark:#fff5b3;animation-delay:-3s"></span>
+        <span class="bubble is-pc" style="right:3%;top:560px;--s:22px;animation-delay:-6s"></span>`,
+    };
+
+    // ---------- Adesivos: formas genéricas próprias (estrela, coração, smiley, seta, balão, selo)
+    function poly(points, r1, r2, cx = 50, cy = 52, rot = -90) {
+      let d = '';
+      for (let k = 0; k < points * 2; k++) {
+        const r = k % 2 ? r2 : r1, a = (rot + (k * 180) / points) * Math.PI / 180;
+        d += `${k ? 'L' : 'M'}${(cx + r * Math.cos(a)).toFixed(1)} ${(cy + r * Math.sin(a)).toFixed(1)}`;
+      }
+      return d + 'Z';
+    }
+    const SHAPES = {
+      star5: poly(5, 48, 21),
+      star4: 'M50 2C54 38 62 46 98 50 62 54 54 62 50 98 46 62 38 54 2 50 38 46 46 38 50 2Z',
+      heart: 'M50 90C20 68 6 52 6 33 6 18 17 8 30 8c10 0 16 6 20 14 4-8 10-14 20-14 13 0 24 10 24 25 0 19-14 35-44 57Z',
+      smiley: 'M50 4a46 46 0 1 1 0 92 46 46 0 1 1 0-92Z',
+      arrow: 'M6 36h52V14l38 36-38 36V64H6Z',
+      balloon: 'M14 10h72c6 0 10 4 10 10v38c0 6-4 10-10 10H46L26 90l4-22H14c-6 0-10-4-10-10V20c0-6 4-10 10-10Z',
+      seal: poly(14, 48, 39, 50, 50),
+    };
+    const INK = '#1a1033';
+    let uid = 0;
+    function sticker([kind, fill, style]) {
+      const [shape, text] = kind.split(':');
+      const d = SHAPES[shape], id = `clip${uid++}`;
+      let extra = '';
+      if (shape === 'smiley') extra = `<ellipse cx="36" cy="40" rx="6" ry="9" fill="${INK}"/><ellipse cx="64" cy="40" rx="6" ry="9" fill="${INK}"/><path d="M28 60q22 22 44 0" fill="none" stroke="${INK}" stroke-width="7" stroke-linecap="round"/>`;
+      if (text) extra = `<text x="50" y="${shape === 'balloon' ? 48 : 59}" text-anchor="middle" font-family="M PLUS Rounded 1c, Barlow, sans-serif" font-weight="800" font-size="${text.length > 3 ? 23 : 28}" fill="${INK}">${esc(text)}</text>`;
+      return `<span class="decal" style="${style}"><svg viewBox="0 0 100 100" aria-hidden="true"><defs><clipPath id="${id}"><path d="${d}"/></clipPath></defs>
+        <path d="${d}" fill="#fff" stroke="#fff" stroke-width="12" stroke-linejoin="round"/><path d="${d}" fill="${fill}"/>
+        <g clip-path="url(#${id})"><ellipse cx="34" cy="16" rx="50" ry="24" fill="#fff" opacity=".42"/></g>${extra}</svg></span>`;
+    }
+    // 3 ou 4 sobrepostos em cada canto escolhido, nunca espalhados.
+    const DECALS = {
+      vapor: {
+        tl: [['seal:NEW!', '#ffe86b', 'left:2px;top:2px;--r:-10deg;--w:62px'], ['heart', '#ff6ad5', 'left:54px;top:-8px;--r:9deg;--w:48px'],
+          ['balloon:lol', '#c9a8ff', 'left:18px;top:44px;--r:-4deg;--w:60px'], ['star4', '#7ff8ff', 'left:100px;top:6px;--r:12deg;--w:34px']],
+        tr: [['smiley', '#7ff8ff', 'right:46px;top:-6px;--r:-8deg;--w:46px'], ['arrow', '#ff6ad5', 'right:2px;top:14px;--r:12deg;--w:46px'], ['star5', '#ffe86b', 'right:30px;top:40px;--r:-6deg;--w:38px']],
+        br: [['seal:BETA', '#7ff8ff', 'right:64px;bottom:6px;--r:-6deg;--w:62px'], ['star4', '#ffffff', 'right:34px;bottom:40px;--r:8deg;--w:30px'],
+          ['heart', '#c9a8ff', 'right:132px;bottom:4px;--r:-12deg;--w:40px'], ['balloon:gg', '#ffe86b', 'right:4px;bottom:2px;--r:7deg;--w:56px']],
+      },
+      aero: {
+        tl: [['seal:NEW!', '#9be84f', 'left:2px;top:2px;--r:-8deg;--w:62px'], ['smiley', '#7fe0ff', 'left:56px;top:-6px;--r:10deg;--w:46px'],
+          ['star5', '#ffe066', 'left:22px;top:46px;--r:-14deg;--w:40px'], ['arrow', '#5fb8ff', 'left:96px;top:30px;--r:6deg;--w:42px']],
+        tr: [['heart', '#ff8fc0', 'right:44px;top:-4px;--r:-10deg;--w:44px'], ['balloon:oi!', '#ffffff', 'right:0;top:10px;--r:6deg;--w:56px'], ['star4', '#bff3ff', 'right:44px;top:42px;--r:0deg;--w:30px']],
+        br: [['seal:100%', '#7fe0ff', 'right:62px;bottom:6px;--r:-6deg;--w:64px'], ['star4', '#ffffff', 'right:40px;bottom:44px;--r:12deg;--w:28px'],
+          ['heart', '#9be84f', 'right:134px;bottom:4px;--r:-10deg;--w:40px'], ['smiley', '#ffe066', 'right:6px;bottom:0;--r:9deg;--w:46px']],
+      },
+      y2k: {
+        tl: [['seal:100%', '#ff9a3c', 'left:2px;top:2px;--r:-10deg;--w:64px'], ['heart', '#ff5f8f', 'left:58px;top:-6px;--r:9deg;--w:46px'],
+          ['star4', '#e3e7ee', 'left:22px;top:48px;--r:-6deg;--w:38px'], ['smiley', '#a6e23a', 'left:98px;top:12px;--r:12deg;--w:40px']],
+        tr: [['star5', '#c9a8ff', 'right:44px;top:-6px;--r:-8deg;--w:44px'], ['arrow', '#38c6e6', 'right:0;top:16px;--r:10deg;--w:46px'], ['seal:BETA', '#a6e23a', 'right:38px;top:40px;--r:-4deg;--w:52px']],
+        br: [['balloon:gg', '#ffffff', 'right:66px;bottom:6px;--r:-5deg;--w:60px'], ['star4', '#38c6e6', 'right:40px;bottom:44px;--r:10deg;--w:30px'],
+          ['heart', '#c9a8ff', 'right:136px;bottom:2px;--r:-12deg;--w:40px'], ['seal:NEW!', '#ff5f8f', 'right:2px;bottom:0;--r:8deg;--w:58px']],
+      },
+    };
+    const cluster = (pos, items) => `<div class="cluster cluster--${pos}" aria-hidden="true">${items.map(sticker).join('')}</div>`;
+
+    // Faces fixas do nicho.
+    const faces = () => `<span class="rack__face rack__wall" aria-hidden="true"></span><span class="rack__face rack__ceil" aria-hidden="true"></span><span class="rack__face rack__floor" aria-hidden="true"></span><span class="rack__face rack__side rack__side--l" aria-hidden="true"></span><span class="rack__face rack__side rack__side--r" aria-hidden="true"></span>`;
+
+    const divider = (i) => i % 7 === 2 ? '<span class="divider divider--acao" aria-hidden="true"><span>AÇÃO</span></span>'
+      : i % 7 === 5 ? '<span class="divider divider--coop" aria-hidden="true"><span>COOP</span></span>' : '';
+
+    function caseSlot(i) {
+      const name = NAMES[i % NAMES.length] + (i >= NAMES.length ? ` ${Math.floor(i / NAMES.length) + 1}` : '');
+      const colors = ART[i % ART.length];
+      const url = colors ? fakeArt(colors, i) : '';
+      const score = (6 + ((i * 37) % 40) / 10).toFixed(1).replace('.', ',');
+      const img = url ? `<img src="${url}" alt="" loading="lazy" decoding="async">` : '';
+      return `
+        <li class="rack__slot">
+          <div class="rack__bay"><div class="rack__scene">
+            ${faces()}
+            <div class="rack__stage" style="--hue:${spineHue(name)}">
+              ${divider(i)}
+              <button type="button" class="case" aria-haspopup="dialog" aria-label="Abrir a caixa de ${esc(name)}">
+                <span class="case__face case__front">
+                  <span class="cover">${img}<span class="cover__blank" ${url ? 'hidden' : ''}>${esc(name)}</span></span>
+                  <span class="price">${score}</span>
+                  <span class="tag">Fase ${i + 1}</span>
+                </span>
+                <span class="case__face case__spine" aria-hidden="true"><span>${esc(name)}</span></span>
+                <span class="case__face case__side" aria-hidden="true"></span>
+                <span class="case__face case__top" aria-hidden="true"></span>
+              </button>
+            </div>
+          </div></div>
+          <div class="rack__plank" aria-hidden="true"></div>
+          <div class="rack__rail">
+            <div class="rack__label">
+              <span class="rack__bar" aria-hidden="true"><span class="rack__file">fase_${String(i + 1).padStart(2, '0')}.exe</span><span class="rack__ctl"><i></i><i></i></span></span>
+              <div class="rack__body">
+                <span class="rack__orb" aria-hidden="true"></span>
+                <div class="rack__txt">
+                  <h3 class="rack__name">${esc(name)}</h3>
+                  <p class="rack__by">sugestão de ${PEOPLE[i % PEOPLE.length]}</p>
+                  <p class="rack__meta">Nota média ${score} · ${2 + (i % 5)} notas</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </li>`;
+    }
+
+    // Completa a última tábua com espaços vazios: 4 por tábua no PC, 2 no celular.
+    function ghosts(count) {
+      const pc = (4 - (count % 4)) % 4;
+      const mobile = count % 2;
+      return Array.from({ length: pc }, (_, i) => `
+        <li class="rack__slot rack__slot--ghost ${i >= mobile ? 'is-pc-only' : ''}" aria-hidden="true">
+          <div class="rack__bay"><div class="rack__scene">${faces()}<div class="rack__stage"><span class="rack__spacer"></span></div></div></div>
+          <div class="rack__plank"></div>
+          <div class="rack__rail"></div>
+        </li>`).join('');
+    }
+
+    // Barra de desenvolvimento: cada link preserva o outro parâmetro.
+    const link = (t, q, label) => `<a href="?tema=${t}&n=${q}"${t === tema && q === n ? ' aria-current="page"' : ''}>${label}</a>`;
+    document.getElementById('devbar').innerHTML = `
+      <span class="devbar__group">tema: ${link('vapor', n, 'vapor')}${link('aero', n, 'aero')}${link('y2k', n, 'y2k')}</span>
+      <span class="devbar__group">caixas: ${link(tema, 6, '6')}${link(tema, 50, '50 (teste de fluidez)')}</span>`;
+
+    document.getElementById('rack').innerHTML = Array.from({ length: n }, (_, i) => caseSlot(i)).join('') + ghosts(n);
+    document.getElementById('count').textContent = `${n} jogos zerados pelo clube`;
+    document.getElementById('room').innerHTML = ROOM[tema];
+    document.getElementById('scenery').innerHTML = SCENERY[tema];
+    document.getElementById('fx').innerHTML = FX[tema];
+
+    const d = DECALS[tema];
+    const drops = tema === 'aero'
+      ? '<span class="drop" aria-hidden="true" style="left:18%;top:12px"></span><span class="drop" aria-hidden="true" style="left:62%;top:20px;scale:.7"></span><span class="drop" aria-hidden="true" style="right:14%;bottom:24px;scale:.85"></span>'
+      : '';
+    document.getElementById('body').insertAdjacentHTML('beforeend', cluster('tl', d.tl) + cluster('tr', d.tr) + cluster('br', d.br) + drops);
+
+    const fine = matchMedia('(hover: hover) and (pointer: fine) and (min-width: 760px)').matches;
+    const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // Tilt leve + reflexo que segue o ponteiro, só no PC e sem reduced-motion.
+    if (fine && !calm) {
+      const rack = document.getElementById('rack');
+      let current = null, last = null, frame = 0;
+      const reset = (el) => ['--tilt-x', '--tilt-y', '--sx', '--sy', '--sa'].forEach((p) => el.style.removeProperty(p));
+      rack.addEventListener('pointermove', (e) => {
+        const btn = e.target.closest('.case');
+        if (current && current !== btn) reset(current);
+        current = btn; last = e;
+        if (!btn || frame) return;
+        frame = requestAnimationFrame(() => {
+          frame = 0;
+          if (!current) return;
+          const r = current.parentElement.getBoundingClientRect();
+          const x = (last.clientX - r.left) / r.width - 0.5;
+          const y = (last.clientY - r.top) / r.height - 0.5;
+          current.style.setProperty('--tilt-y', `${(x * 12).toFixed(2)}deg`);
+          current.style.setProperty('--tilt-x', `${(-y * 8).toFixed(2)}deg`);
+          current.style.setProperty('--sx', `${((x + 0.5) * 100).toFixed(1)}%`);
+          current.style.setProperty('--sy', `${((y + 0.5) * 100).toFixed(1)}%`);
+          current.style.setProperty('--sa', '0.2');
+        });
+      });
+      rack.addEventListener('pointerleave', () => { if (current) reset(current); current = null; });
+
+      // Parallax em camadas pelo ponteiro: o fundo vai com o olho, o que flutua e as caixas
+      // vão contra, o móvel fica parado (âncora). Só transform: nada de layout.
+      const room = document.getElementById('room');
+      const fx = document.getElementById('fx');
+      const stageRule = document.getElementById('par').sheet.cssRules[0].style;
+      let px = 0, py = 0, pframe = 0;
+      addEventListener('pointermove', (e) => {
+        px = e.clientX / innerWidth - 0.5; py = e.clientY / innerHeight - 0.5;
+        if (pframe) return;
+        pframe = requestAnimationFrame(() => {
+          pframe = 0;
+          room.style.transform = `translate3d(${(px * 18).toFixed(1)}px, ${(py * 10).toFixed(1)}px, 0)`;
+          stageRule.translate = `${(px * -5).toFixed(1)}px ${(py * -3).toFixed(1)}px`;
+          fx.style.transform = `translate3d(${(px * -24).toFixed(1)}px, ${(py * -12).toFixed(1)}px, 0)`;
+        });
+      }, { passive: true });
+    }
+  </script>
+</body>
+</html>

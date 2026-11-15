@@ -1,282 +1,56 @@
 {
-  "schemaVersion": 2,
-  "generatedAt": "2026-11-14T00:43:50.095Z",
-  "title": "Design System: Clube dos Jogos",
   "extensions": {
-    "colorMeta": {
-      "ground": {
-        "role": "neutral",
-        "displayName": "Chão da Loja",
-        "canonical": "oklch(19.8% 0.012 48.1)",
-        "tonalRamp": [
-          "oklch(15% 0.005 48.1)",
-          "oklch(25% 0.008 48.1)",
-          "oklch(35% 0.012 48.1)",
-          "oklch(48% 0.012 48.1)",
-          "oklch(60% 0.012 48.1)",
-          "oklch(72% 0.009 48.1)",
-          "oklch(84% 0.005 48.1)",
-          "oklch(95% 0.003 48.1)"
-        ]
-      },
-      "shelf": {
-        "role": "neutral",
-        "displayName": "Prateleira",
-        "canonical": "oklch(25.8% 0.018 48.0)",
-        "tonalRamp": [
-          "oklch(15% 0.008 48.0)",
-          "oklch(25% 0.013 48.0)",
-          "oklch(35% 0.018 48.0)",
-          "oklch(48% 0.018 48.0)",
-          "oklch(60% 0.018 48.0)",
-          "oklch(72% 0.014 48.0)",
-          "oklch(84% 0.008 48.0)",
-          "oklch(95% 0.005 48.0)"
-        ]
-      },
-      "edge": {
-        "role": "neutral",
-        "displayName": "Fórmica",
-        "canonical": "oklch(36.3% 0.028 53.6)",
-        "tonalRamp": [
-          "oklch(15% 0.012 53.6)",
-          "oklch(25% 0.020 53.6)",
-          "oklch(35% 0.028 53.6)",
-          "oklch(48% 0.028 53.6)",
-          "oklch(60% 0.028 53.6)",
-          "oklch(72% 0.023 53.6)",
-          "oklch(84% 0.013 53.6)",
-          "oklch(95% 0.007 53.6)"
-        ]
-      },
-      "lip": {
-        "role": "neutral",
-        "displayName": "Beiço de Madeira",
-        "canonical": "oklch(41.8% 0.037 60.2)",
-        "tonalRamp": [
-          "oklch(15% 0.016 60.2)",
-          "oklch(25% 0.027 60.2)",
-          "oklch(35% 0.037 60.2)",
-          "oklch(48% 0.037 60.2)",
-          "oklch(60% 0.037 60.2)",
-          "oklch(72% 0.030 60.2)",
-          "oklch(84% 0.017 60.2)",
-          "oklch(95% 0.009 60.2)"
-        ]
-      },
-      "deep": {
-        "role": "neutral",
-        "displayName": "Fundo do Estojo",
-        "canonical": "oklch(16.5% 0.010 43.0)",
-        "tonalRamp": [
-          "oklch(15% 0.004 43.0)",
-          "oklch(25% 0.007 43.0)",
-          "oklch(35% 0.010 43.0)",
-          "oklch(48% 0.010 43.0)",
-          "oklch(60% 0.010 43.0)",
-          "oklch(72% 0.008 43.0)",
-          "oklch(84% 0.004 43.0)",
-          "oklch(95% 0.002 43.0)"
-        ]
-      },
-      "ink": {
-        "role": "neutral",
-        "displayName": "Tinta Clara",
-        "canonical": "oklch(95.5% 0.016 79.4)",
-        "tonalRamp": [
-          "oklch(15% 0.007 79.4)",
-          "oklch(25% 0.012 79.4)",
-          "oklch(35% 0.016 79.4)",
-          "oklch(48% 0.016 79.4)",
-          "oklch(60% 0.016 79.4)",
-          "oklch(72% 0.013 79.4)",
-          "oklch(84% 0.008 79.4)",
-          "oklch(95% 0.004 79.4)"
-        ]
-      },
-      "muted": {
-        "role": "neutral",
-        "displayName": "Tinta Gasta",
-        "canonical": "oklch(81.2% 0.028 72.7)",
-        "tonalRamp": [
-          "oklch(15% 0.012 72.7)",
-          "oklch(25% 0.020 72.7)",
-          "oklch(35% 0.028 72.7)",
-          "oklch(48% 0.028 72.7)",
-          "oklch(60% 0.028 72.7)",
-          "oklch(72% 0.023 72.7)",
-          "oklch(84% 0.013 72.7)",
-          "oklch(95% 0.007 72.7)"
-        ]
-      },
-      "orange": {
-        "role": "secondary",
-        "displayName": "Laranja de Etiqueta",
-        "canonical": "oklch(72.4% 0.187 48.9)",
-        "tonalRamp": [
-          "oklch(15% 0.080 48.9)",
-          "oklch(25% 0.133 48.9)",
-          "oklch(35% 0.187 48.9)",
-          "oklch(48% 0.187 48.9)",
-          "oklch(60% 0.187 48.9)",
-          "oklch(72% 0.149 48.9)",
-          "oklch(84% 0.085 48.9)",
-          "oklch(95% 0.047 48.9)"
-        ]
-      },
-      "lime": {
-        "role": "primary",
-        "displayName": "Limão de Destaque",
-        "canonical": "oklch(88.4% 0.206 126.4)",
-        "tonalRamp": [
-          "oklch(15% 0.088 126.4)",
-          "oklch(25% 0.147 126.4)",
-          "oklch(35% 0.206 126.4)",
-          "oklch(48% 0.206 126.4)",
-          "oklch(60% 0.206 126.4)",
-          "oklch(72% 0.165 126.4)",
-          "oklch(84% 0.094 126.4)",
-          "oklch(95% 0.052 126.4)"
-        ]
-      },
-      "pink": {
-        "role": "tertiary",
-        "displayName": "Rosa de Tarja",
-        "canonical": "oklch(66.5% 0.228 11.9)",
-        "tonalRamp": [
-          "oklch(15% 0.098 11.9)",
-          "oklch(25% 0.163 11.9)",
-          "oklch(35% 0.228 11.9)",
-          "oklch(48% 0.228 11.9)",
-          "oklch(60% 0.228 11.9)",
-          "oklch(72% 0.182 11.9)",
-          "oklch(84% 0.104 11.9)",
-          "oklch(95% 0.057 11.9)"
-        ]
-      },
-      "amber": {
-        "role": "tertiary",
-        "displayName": "Âmbar de Aviso",
-        "canonical": "oklch(85.4% 0.126 75.2)",
-        "tonalRamp": [
-          "oklch(15% 0.054 75.2)",
-          "oklch(25% 0.090 75.2)",
-          "oklch(35% 0.126 75.2)",
-          "oklch(48% 0.126 75.2)",
-          "oklch(60% 0.126 75.2)",
-          "oklch(72% 0.101 75.2)",
-          "oklch(84% 0.057 75.2)",
-          "oklch(95% 0.031 75.2)"
-        ]
-      },
-      "paper": {
-        "role": "neutral",
-        "displayName": "Papel de Ficha",
-        "canonical": "oklch(94.3% 0.035 92.8)",
-        "tonalRamp": [
-          "oklch(15% 0.015 92.8)",
-          "oklch(25% 0.025 92.8)",
-          "oklch(35% 0.035 92.8)",
-          "oklch(48% 0.035 92.8)",
-          "oklch(60% 0.035 92.8)",
-          "oklch(72% 0.028 92.8)",
-          "oklch(84% 0.016 92.8)",
-          "oklch(95% 0.009 92.8)"
-        ]
-      },
-      "paper-ink": {
-        "role": "neutral",
-        "displayName": "Tinta de Ficha",
-        "canonical": "oklch(24.5% 0.023 45.9)",
-        "tonalRamp": [
-          "oklch(15% 0.010 45.9)",
-          "oklch(25% 0.017 45.9)",
-          "oklch(35% 0.023 45.9)",
-          "oklch(48% 0.023 45.9)",
-          "oklch(60% 0.023 45.9)",
-          "oklch(72% 0.019 45.9)",
-          "oklch(84% 0.011 45.9)",
-          "oklch(95% 0.006 45.9)"
-        ]
-      },
-      "paper-muted": {
-        "role": "neutral",
-        "displayName": "Lápis de Ficha",
-        "canonical": "oklch(37.7% 0.030 50.5)",
-        "tonalRamp": [
-          "oklch(15% 0.013 50.5)",
-          "oklch(25% 0.022 50.5)",
-          "oklch(35% 0.030 50.5)",
-          "oklch(48% 0.030 50.5)",
-          "oklch(60% 0.030 50.5)",
-          "oklch(72% 0.024 50.5)",
-          "oklch(84% 0.014 50.5)",
-          "oklch(95% 0.008 50.5)"
-        ]
-      },
-      "stamp": {
-        "role": "neutral",
-        "displayName": "Carimbo Vermelho",
-        "canonical": "oklch(50.2% 0.180 16.1)",
-        "tonalRamp": [
-          "oklch(15% 0.077 16.1)",
-          "oklch(25% 0.128 16.1)",
-          "oklch(35% 0.180 16.1)",
-          "oklch(48% 0.180 16.1)",
-          "oklch(60% 0.180 16.1)",
-          "oklch(72% 0.144 16.1)",
-          "oklch(84% 0.082 16.1)",
-          "oklch(95% 0.045 16.1)"
-        ]
-      }
-    },
     "typographyMeta": {
       "display": {
-        "displayName": "Display",
-        "purpose": "h1 de cada tela."
+        "displayName": "Display (placa)",
+        "purpose": "h1 de cada tela: FASE N, ESTANTE, STATS, BALCÃO."
       },
       "headline": {
         "displayName": "Headline",
-        "purpose": "Títulos de seção (h2)."
+        "purpose": "Títulos de seção (NA PRATELEIRA); o nome do vencedor sobe de tamanho."
       },
-      "logo": {
-        "displayName": "Logo",
-        "purpose": "Marca Clube dos Jogos, sempre laranja."
-      },
-      "title-pixel": {
-        "displayName": "Title pixel",
+      "title-plate": {
+        "displayName": "Placa de título",
         "purpose": "Título da ficha, de painel, de estado vazio e valor dos fatos."
       },
       "number": {
-        "displayName": "Number",
-        "purpose": "Notas, médias e contagens; adesivo numérico."
+        "displayName": "Número",
+        "purpose": "Notas, médias e contagens; número sozinho em adesivo."
       },
       "title": {
-        "displayName": "Title",
-        "purpose": "Nome do jogo no card (h3)."
+        "displayName": "Título",
+        "purpose": "Nome do jogo em card e títulos menores."
       },
       "body": {
-        "displayName": "Body",
-        "purpose": "Texto corrido e UI, até 68ch."
+        "displayName": "Corpo",
+        "purpose": "Texto corrido, até 68ch."
+      },
+      "meta": {
+        "displayName": "Meta",
+        "purpose": "Metadados curtos: ano · gênero, quem sugeriu, contagens, rodapé."
       },
       "label": {
-        "displayName": "Label",
-        "purpose": "Etapas, tarja, carimbo da ficha, pílula, rótulo de fato; caixa alta."
+        "displayName": "Rótulo",
+        "purpose": "Faixa de etapas, tarja, pílula, rótulo dos fatos (caixa alta)."
       },
       "stamp": {
-        "displayName": "Stamp",
-        "purpose": "Carimbo sobre a capa; caixa alta."
+        "displayName": "Carimbo",
+        "purpose": "Carimbos sobre a capa e na ficha."
+      },
+      "typed": {
+        "displayName": "Datilografado",
+        "purpose": "Corpo da ficha do sócio e do manual; só sobre papel."
       },
       "hand": {
-        "displayName": "Hand",
-        "purpose": "Etiqueta de preço, adesivo de frase, bilhete, próxima ação da ficha."
+        "displayName": "À mão",
+        "purpose": "Etiqueta de preço, adesivo, post-it, bilhete e a linha do que falta."
       }
     },
     "shadows": [
       {
         "name": "estojo",
         "value": "0 6px 0 var(--deep)",
-        "purpose": "Capas."
+        "purpose": "Capas, TV, móvel: sombra dura de objeto."
       },
       {
         "name": "ficha",
@@ -284,203 +58,464 @@
         "purpose": "Ficha do sócio."
       },
       {
-        "name": "papel-solto",
+        "name": "papel",
         "value": "0 4px 0 var(--deep)",
-        "purpose": "Confirmação e fatos do jogo."
+        "purpose": "Papel solto: confirmação, fatos, post-it, manual."
       },
       {
         "name": "adesivo",
         "value": "0 3px 0 var(--deep)",
-        "purpose": "Adesivos de nota."
+        "purpose": "Etiqueta de preço, adesivo, chip, ticket."
       },
       {
         "name": "bilhete",
         "value": "0 3px 6px rgb(0 0 0 / 0.45)",
-        "purpose": "Bilhete \"esse é seu, calma\" colado na capa."
+        "purpose": "Bilhete que flutua sobre a capa (sombra macia)."
       },
       {
         "name": "aviso",
         "value": "0 6px 12px rgb(0 0 0 / 0.55), 0 2px 3px rgb(0 0 0 / 0.5)",
-        "purpose": "Toast (--shadow-box)."
+        "purpose": "Toast."
       }
     ],
     "motion": [
       {
-        "name": "ui-state",
-        "value": "120ms ease-out",
-        "purpose": "Fundo, cor e deslocamento de botões."
+        "name": "sai",
+        "value": "cubic-bezier(0.2, 0.8, 0.2, 1)",
+        "purpose": "Curva assinatura: entradas, voo da caixinha, cascatas (260ms em controles, 560–760ms em voos)."
       },
       {
-        "name": "stamp-hit",
+        "name": "na-tela",
+        "value": "cubic-bezier(0.65, 0, 0.35, 1)",
+        "purpose": "Movimento que começa e termina na tela: tampa abrindo e fechando, folha do calendário."
+      },
+      {
+        "name": "entra-rapido",
+        "value": "cubic-bezier(0.4, 0, 1, 1)",
+        "purpose": "Saídas e sumiços (140–200ms)."
+      },
+      {
+        "name": "gravidade",
+        "value": "cubic-bezier(0.55, 0, 1, 0.45)",
+        "purpose": "Queda de objetos."
+      },
+      {
+        "name": "carimbo-bate",
         "value": "420ms cubic-bezier(0.16, 1, 0.3, 1)",
-        "purpose": "Carimbo batendo na capa (de rotate -24deg scale 1.9 para -12deg scale 1)."
+        "purpose": "Carimbo batendo na capa (escala 1.9 para 1)."
       },
       {
-        "name": "roulette-tick",
-        "value": "60ms linear",
-        "purpose": "Capa acesa na roleta do desempate."
+        "name": "controle",
+        "value": "120ms ease-out",
+        "purpose": "Hover de botão, campo e link (fundo e cor)."
       },
       {
-        "name": "reduced-motion",
-        "value": "1ms",
-        "purpose": "Com prefers-reduced-motion toda animação e transição cai para 1ms."
+        "name": "ambiente",
+        "value": "ciclo de 5s ou mais, só opacity e transform",
+        "purpose": "Respiração da TV, poeira, faixa de pano; desliga em reduced-motion e contraste alto."
       }
     ],
     "focus": [
       {
-        "name": "foco-prateleira",
-        "value": "outline: 3px solid var(--lime); outline-offset: 3px",
-        "purpose": "Padrão sobre fundo escuro."
+        "name": "parede",
+        "value": "outline: 3px solid var(--amber); outline-offset: 3px",
+        "purpose": "Foco padrão."
       },
       {
-        "name": "foco-papel",
+        "name": "papel",
         "value": "outline-color: var(--paper-ink)",
-        "purpose": "Dentro de ficha, confirmação e fatos."
+        "purpose": "Dentro de ficha, confirmação, fatos, manual, folha e página."
       },
       {
-        "name": "foco-campo",
-        "value": "outline: 3px solid var(--lime); outline-offset: 1px; border-color: var(--lime)",
+        "name": "campo",
+        "value": "outline: 3px solid var(--amber); outline-offset: 1px",
         "purpose": "Campos de texto."
       }
     ],
     "breakpoints": [
       {
-        "name": "field-row",
-        "value": "560px"
+        "name": "faixa-2x2",
+        "value": "440px",
+        "purpose": "Abaixo disso a faixa de etapas vira 2×2."
       },
       {
-        "name": "desktop",
-        "value": "760px"
+        "name": "pares",
+        "value": "560px",
+        "purpose": "Pares de campos lado a lado."
+      },
+      {
+        "name": "pc",
+        "value": "760px",
+        "purpose": "Quebra principal: prateleira de 2 para 4 colunas, TV ao lado, mesa larga."
+      },
+      {
+        "name": "pc-estreito",
+        "value": "900px",
+        "purpose": "Entre 760 e 900 a faixa ao lado da TV volta a 2×2."
       }
-    ]
+    ],
+    "colorMeta": {
+      "ground": {
+        "role": "neutral",
+        "displayName": "Parede",
+        "canonical": "#140b10",
+        "tonalRamp": [
+          "hsl(327 19% 15%)",
+          "hsl(327 21% 25%)",
+          "hsl(327 24% 36%)",
+          "hsl(327 27% 48%)",
+          "hsl(327 28% 60%)",
+          "hsl(327 25% 72%)",
+          "hsl(327 21% 84%)",
+          "hsl(327 19% 95%)"
+        ]
+      },
+      "shelf": {
+        "role": "neutral",
+        "displayName": "Prateleira",
+        "canonical": "#1e1218",
+        "tonalRamp": [
+          "hsl(330 16% 15%)",
+          "hsl(330 18% 25%)",
+          "hsl(330 21% 36%)",
+          "hsl(330 23% 48%)",
+          "hsl(330 24% 60%)",
+          "hsl(330 21% 72%)",
+          "hsl(330 18% 84%)",
+          "hsl(330 16% 95%)"
+        ]
+      },
+      "wood": {
+        "role": "neutral",
+        "displayName": "Madeira",
+        "canonical": "#3b2417",
+        "tonalRamp": [
+          "hsl(22 28% 15%)",
+          "hsl(22 32% 25%)",
+          "hsl(22 36% 36%)",
+          "hsl(22 41% 48%)",
+          "hsl(22 42% 60%)",
+          "hsl(22 37% 72%)",
+          "hsl(22 32% 84%)",
+          "hsl(22 28% 95%)"
+        ]
+      },
+      "lip": {
+        "role": "neutral",
+        "displayName": "Beiço de Madeira",
+        "canonical": "#6b4a2f",
+        "tonalRamp": [
+          "hsl(27 25% 15%)",
+          "hsl(27 28% 25%)",
+          "hsl(27 32% 36%)",
+          "hsl(27 37% 48%)",
+          "hsl(27 37% 60%)",
+          "hsl(27 33% 72%)",
+          "hsl(27 29% 84%)",
+          "hsl(27 25% 95%)"
+        ]
+      },
+      "edge": {
+        "role": "neutral",
+        "displayName": "Fórmica",
+        "canonical": "#7a6153",
+        "tonalRamp": [
+          "hsl(22 12% 15%)",
+          "hsl(22 14% 25%)",
+          "hsl(22 16% 36%)",
+          "hsl(22 18% 48%)",
+          "hsl(22 18% 60%)",
+          "hsl(22 16% 72%)",
+          "hsl(22 14% 84%)",
+          "hsl(22 12% 95%)"
+        ]
+      },
+      "deep": {
+        "role": "neutral",
+        "displayName": "Fundo do Estojo",
+        "canonical": "#0c0609",
+        "tonalRamp": [
+          "hsl(330 21% 15%)",
+          "hsl(330 24% 25%)",
+          "hsl(330 28% 36%)",
+          "hsl(330 31% 48%)",
+          "hsl(330 32% 60%)",
+          "hsl(330 28% 72%)",
+          "hsl(330 25% 84%)",
+          "hsl(330 21% 95%)"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Tinta Clara",
+        "canonical": "#f3e6d8",
+        "tonalRamp": [
+          "hsl(31 34% 15%)",
+          "hsl(31 39% 25%)",
+          "hsl(31 44% 36%)",
+          "hsl(31 50% 48%)",
+          "hsl(31 51% 60%)",
+          "hsl(31 45% 72%)",
+          "hsl(31 39% 84%)",
+          "hsl(31 34% 95%)"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Tinta Gasta",
+        "canonical": "#c9b5a8",
+        "tonalRamp": [
+          "hsl(24 15% 15%)",
+          "hsl(24 17% 25%)",
+          "hsl(24 19% 36%)",
+          "hsl(24 22% 48%)",
+          "hsl(24 22% 60%)",
+          "hsl(24 20% 72%)",
+          "hsl(24 17% 84%)",
+          "hsl(24 15% 95%)"
+        ]
+      },
+      "amber": {
+        "role": "primary",
+        "displayName": "Âmbar de Abajur",
+        "canonical": "#ffc15e",
+        "tonalRamp": [
+          "hsl(37 64% 15%)",
+          "hsl(37 73% 25%)",
+          "hsl(37 83% 36%)",
+          "hsl(37 94% 48%)",
+          "hsl(37 96% 60%)",
+          "hsl(37 85% 72%)",
+          "hsl(37 74% 84%)",
+          "hsl(37 64% 95%)"
+        ]
+      },
+      "pink": {
+        "role": "secondary",
+        "displayName": "Rosa de Neon",
+        "canonical": "#ff5c8a",
+        "tonalRamp": [
+          "hsl(343 64% 15%)",
+          "hsl(343 73% 25%)",
+          "hsl(343 83% 36%)",
+          "hsl(343 94% 48%)",
+          "hsl(343 96% 60%)",
+          "hsl(343 85% 72%)",
+          "hsl(343 74% 84%)",
+          "hsl(343 64% 95%)"
+        ]
+      },
+      "teal": {
+        "role": "secondary",
+        "displayName": "Teal de TV",
+        "canonical": "#46c3b5",
+        "tonalRamp": [
+          "hsl(173 33% 15%)",
+          "hsl(173 37% 25%)",
+          "hsl(173 42% 36%)",
+          "hsl(173 48% 48%)",
+          "hsl(173 49% 60%)",
+          "hsl(173 43% 72%)",
+          "hsl(173 38% 84%)",
+          "hsl(173 33% 95%)"
+        ]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Papel de Ficha",
+        "canonical": "#f4ecd2",
+        "tonalRamp": [
+          "hsl(46 39% 15%)",
+          "hsl(46 44% 25%)",
+          "hsl(46 50% 36%)",
+          "hsl(46 57% 48%)",
+          "hsl(46 58% 60%)",
+          "hsl(46 51% 72%)",
+          "hsl(46 45% 84%)",
+          "hsl(46 39% 95%)"
+        ]
+      },
+      "paper-ink": {
+        "role": "neutral",
+        "displayName": "Tinta de Ficha",
+        "canonical": "#2a1d17",
+        "tonalRamp": [
+          "hsl(19 19% 15%)",
+          "hsl(19 21% 25%)",
+          "hsl(19 24% 36%)",
+          "hsl(19 27% 48%)",
+          "hsl(19 28% 60%)",
+          "hsl(19 25% 72%)",
+          "hsl(19 22% 84%)",
+          "hsl(19 19% 95%)"
+        ]
+      },
+      "paper-muted": {
+        "role": "neutral",
+        "displayName": "Lápis de Ficha",
+        "canonical": "#4f3d33",
+        "tonalRamp": [
+          "hsl(21 14% 15%)",
+          "hsl(21 16% 25%)",
+          "hsl(21 18% 36%)",
+          "hsl(21 20% 48%)",
+          "hsl(21 21% 60%)",
+          "hsl(21 18% 72%)",
+          "hsl(21 16% 84%)",
+          "hsl(21 14% 95%)"
+        ]
+      },
+      "stamp": {
+        "role": "tertiary",
+        "displayName": "Carimbo Vermelho",
+        "canonical": "#b3213f",
+        "tonalRamp": [
+          "hsl(348 44% 15%)",
+          "hsl(348 50% 25%)",
+          "hsl(348 57% 36%)",
+          "hsl(348 65% 48%)",
+          "hsl(348 66% 60%)",
+          "hsl(348 58% 72%)",
+          "hsl(348 51% 84%)",
+          "hsl(348 44% 95%)"
+        ]
+      }
+    }
   },
   "components": [
     {
       "name": "Botão primário",
       "kind": "button",
       "refersTo": "button-primary",
-      "description": "Ação principal da tela ou do card (votar, sugerir, salvar).",
-      "html": "<button class=\"ds-btn ds-btn--primary\">Separar este</button>",
-      "css": ".ds-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:8px 16px;border-radius:var(--radius,4px);border:2px solid var(--ink,#f6efe4);background:transparent;color:var(--ink,#f6efe4);font:700 1rem/1.5 var(--font-body,'Barlow',system-ui,sans-serif);cursor:pointer;transition:background-color 120ms ease-out,color 120ms ease-out,transform 120ms ease-out}.ds-btn:hover{background:var(--ink,#f6efe4);color:var(--deep,#120d0b)}.ds-btn:active{transform:translateY(1px)}.ds-btn:focus-visible{outline:3px solid var(--lime,#b6f03c);outline-offset:3px}.ds-btn--primary{background:var(--lime,#b6f03c);border-color:var(--lime,#b6f03c);color:var(--deep,#120d0b)}.ds-btn--primary:hover{background:var(--ink,#f6efe4);border-color:var(--ink,#f6efe4)}"
+      "description": "Ação principal: âmbar de abajur, Atkinson 700.",
+      "html": "<button class=\"ds-btn ds-btn-primary\">Abrir votação</button>",
+      "css": ".ds-btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:44px; padding:8px 16px; border:2px solid var(--ink); border-radius:4px; background:transparent; color:var(--ink); font:700 1rem/1.2 var(--f-texto); cursor:pointer; transition:background-color 120ms ease-out, color 120ms ease-out, border-color 120ms ease-out; } .ds-btn-primary { background:var(--amber); border-color:var(--amber); color:var(--deep); } .ds-btn-primary:hover { background:var(--ink); border-color:var(--ink); } .ds-btn:focus-visible { outline:3px solid var(--amber); outline-offset:3px; } .ds-btn:active { transform:translateY(1px); }"
     },
     {
       "name": "Botão secundário",
       "kind": "button",
       "refersTo": "button-secondary",
-      "description": "Ação secundária de contorno sobre a prateleira.",
-      "html": "<button class=\"ds-btn\">Cancelar</button>",
-      "css": ".ds-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:8px 16px;border-radius:var(--radius,4px);border:2px solid var(--ink,#f6efe4);background:transparent;color:var(--ink,#f6efe4);font:700 1rem/1.5 var(--font-body,'Barlow',system-ui,sans-serif);cursor:pointer;transition:background-color 120ms ease-out,color 120ms ease-out,transform 120ms ease-out}.ds-btn:hover{background:var(--ink,#f6efe4);color:var(--deep,#120d0b)}.ds-btn:active{transform:translateY(1px)}.ds-btn:focus-visible{outline:3px solid var(--lime,#b6f03c);outline-offset:3px}"
+      "description": "Contorno em tinta clara; hover preenche.",
+      "html": "<button class=\"ds-btn2\">Cancelar</button>",
+      "css": ".ds-btn2 { min-height:44px; padding:8px 16px; border:2px solid var(--ink); border-radius:4px; background:transparent; color:var(--ink); font:700 1rem/1.2 var(--f-texto); cursor:pointer; transition:background-color 120ms ease-out, color 120ms ease-out; } .ds-btn2:hover { background:var(--ink); color:var(--deep); } .ds-btn2:focus-visible { outline:3px solid var(--amber); outline-offset:3px; }"
     },
     {
       "name": "Botão de perigo",
       "kind": "button",
       "refersTo": "button-danger",
-      "description": "Ação destrutiva; sempre seguida de confirmação na página.",
-      "html": "<button class=\"ds-btn ds-btn--danger\">Apagar</button>",
-      "css": ".ds-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:8px 16px;border-radius:var(--radius,4px);border:2px solid var(--ink,#f6efe4);background:transparent;color:var(--ink,#f6efe4);font:700 1rem/1.5 var(--font-body,'Barlow',system-ui,sans-serif);cursor:pointer;transition:background-color 120ms ease-out,color 120ms ease-out,transform 120ms ease-out}.ds-btn:hover{background:var(--ink,#f6efe4);color:var(--deep,#120d0b)}.ds-btn:active{transform:translateY(1px)}.ds-btn:focus-visible{outline:3px solid var(--lime,#b6f03c);outline-offset:3px}.ds-btn--danger{border-color:var(--pink,#ff3d6e);color:var(--pink,#ff3d6e)}.ds-btn--danger:hover{background:var(--pink,#ff3d6e);color:var(--deep,#120d0b)}"
+      "description": "Ações que apagam ou voltam etapa; confirmadas numa ficha de papel.",
+      "html": "<button class=\"ds-btn-perigo\">Tirar da prateleira</button>",
+      "css": ".ds-btn-perigo { min-height:44px; padding:8px 16px; border:2px solid var(--pink); border-radius:4px; background:transparent; color:var(--pink); font:700 1rem/1.2 var(--f-texto); cursor:pointer; transition:background-color 120ms ease-out, color 120ms ease-out; } .ds-btn-perigo:hover { background:var(--pink); color:var(--deep); } .ds-btn-perigo:focus-visible { outline:3px solid var(--amber); outline-offset:3px; }"
     },
     {
       "name": "Campo de texto",
       "kind": "input",
       "refersTo": "input",
-      "description": "Campo sobre fundo deep com foco limão.",
-      "html": "<label class=\"ds-field\"><span>Nome do jogo</span><input class=\"ds-input\" placeholder=\"Busca ou digita à mão\"></label>",
-      "css": ".ds-field{display:grid;gap:6px;font:700 1rem/1.5 var(--font-body,'Barlow',system-ui,sans-serif);color:var(--ink,#f6efe4)}.ds-input{width:100%;min-height:44px;padding:10px 12px;border-radius:var(--radius,4px);background:var(--deep,#120d0b);border:2px solid var(--edge,#4a3a30);color:var(--ink,#f6efe4);font:400 1rem/1.5 var(--font-body,'Barlow',system-ui,sans-serif)}.ds-input::placeholder{color:#a8998a}.ds-input:hover{border-color:var(--lip,#5c4838)}.ds-input:focus-visible{outline:3px solid var(--lime,#b6f03c);outline-offset:1px;border-color:var(--lime,#b6f03c)}"
+      "description": "Fundo do estojo, borda de fórmica; foco âmbar.",
+      "html": "<label class=\"ds-field\"><span>Nova pergunta</span><input class=\"ds-input\" placeholder=\"Ex.: o final fez sentido?\"></label>",
+      "css": ".ds-field { display:grid; gap:6px; color:var(--ink); font:700 1rem/1.4 var(--f-texto); } .ds-input { min-height:44px; padding:10px 12px; border:2px solid var(--edge); border-radius:4px; background:var(--deep); color:var(--ink); font:400 1rem/1.4 var(--f-texto); } .ds-input:hover { border-color:var(--lip); } .ds-input:focus-visible { outline:3px solid var(--amber); outline-offset:1px; border-color:var(--amber); }"
     },
     {
       "name": "Navegação",
       "kind": "nav",
       "refersTo": "nav-link",
-      "description": "Links Rodada/Estante/Stats; o atual é um bloco limão.",
-      "html": "<nav class=\"ds-nav\"><a href=\"#\" aria-current=\"page\">Rodada <span class=\"ds-count\">3</span></a><a href=\"#\">Estante</a><a href=\"#\">Stats</a></nav>",
-      "css": ".ds-nav{display:flex;gap:2px;background:var(--ground,#1a1411);padding:8px}.ds-nav a{color:var(--muted,#cdbfae);text-decoration:none;font:600 .95rem/1.5 var(--font-body,'Barlow',system-ui,sans-serif);padding:8px 12px;border-radius:var(--radius,4px);min-height:44px;display:inline-flex;align-items:center;gap:6px}.ds-nav a:hover{color:var(--ink,#f6efe4);background:var(--shelf,#2b211c)}.ds-nav a:focus-visible{outline:3px solid var(--lime,#b6f03c);outline-offset:3px}.ds-nav a[aria-current=page]{color:var(--deep,#120d0b);background:var(--lime,#b6f03c)}.ds-count{background:var(--pink,#ff3d6e);color:var(--deep,#120d0b);font-size:.75rem;font-weight:700;border-radius:999px;padding:0 7px}.ds-nav a[aria-current=page] .ds-count{background:var(--deep,#120d0b);color:var(--lime,#b6f03c)}"
+      "description": "Links muted; a página atual é um bloco âmbar; contador rosa.",
+      "html": "<nav class=\"ds-nav\"><a href=\"#\" aria-current=\"page\">Rodada</a><a href=\"#\">Estante</a><a href=\"#\">Stats</a><a href=\"#\">Admin <span class=\"ds-count\">1</span></a></nav>",
+      "css": ".ds-nav { display:flex; gap:4px; } .ds-nav a { display:flex; align-items:center; gap:6px; min-height:44px; padding:8px 12px; border-radius:4px; color:var(--muted); font:600 0.95rem/1.2 var(--f-texto); text-decoration:none; transition:background-color 120ms ease-out, color 120ms ease-out; } .ds-nav a:hover { background:var(--shelf); color:var(--ink); } .ds-nav a[aria-current=page] { background:var(--amber); color:var(--deep); } .ds-count { padding:0 6px; border-radius:999px; background:var(--pink); color:var(--deep); font:700 0.75rem/1.5 var(--f-texto); } .ds-nav a:focus-visible { outline:3px solid var(--amber); outline-offset:3px; }"
     },
     {
       "name": "Faixa de etapas",
       "kind": "custom",
       "refersTo": "steps-item",
-      "description": "Único eixo do tempo: concluídas riscadas em laranja, atual em limão.",
-      "html": "<ol class=\"ds-steps\"><li class=\"is-done\">Sugerindo</li><li class=\"is-now\">Votando</li><li>Jogando</li><li>Encerrada</li></ol>",
-      "css": ".ds-steps{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.ds-steps li{text-align:center;font:700 .75rem/1.3 var(--font-body,'Barlow',system-ui,sans-serif);text-transform:uppercase;letter-spacing:.04em;padding:9px 2px;background:var(--shelf,#2b211c);border-radius:var(--radius,4px);color:var(--muted,#cdbfae)}.ds-steps .is-done{color:var(--ink,#f6efe4);text-decoration:line-through;text-decoration-color:var(--orange,#ff7a1a);text-decoration-thickness:2px}.ds-steps .is-now{background:var(--lime,#b6f03c);color:var(--deep,#120d0b)}"
+      "description": "O único eixo do tempo: concluída riscada em teal, atual em âmbar.",
+      "html": "<ol class=\"ds-faixa\"><li class=\"feita\">Sugerindo</li><li aria-current=\"step\">Votando</li><li>Jogando</li><li>Encerrada</li></ol>",
+      "css": ".ds-faixa { list-style:none; padding:0; margin:0; display:grid; grid-template-columns:repeat(4,1fr); gap:6px; } .ds-faixa li { padding:9px 8px; border-radius:4px; background:var(--shelf); color:var(--muted); text-align:center; font:700 0.75rem/1.3 var(--f-texto); letter-spacing:0.06em; text-transform:uppercase; } .ds-faixa .feita { color:var(--ink); text-decoration:line-through 2px var(--teal); } .ds-faixa [aria-current=step] { background:var(--amber); color:var(--deep); }"
     },
     {
       "name": "Ficha do sócio",
       "kind": "card",
       "refersTo": "ficha",
-      "description": "Papel girado com a próxima ação e o carimbo de status.",
-      "html": "<div class=\"ds-ficha\"><h3 class=\"ds-ficha__title\">Ficha do sócio</h3><span class=\"ds-ficha__stamp\">Votou</span><p class=\"ds-ficha__todo\">Falta você marcar as datas</p><button class=\"ds-ficha__btn\">Marcar datas</button></div>",
-      "css": ".ds-ficha{position:relative;background:var(--paper,#f4ecd2);color:var(--paper-ink,#2a1d17);padding:16px 16px 18px;transform:rotate(-.6deg);box-shadow:0 5px 0 var(--deep,#120d0b);max-width:420px}.ds-ficha__title{font:400 1.75rem/1 var(--font-display,'Jersey 10',sans-serif);padding-right:100px;margin:0}.ds-ficha__todo{font:1.25rem/1.35 var(--font-hand,'Permanent Marker',cursive);margin:8px 0 12px}.ds-ficha__stamp{position:absolute;right:12px;top:12px;transform:rotate(-6deg);border:3px solid var(--stamp,#b3213f);color:var(--stamp,#b3213f);font:700 .75rem/1.3 var(--font-body,'Barlow',system-ui,sans-serif);letter-spacing:.08em;padding:2px 7px;text-transform:uppercase}.ds-ficha__btn{min-height:44px;padding:8px 16px;border-radius:4px;border:2px solid var(--paper-ink,#2a1d17);background:var(--paper-ink,#2a1d17);color:var(--paper,#f4ecd2);font:700 1rem/1.5 var(--font-body,'Barlow',system-ui,sans-serif);cursor:pointer}.ds-ficha__btn:hover{background:var(--stamp,#b3213f);border-color:var(--stamp,#b3213f)}.ds-ficha__btn:focus-visible{outline:3px solid var(--paper-ink,#2a1d17);outline-offset:3px}"
+      "description": "Papel creme girado com carimbo vermelho e a próxima ação à mão.",
+      "html": "<section class=\"ds-ficha\"><span class=\"ds-ficha__carimbo\">Votando</span><h2 class=\"ds-ficha__titulo\">Ficha do sócio</h2><p class=\"ds-ficha__socio\">Sócio: Bia</p><p class=\"ds-ficha__falta\">Separa todo jogo que você toparia jogar.</p><p>Você votou em 2 de 5.</p></section>",
+      "css": ".ds-ficha { position:relative; max-width:520px; padding:16px 16px 18px; background:var(--paper); color:var(--paper-ink); transform:rotate(-0.6deg); box-shadow:0 5px 0 var(--deep); font:400 0.95rem/1.35 var(--f-dati); } .ds-ficha__titulo { margin:0; padding-right:112px; font:400 1.75rem/1 var(--f-placa); letter-spacing:0.05em; } .ds-ficha__socio { margin:6px 0 0; color:var(--paper-muted); text-transform:uppercase; } .ds-ficha__falta { margin:12px 0 6px; font:400 1.25rem/1.3 var(--f-mao); } .ds-ficha__carimbo { position:absolute; top:14px; right:14px; padding:2px 8px; border:3px solid currentColor; color:var(--stamp); transform:rotate(-6deg); font:800 1rem/1.3 var(--f-texto); letter-spacing:0.12em; text-transform:uppercase; }"
     },
     {
-      "name": "Capa na prateleira",
-      "kind": "card",
+      "name": "Capa genérica com etiqueta",
+      "kind": "custom",
       "refersTo": "cover",
-      "description": "Capa 3:4 com sombra dura, etiqueta de preço, tarja e carimbo, sobre o beiço.",
-      "html": "<div class=\"ds-shelf\"><div class=\"ds-box\"><div class=\"ds-cover\"><span class=\"ds-cover__blank\">Nome do jogo</span><span class=\"ds-price\">8,5</span><span class=\"ds-tag\">Curto · Solo</span><span class=\"ds-stamp\">Separado</span></div><h3 class=\"ds-box__name\">Nome do jogo</h3></div></div><div class=\"ds-lip\"></div>",
-      "css": ".ds-shelf{background:var(--shelf,#2b211c);padding:16px 12px 0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.ds-box{position:relative;padding-bottom:16px}.ds-cover{position:relative;aspect-ratio:3/4;background:var(--deep,#120d0b);box-shadow:0 6px 0 var(--deep,#120d0b)}.ds-cover__blank{position:absolute;inset:0;display:flex;align-items:end;padding:10px;font:1.8rem/.9 var(--font-display,'Jersey 10',sans-serif);color:var(--ink,#f6efe4);background:repeating-linear-gradient(135deg,var(--deep,#120d0b) 0 12px,#1e1714 12px 24px)}.ds-price{position:absolute;top:-8px;right:-6px;background:var(--orange,#ff7a1a);color:var(--deep,#120d0b);font:1.15rem/1.3 var(--font-hand,'Permanent Marker',cursive);padding:2px 10px;transform:rotate(5deg)}.ds-tag{position:absolute;left:-6px;top:16px;background:var(--pink,#ff3d6e);color:var(--deep,#120d0b);font:700 .75rem/1.3 var(--font-body,'Barlow',system-ui,sans-serif);letter-spacing:.04em;padding:2px 8px;text-transform:uppercase}.ds-stamp{position:absolute;top:36%;left:50%;transform:translate(-50%,-50%) rotate(-12deg);font:700 1rem/1.3 var(--font-body,'Barlow',system-ui,sans-serif);letter-spacing:.12em;text-transform:uppercase;padding:4px 10px;border:3px solid currentColor;background:rgb(26 20 17/.85);color:var(--lime,#b6f03c);white-space:nowrap}.ds-box__name{margin:14px 0 0;color:var(--ink,#f6efe4);font:700 1.15rem/1.25 var(--font-body,'Barlow',system-ui,sans-serif)}.ds-lip{height:14px;background:var(--lip,#5c4838);border-bottom:6px solid var(--edge,#4a3a30)}"
+      "description": "Capa 3:4 por código (cor por hash, faixas diagonais, nome em Bebas), etiqueta de preço à mão e carimbo.",
+      "html": "<div class=\"ds-capa\"><span class=\"ds-capa__nome\">Hollow Knight</span><span class=\"ds-preco\">R$ 47</span><span class=\"ds-carimbo\">Vencedor</span></div>",
+      "css": ".ds-capa { position:relative; width:180px; aspect-ratio:3/4; background:linear-gradient(135deg, transparent 0 56%, #d9b45a 56% 60%, transparent 60% 64%, #d9b45a 64% 68%, transparent 68% 72%, #d9b45a 72% 76%, transparent 76%), #33452a; box-shadow:0 6px 0 var(--deep); } .ds-capa__nome { position:absolute; left:7%; right:7%; bottom:6%; padding:4px 6px 2px; background:var(--deep); color:var(--ink); font:400 1.3rem/0.95 var(--f-placa); letter-spacing:0.04em; } .ds-preco { position:absolute; right:-6px; top:-8px; padding:2px 10px; transform:rotate(5deg); background:var(--amber); color:var(--deep); font:400 1.1rem/1.3 var(--f-mao); box-shadow:0 3px 0 var(--deep); } .ds-carimbo { position:absolute; left:50%; top:42%; padding:4px 10px; border:3px solid currentColor; background:rgb(20 11 16 / 0.85); color:var(--amber); font:800 1rem/1.3 var(--f-texto); letter-spacing:0.12em; text-transform:uppercase; transform:translate(-50%,-50%) rotate(-12deg); }"
     },
     {
-      "name": "Adesivos",
-      "kind": "chip",
-      "refersTo": "sticker",
-      "description": "Frase em marcador; número sozinho em pixel.",
-      "html": "<span class=\"ds-sticker\">média 8,5</span> <span class=\"ds-sticker ds-sticker--num\">9</span>",
-      "css": ".ds-sticker{display:inline-block;background:var(--orange,#ff7a1a);color:var(--deep,#120d0b);font:1.25rem/1.3 var(--font-hand,'Permanent Marker',cursive);padding:2px 10px;transform:rotate(-3deg);box-shadow:0 3px 0 var(--deep,#120d0b);white-space:nowrap}.ds-sticker--num{font:1.6rem/1.1 var(--font-display,'Jersey 10',sans-serif);padding:2px 10px 0}"
+      "name": "Ticket de voto",
+      "kind": "button",
+      "description": "Canhoto, picote e corpo; votar rasga o corpo e cola a etiqueta VOTADO na capa.",
+      "html": "<button class=\"ds-ticket\" type=\"button\" aria-pressed=\"false\"><span class=\"ds-ticket__canhoto\">Nº 0412</span><span class=\"ds-ticket__corpo\"><b>Votar</b><small>admite 1</small></span></button>",
+      "css": ".ds-ticket { display:grid; grid-template-columns:78px 1fr; width:220px; min-height:54px; padding:0; border:0; background:none; color:var(--deep); cursor:pointer; transition:translate 120ms ease-out; } .ds-ticket:hover { translate:0 -2px; } .ds-ticket:focus-visible { outline:3px solid var(--amber); outline-offset:3px; } .ds-ticket__canhoto, .ds-ticket__corpo { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:6px 8px; background:var(--amber); box-shadow:0 3px 0 var(--deep); } .ds-ticket__canhoto { border-right:2px dashed rgb(12 6 9 / 0.45); font:400 0.75rem/1.15 var(--f-dati); } .ds-ticket__corpo { outline:2px solid rgb(12 6 9 / 0.3); outline-offset:-6px; } .ds-ticket__corpo b { font:400 1.6rem/1 var(--f-placa); letter-spacing:0.14em; } .ds-ticket__corpo small { font:400 0.75rem/1 var(--f-dati); text-transform:uppercase; }"
     },
     {
       "name": "Confirmação na página",
-      "kind": "custom",
+      "kind": "card",
       "refersTo": "confirm",
-      "description": "Ficha de papel abaixo do botão no lugar de window.confirm.",
-      "html": "<div class=\"ds-confirm\" role=\"alertdialog\" aria-label=\"Confirmação\"><p>Apagar esta sugestão?</p><button class=\"ds-c-btn ds-c-btn--ok\">Apagar</button> <button class=\"ds-c-btn\">Cancelar</button></div>",
-      "css": ".ds-confirm{padding:12px 14px;background:var(--paper,#f4ecd2);color:var(--paper-ink,#2a1d17);transform:rotate(-.4deg);box-shadow:0 4px 0 var(--deep,#120d0b);max-width:520px}.ds-confirm p{font:700 1rem/1.5 var(--font-body,'Barlow',system-ui,sans-serif);margin:0 0 10px}.ds-c-btn{min-height:44px;padding:8px 16px;border-radius:4px;border:2px solid var(--paper-ink,#2a1d17);background:transparent;color:var(--paper-ink,#2a1d17);font:700 1rem/1.5 var(--font-body,'Barlow',system-ui,sans-serif);cursor:pointer}.ds-c-btn--ok{background:var(--paper-ink,#2a1d17);color:var(--paper,#f4ecd2)}.ds-c-btn:hover{background:var(--stamp,#b3213f);border-color:var(--stamp,#b3213f);color:var(--paper,#f4ecd2)}.ds-c-btn:focus-visible{outline:3px solid var(--paper-ink,#2a1d17);outline-offset:3px}"
+      "description": "Ficha de papel logo abaixo do botão; nunca window.confirm.",
+      "html": "<div class=\"ds-confirm\" role=\"alertdialog\"><p>Tirar “Hades” da prateleira?</p><div class=\"ds-confirm__acoes\"><button class=\"ds-confirm__ok\">Tirar da prateleira</button><button class=\"ds-confirm__nao\">Cancelar</button></div></div>",
+      "css": ".ds-confirm { max-width:420px; padding:12px 14px; background:var(--paper); color:var(--paper-ink); transform:rotate(-0.4deg); box-shadow:0 4px 0 var(--deep); font:700 1rem/1.4 var(--f-texto); } .ds-confirm p { margin:0 0 10px; } .ds-confirm__acoes { display:flex; flex-wrap:wrap; gap:8px; } .ds-confirm__ok, .ds-confirm__nao { min-height:44px; padding:8px 16px; border:2px solid var(--paper-ink); border-radius:4px; font:700 1rem/1.2 var(--f-texto); cursor:pointer; } .ds-confirm__ok { background:var(--paper-ink); color:var(--paper); } .ds-confirm__ok:hover { background:var(--stamp); border-color:var(--stamp); } .ds-confirm__nao { background:transparent; color:var(--paper-ink); } .ds-confirm__nao:hover { background:var(--paper-ink); color:var(--paper); } .ds-confirm button:focus-visible { outline:3px solid var(--paper-ink); outline-offset:3px; }"
     }
   ],
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-15T05:13:46.931Z",
+  "title": "Design System: Clube dos Jogos",
   "narrative": {
-    "northStar": "Locadora de sexta",
-    "overview": "A interface é a prateleira de lançamentos de uma locadora numa sexta à noite. O fundo é madeira escura e fórmica; os jogos ficam de frente, em capas 3:4 apoiadas sobre o beiço da prateleira, com etiqueta de preço escrita à mão e tarja colorida. Tudo o que é \"papelada\" (a ficha do sócio, os bilhetinhos, as confirmações, os fatos do jogo) vira papel creme levemente girado, com tinta marrom e carimbo vermelho. O que acontece com um jogo não some: vira carimbo batido na capa.\n\nA densidade é de balcão, não de dashboard: poucos elementos por tela, a capa é a estrela e o resto da interface abre espaço. O tempo da rodada mora num lugar só, a faixa de quatro etapas embaixo do título \"FASE N\". A fonte pixel aparece só onde há placa ou número (títulos, logo, notas); o texto corrido é Barlow, legível, e a letra de pincel atômico só onde alguém \"escreveu à mão\". O mundo recusa o \"site retrô gamer\" de preto com neon e pixel em tudo, e recusa cards genéricos de dashboard.\n\nO sistema é mobile-first (390 px como referência) e se abre no PC (1280 px) sem trocar de mundo: a prateleira passa de 2 para 4 colunas e a ficha deixa de ocupar a largura toda.",
+    "northStar": "Sexta no quarto",
+    "overview": "É sexta à noite: o jogo alugado da locadora chegou ao quarto. O ambiente é um quarto gamer retrô às escuras, onde a luz vem só de coisas que existem na cena (a TV de tubo, o abajur, a lâmpada de lava, um letreiro de neon) e quase tudo fica em sombra tingida de vinho. Dentro do quarto vivem os objetos da locadora: a prateleira de madeira com as capas de frente, a etiqueta de preço escrita à mão, a ficha de sócio datilografada, os bilhetinhos de papel e os carimbos. Tudo o que é \"papelada\" é papel creme levemente girado com tinta marrom e carimbo vermelho. O que acontece com um jogo não some: vira carimbo na capa.\n A densidade é de balcão, não de dashboard: poucos elementos por tela, a capa é a estrela e o resto abre espaço. A luz é atmosfera, nunca interface: **texto só vive em superfície sólida**, e efeito (brilho, grão, vinheta) fica na cena, atrás de tudo. O tempo da rodada mora num lugar só, a faixa de quatro etapas embaixo do título \"FASE N\". O mundo recusa o \"site gamer\" de preto chapado com neon em tudo e fonte pixel em tudo, recusa vaporwave, Y2K, Frutiger Aero, cyberpunk e terror analógico, e recusa cards genéricos de dashboard. Neon é **um** letreiro, não o tema.\n Mobile-first (390 px de referência), abre-se no PC (1280 px) sem trocar de mundo: a prateleira passa de 2 para 4 colunas e a ficha deixa de ocupar a largura toda.",
     "keyCharacteristics": [
-      "Fundo marrom de prateleira com acentos fortes e raros: laranja de etiqueta, limão de destaque, rosa de tarja.",
-      "Capas sempre 3:4, de frente, com sombra dura curta, sobre a prateleira com beiço.",
-      "Papel creme girado (de -0.4deg a -0.8deg) para tudo que é ficha, bilhete ou confirmação.",
-      "Estados registrados como carimbos girados (SEPARADO, SEU, VENCEDOR, SORTEADO).",
-      "Três vozes tipográficas com papéis fixos: pixel para placa e número, Barlow para ler, marcador para o que foi escrito à mão.",
+      "Parede e sombra com matiz (vinho, nunca preto puro); acentos raros e saturados só onde há luz: âmbar de abajur, rosa de neon, teal de TV.",
+      "Luz motivada: cada brilho pertence a um objeto desenhado; uma luz dominante (a TV), as outras apoiam.",
+      "Capas sempre 3:4, de frente, sobre prateleira de madeira com beiço; sombra dura curta nos objetos.",
+      "Papel creme girado para tudo que é ficha, bilhete, etiqueta ou confirmação; estados registrados como carimbos girados.",
+      "Quatro vozes tipográficas com papéis fixos: Bebas Neue para placa e número, Atkinson para ler, Special Elite para o datilografado, marcador para o escrito à mão.",
       "Alvos de toque de no mínimo 44 px em todo controle."
     ],
     "rules": [
       {
         "name": "The Papel Pequeno Rule",
-        "body": "O papel creme só aparece em peças pequenas (ficha, bilhete, confirmação, fato). Nunca vira fundo de seção ou de página; na largura de PC a ficha para em 760 px.",
+        "body": "O papel creme só aparece em peças pequenas (ficha, bilhete, confirmação, fato, etiqueta). Nunca vira fundo de seção ou de página; na largura de PC a ficha para em 760 px.",
         "section": "colors"
       },
       {
         "name": "The Tinta Certa Rule",
-        "body": "Sobre qualquer acento (limão, laranja, rosa) o texto é deep; sobre papel, paper-ink. Texto claro nunca vai em cima de acento.",
+        "body": "Sobre qualquer acento (âmbar, rosa, teal) o texto é deep; sobre papel, paper-ink. Texto claro nunca vai em cima de acento.",
         "section": "colors"
       },
       {
         "name": "The Foco no Papel Rule",
-        "body": "O anel de foco é limão (3px, offset 3px) sobre a prateleira e troca para paper-ink dentro de ficha, confirmação e fatos, porque o limão some no creme.",
+        "body": "O anel de foco é âmbar (3px, offset 3px) sobre a parede e troca para paper-ink dentro de ficha, confirmação e fatos.",
         "section": "colors"
       },
       {
-        "name": "The Número em Pixel Rule",
-        "body": "Número sozinho em adesivo usa Jersey 10 (o adesivo numérico); frase em adesivo usa Permanent Marker. O \"1\" escrito à mão parecia um parêntese.",
+        "name": "The Uma Luz Rule",
+        "body": "A TV (teal) manda; abajur (âmbar) e neon (rosa) apoiam e ocupam pouco. Nunca acender tudo com a mesma força nem usar arco-íris de neons. Cor de luz é ambiente: nunca informa estado (estado é texto, forma ou ícone).",
+        "section": "colors"
+      },
+      {
+        "name": "The Placa Só em Placa Rule",
+        "body": "Bebas Neue é para título, logo, nome na etiqueta e número. Texto corrido, botão e rótulo são sempre Atkinson. Fonte pixel não faz parte do sistema.",
         "section": "typography"
       },
       {
-        "name": "The Pixel Só em Placa Rule",
-        "body": "Jersey 10 é para título, logo e número. Texto corrido, botão e rótulo são sempre Barlow.",
+        "name": "The Número em Bebas Rule",
+        "body": "Número sozinho em adesivo usa Bebas Neue; frase em adesivo usa Permanent Marker. O \"1\" escrito à mão parece parêntese.",
         "section": "typography"
       },
       {
-        "name": "The Marcador É Etiqueta Rule",
-        "body": "Permanent Marker só aparece em etiqueta, adesivo, bilhete e na linha \"o que falta\" da ficha; nunca em título, botão ou parágrafo.",
+        "name": "The Datilografado É Papel Rule",
+        "body": "Special Elite só aparece sobre papel (ficha, etiqueta, bilhete) e em texto curto; Permanent Marker só em etiqueta, adesivo, bilhete e na linha \"o que falta\" da ficha. Nunca em título, botão ou parágrafo.",
         "section": "typography"
       },
       {
         "name": "The Faixa Única Rule",
-        "body": "A faixa de fases é o único eixo do tempo: etapas concluídas riscadas em laranja, a atual em limão, as futuras em muted. Nenhuma outra barra de progresso, cronômetro ou linha do tempo.",
+        "body": "A faixa de fases é o único eixo do tempo: etapas concluídas riscadas em teal, a atual em âmbar, as futuras em muted. Nenhuma outra barra de progresso, cronômetro ou linha do tempo. A luz da cena pode mudar com a fase (votação: TV forte; jogando: abajur aceso), mas isso é clima, nunca indicador.",
         "section": "layout"
       },
       {
@@ -490,7 +525,7 @@
       },
       {
         "name": "The Sombra Dura Rule",
-        "body": "Capas e fichas usam sombra dura curta, só no eixo vertical e sem desfoque. É a matéria do mundo (estojo na prateleira), não decoração aplicável a painéis, botões ou listas.",
+        "body": "Capas e papéis usam sombra dura curta, só no eixo vertical e sem desfoque. É a matéria do mundo, não decoração para painéis, botões ou listas.",
         "section": "elevation"
       },
       {
@@ -499,31 +534,50 @@
         "section": "elevation"
       },
       {
+        "name": "The Texto Sólido Rule",
+        "body": "Texto de interface nunca fica sobre halo forte, grão, scanline ou vinheta: vive em painel, papel, etiqueta ou parede quase lisa. Efeitos só na cena e dentro do vidro da TV.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Sem Filtro no 3D Rule",
+        "body": "Luz, glow, grão e vinheta nunca são pai nem o próprio elemento da prateleira 3D: `opacity < 1`, `filter`, `mix-blend-mode`, `isolation`, `mask` e `clip-path` numa cadeia `preserve-3d` achatam o 3D.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Movimento Opcional Rule",
+        "body": "Respiração da TV, poeira, lava e parallax são lentos e sutis (flicker nunca acima de 3 vezes por segundo, ciclo ≥ 5 s) e desligam com `prefers-reduced-motion`; `prefers-contrast: more` remove grão, scanlines e aberração. Carimbo batendo e roleta também desligam.",
+        "section": "elevation"
+      },
+      {
         "name": "The Capa 3:4 Rule",
-        "body": "Toda capa tem proporção 3:4 em qualquer tela, com a imagem em object-fit cover. Sem imagem, a capa mostra o nome em pixel sobre listras diagonais em deep.",
+        "body": "Toda capa tem proporção 3:4, imagem em object-fit cover. Sem imagem, a capa é uma **caixa genérica por código**: cor por hash do nome (8 a 10 tons das paletas), três faixas diagonais, um motivo geométrico e o nome em Bebas Neue. Capas reais (RAWG) são o conteúdo; capas e logos de jogos reais também podem decorar a cena.",
         "section": "shapes"
       }
     ],
     "dos": [
-      "Do manter toda capa em 3:4, de frente, com a sombra dura curta (0 6px 0 deep).",
-      "Do usar sombra dura sem desfoque em capas e peças de papel, e sombra macia só no bilhete e no toast.",
-      "Do registrar estados como carimbos girados sobre a capa (SEPARADO, SEU, VENCEDOR, SORTEADO) em vez de badges ou textos que somem.",
-      "Do usar Jersey 10 para número sozinho em adesivo e Permanent Marker para frase em adesivo.",
-      "Do trocar o anel de foco para paper-ink sobre papel; limão no resto.",
-      "Do garantir 44px mínimos em todo alvo de toque.",
+      "Do manter a luz motivada: cada brilho tem um objeto dono (TV, abajur, lava, letreiro, janela).",
+      "Do manter toda capa em 3:4, de frente, com sombra dura curta, sobre o beiço de madeira.",
+      "Do registrar estados como carimbos girados sobre a capa (SEPARADO, SEU, VENCEDOR, SORTEADO) em vez de badges que somem.",
+      "Do manter a locadora viva nos objetos e no texto: etiqueta de preço, ficha datilografada, \"LOCAÇÃO 2 DIAS\", \"REBOBINE\", carteirinha.",
+      "Do usar logos, consoles, jogos e personagens reais à vontade (projeto pessoal, sem fins comerciais); props genéricos desenhados em CSS/SVG servem de reserva.",
+      "Do trocar o anel de foco para paper-ink sobre papel; âmbar no resto.",
+      "Do garantir 44px mínimos em todo alvo de toque e 4,5:1 em todo texto (medido com a cena renderizada).",
       "Do confirmar ações destrutivas dentro da página, numa ficha de papel abaixo do botão.",
       "Do deixar a faixa de fases como o único indicador de tempo da rodada.",
-      "Do desligar carimbo batendo e roleta com prefers-reduced-motion."
+      "Do desligar movimento e efeitos com prefers-reduced-motion e prefers-contrast.",
+      "Do manter no rodapé o aviso de clube sem fins comerciais e sem afiliação a fabricantes, estúdios e plataformas."
     ],
     "donts": [
       "Don't usar window.confirm, alert ou modais do navegador.",
       "Don't colocar kicker ou eyebrow (rótulo pequeno em caixa alta) acima de título.",
       "Don't criar outra barra de progresso, cronômetro ou linha do tempo além da faixa de fases.",
       "Don't usar papel creme como fundo de seção ou de página.",
-      "Don't escrever texto corrido, botão ou rótulo em Jersey 10 ou Permanent Marker.",
-      "Don't pôr texto claro sobre limão, laranja ou rosa.",
+      "Don't escrever texto corrido, botão ou rótulo em Bebas Neue, Special Elite ou Permanent Marker.",
+      "Don't pôr texto claro sobre âmbar, rosa ou teal, nem texto de interface sobre halo, grão ou scanline.",
       "Don't aplicar sombra (dura ou macia) em painel, lista ou botão.",
-      "Don't cair no \"retrô gamer\" de preto com neon e pixel em tudo, nem em cards genéricos de dashboard.",
+      "Don't usar preto puro, pixel em tudo, mais de um neon, nem arco-íris de luzes; nada de vaporwave, Y2K, Frutiger Aero, cyberpunk ou terror analógico (vidro translúcido, cromo, bolhas, pastel rosa-ciano, tela quebrada).",
+      "Don't pôr filtro, blend, máscara ou opacidade na cadeia da prateleira 3D.",
+      "Don't piscar luz mais de 3 vezes por segundo nem deixar movimento correr sem como desligar.",
       "Don't usar ícones de fonte ou glifos; ícones são SVG próprios em grade 24x24, sem curvas, em currentColor."
     ]
   }

@@ -10,7 +10,7 @@ web
 
 Vite + JavaScript puro (sem framework, sem TypeScript), HTML e CSS próprios, mobile-first.
 Firebase Authentication (Google), Firestore e Hosting, só plano gratuito (sem Cloud Functions).
-Sem bibliotecas de UI. Fontes via Google Fonts `<link>`.
+Sem bibliotecas de UI. Fontes `.woff2` hospedadas no próprio domínio (`public/fonts`).
 
 ## Users
 

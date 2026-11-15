@@ -1,0 +1,1824 @@
+<!doctype html>
+<!--
+  Mock estático: tela "Rodada", fase 1 (sugerindo), mesma casca da votação; a caixinha do jogo vira o formulário, no mundo "Sexta no quarto" (DESIGN.md + Estetica/DOSSIE.md).
+  Estrutura da estante 3D herdada de prateleira-3d-v2.html. Não é código do app.
+
+  FONTES: o <link> do Google Fonts abaixo é TEMPORÁRIO, só para o mock. O app final hospeda os .woff2
+  (Bebas Neue e Atkinson Hyperlegible Next: OFL 1.1; Special Elite e Permanent Marker: Apache-2.0) no
+  próprio domínio, com a licença junto.
+-->
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mock: Rodada, sugerindo (quarto gamer)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;600;700;800&family=Bebas+Neue&family=Permanent+Marker&family=Special+Elite&display=swap" rel="stylesheet" />
+  <style>
+    /* ---------- Tokens (DESIGN.md) ---------- */
+    :root {
+      --ground: #140b10; --shelf: #1e1218; --wood: #3b2417; --lip: #6b4a2f; --edge: #7a6153; --deep: #0c0609;
+      --ink: #f3e6d8; --muted: #c9b5a8; --amber: #ffc15e; --pink: #ff5c8a; --teal: #46c3b5;
+      --paper: #f4ecd2; --paper-ink: #2a1d17; --paper-muted: #4f3d33; --stamp: #b3213f;
+
+      --f-placa: 'Bebas Neue', 'Atkinson Hyperlegible Next', sans-serif;
+      --f-texto: 'Atkinson Hyperlegible Next', system-ui, sans-serif;
+      --f-dati: 'Special Elite', 'Atkinson Hyperlegible Next', monospace;
+      --f-mao: 'Permanent Marker', 'Atkinson Hyperlegible Next', cursive;
+
+      --gutter: 16px; --max: 1120px; --toque: 44px;
+
+      /* madeira do móvel em luz baixa (wood e lip são tokens; o resto são os tons vizinhos) */
+      --wood-1: #22140c; --wood-2: #3b2417; --wood-3: #4d3020; --wood-4: #6b4a2f; --wood-5: #8c6646;
+
+      /* veio de madeira e poeira: ruído renderizado uma vez como imagem (herdado do V2) */
+      --grain-h: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='640' height='160'><filter id='a' x='0' y='0' width='1' height='1'><feTurbulence type='fractalNoise' baseFrequency='0.0032 0.075' numOctaves='4' seed='9' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.10 0 0 0 0 0.05 0 0 0 0 0.02 1.4 0 0 0 -0.2'/><feComponentTransfer><feFuncA type='table' tableValues='0 0.42 0.04 0.36 0 0.46 0.06 0.32 0 0.4 0.05 0.3 0'/></feComponentTransfer></filter><filter id='b' x='0' y='0' width='1' height='1'><feTurbulence type='fractalNoise' baseFrequency='0.002 0.42' numOctaves='2' seed='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 0.86 0 0 0 0 0.7 2.6 0 0 0 -1.45'/></filter><rect width='640' height='160' filter='url(%23a)'/><rect width='640' height='160' filter='url(%23b)' opacity='0.3'/></svg>");
+      --grain-v: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='640'><filter id='a' x='0' y='0' width='1' height='1'><feTurbulence type='fractalNoise' baseFrequency='0.075 0.0032' numOctaves='4' seed='5' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.10 0 0 0 0 0.05 0 0 0 0 0.02 1.4 0 0 0 -0.2'/><feComponentTransfer><feFuncA type='table' tableValues='0 0.42 0.04 0.36 0 0.46 0.06 0.32 0 0.4 0.05 0.3 0'/></feComponentTransfer></filter><filter id='b' x='0' y='0' width='1' height='1'><feTurbulence type='fractalNoise' baseFrequency='0.42 0.002' numOctaves='2' seed='8' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 0.86 0 0 0 0 0.7 2.6 0 0 0 -1.45'/></filter><rect width='160' height='640' filter='url(%23a)'/><rect width='160' height='640' filter='url(%23b)' opacity='0.3'/></svg>");
+      --specks: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='d' x='0' y='0' width='1' height='1'><feTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='1' seed='4' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.86 0 0 0 0 0.82 0 0 0 0 0.74 7 0 0 0 -4.6'/></filter><rect width='180' height='180' filter='url(%23d)' opacity='0.25'/></svg>");
+      /* carpete geométrico de locadora (V2), base puxada para o vinho */
+      --carpet: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='96' height='96'><rect width='96' height='96' fill='%231c1418'/><path d='M6 14l9-8 9 8 9-8 9 8' fill='none' stroke='%232d6468' stroke-width='4'/><path d='M60 54h18l-9 15z' fill='%23a0702b'/><path d='M12 62h5v5h-5zM21 70h5v5h-5zM30 62h5v5h-5z' fill='%23a3354f'/><circle cx='78' cy='22' r='7' fill='none' stroke='%23a3354f' stroke-width='3'/><path d='M38 84h22v4H38z' fill='%232d6468'/><path d='M86 78h3v3h-3zM4 40h3v3H4zM50 30h3v3h-3zM70 90h3v3h-3z' fill='%23c9b98f'/></svg>");
+    }
+
+    /* ---------- Base e superfícies do navegador ---------- */
+    *, *::before, *::after { box-sizing: border-box; }
+    html { color-scheme: dark; background: var(--ground); scrollbar-color: var(--lip) var(--ground); }
+    body {
+      position: relative; margin: 0; min-height: 100vh;
+      color: var(--ink); font: 400 1rem/1.5 var(--f-texto); caret-color: var(--amber);
+      background: var(--ground); overflow-x: clip;
+      -webkit-font-smoothing: antialiased;
+    }
+    ::selection { background: var(--amber); color: var(--deep); }
+    :focus-visible { outline: 3px solid var(--amber); outline-offset: 3px; }
+    h1, h2, h3, p { margin: 0; }
+    .sr { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+    .icone { width: 20px; height: 20px; flex: none; }
+
+    /* ---------- A cena: camadas irmãs, todas atrás da interface ----------
+       Ordem: parede (fundo do body) → luz (screen) → grão (overlay) → vinheta. A UI fica acima (z 10),
+       fora de qualquer blend. Nenhuma delas é ancestral da estante 3D.
+       Blend em tela cheia: 2 (luz + grão), dentro do limite de 3 no PC e 2 no celular. */
+    /* parede: pegboard do V2 (furos escuros com quina clara), em camada própria para o parallax */
+    .cena-parede {
+      position: fixed; inset: -32px -32px -160px; z-index: 0; pointer-events: none;
+      background:
+        radial-gradient(circle at 11px 11px, #0a0507 0 2.3px, rgb(255 230 210 / 0.05) 2.6px 3.1px, transparent 3.4px) 0 0 / 22px 22px,
+        var(--specks) 0 0 / 180px 180px,
+        linear-gradient(180deg, #251a1c, var(--ground) 75%);
+    }
+    .cena-luz {
+      position: absolute; inset: 0; z-index: 1; pointer-events: none; mix-blend-mode: screen;
+      /* posições medidas por JS a partir dos objetos (TV, abajur, letreiro); queda ~1/d² por paradas */
+      background:
+        radial-gradient(circle var(--tv-r, 520px) at var(--tv-x, 75%) var(--tv-y, 360px),
+          rgb(70 195 181 / 0.42) 0, rgb(70 195 181 / 0.34) 12%, rgb(70 195 181 / 0.21) 25%,
+          rgb(70 195 181 / 0.085) 50%, rgb(70 195 181 / 0.03) 75%, transparent 100%),
+        radial-gradient(circle var(--lamp-r, 340px) at var(--lamp-x, 10%) var(--lamp-y, 900px),
+          rgb(255 193 94 / 0.24) 0, rgb(255 193 94 / 0.19) 12%, rgb(255 193 94 / 0.12) 25%,
+          rgb(255 193 94 / 0.05) 50%, rgb(255 193 94 / 0.017) 75%, transparent 100%),
+        radial-gradient(ellipse var(--neon-w, 170px) var(--neon-h, 90px) at var(--neon-x, 90px) var(--neon-y, 40px),
+          rgb(255 92 138 / 0.12), rgb(255 92 138 / 0.05) 50%, transparent 100%);
+    }
+    .cena-grao {
+      position: fixed; inset: 0; z-index: 2; pointer-events: none; opacity: 0.08; mix-blend-mode: overlay;
+      background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>") 0 0 / 160px 160px;
+    }
+    .cena-vinheta {
+      position: fixed; inset: 0; z-index: 3; pointer-events: none;
+      background: radial-gradient(ellipse 85% 80% at 50% 42%, transparent 48%, rgb(12 6 9 / 0.5) 100%);
+    }
+    .app { position: relative; z-index: 10; }
+
+    /* ---------- Barra superior ---------- */
+    .topo {
+      max-width: var(--max); margin: 0 auto; padding: 12px var(--gutter) 8px;
+      display: grid; grid-template-columns: 1fr auto; grid-template-areas: "marca avatar" "nav nav";
+      align-items: center; gap: 6px 12px; border-bottom: 2px solid var(--edge);
+    }
+    .marca { grid-area: marca; display: block; width: 158px; }
+    .neon { display: block; width: 100%; height: auto; overflow: visible; }
+    .neon__fio { fill: none; stroke: #2a1a20; stroke-width: 1.6; stroke-linecap: round; }
+    .neon__grampo { fill: #2a1a20; }
+    .neon__apagado { fill: none; stroke: #3e2632; stroke-width: 4.6; stroke-linecap: round; stroke-linejoin: round; }
+    .neon__tubo { fill: none; stroke: var(--pink); stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
+    .neon__nucleo { fill: none; stroke: rgb(255 243 250 / 0.55); stroke-width: 1.1; stroke-linecap: round; stroke-linejoin: round; }
+    .neon__l { transition: none; }
+    .neon__l.apaga { opacity: 0.12; }
+
+    .nav { grid-area: nav; }
+    .nav ul { list-style: none; margin: 0; padding: 0; display: flex; gap: 4px; overflow-x: auto; }
+    .nav a {
+      display: flex; align-items: center; min-height: var(--toque); padding: 8px 12px; border-radius: 4px;
+      color: var(--muted); font: 600 0.95rem/1.2 var(--f-texto); text-decoration: none; white-space: nowrap;
+      transition: background-color 120ms ease-out, color 120ms ease-out;
+    }
+    .nav a:hover { background: var(--shelf); color: var(--ink); }
+    .nav a[aria-current="page"] { background: var(--amber); color: var(--deep); }
+    .avatar {
+      grid-area: avatar; display: grid; place-items: center; width: var(--toque); height: var(--toque);
+      border-radius: 50%; border: 3px solid var(--ink); background: var(--pink); color: var(--deep);
+      font: 800 1.1rem/1 var(--f-texto);
+    }
+    @media (min-width: 760px) {
+      .topo { grid-template-columns: auto 1fr auto; grid-template-areas: "marca nav avatar"; gap: 20px; padding-top: 14px; }
+      .marca { width: 196px; }
+      .nav { justify-self: end; }
+    }
+
+    /* ---------- Página da rodada ---------- */
+    .rodada {
+      max-width: var(--max); margin: 0 auto; padding: 28px var(--gutter) 120px;
+      display: grid; grid-template-columns: minmax(0, 1fr); row-gap: 20px;
+      grid-template-areas: "cabeca" "faixa" "ficha" "tv" "estante";
+    }
+    @media (min-width: 760px) {
+      .rodada {
+        grid-template-columns: minmax(0, 1fr) minmax(250px, 380px); column-gap: 40px; padding-top: 40px;
+        grid-template-areas: "cabeca tv" "faixa tv" "ficha tv" "estante estante";
+      }
+    }
+    .cabeca { grid-area: cabeca; }
+    .cabeca h1 {
+      font: 400 clamp(3.25rem, 12vw, 5rem)/0.95 var(--f-placa); letter-spacing: 0.04em; text-wrap: balance;
+    }
+    .cabeca p { margin-top: 6px; color: var(--muted); }
+
+    /* faixa de etapas: o único eixo do tempo */
+    .faixa {
+      grid-area: faixa; list-style: none; margin: 0; padding: 0;
+      display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px;
+    }
+    .faixa li {
+      padding: 9px 8px; border-radius: 4px; background: var(--shelf); color: var(--muted); text-align: center;
+      font: 700 0.75rem/1.3 var(--f-texto); letter-spacing: 0.06em; text-transform: uppercase;
+    }
+    .faixa .feita { color: var(--ink); text-decoration: line-through 2px var(--teal); }
+    .faixa [aria-current="step"] { background: var(--amber); color: var(--deep); }
+    /* celular estreito: as 4 etapas não cabem numa linha com respiro, então viram 2×2 (lê-se em Z) */
+    @media (max-width: 439.98px) { .faixa { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (min-width: 760px) { .faixa li { font-size: 0.85rem; } }
+    /* PC estreito: a faixa divide a linha com a TV e fica sem espaço para 4 blocos */
+    @media (min-width: 760px) and (max-width: 899.98px) { .faixa { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+    /* ---------- Botões ---------- */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      min-height: var(--toque); padding: 8px 16px; border: 2px solid currentColor; border-radius: 4px;
+      background: transparent; color: var(--ink); font: 700 1rem/1.2 var(--f-texto); cursor: pointer;
+      transition: background-color 120ms ease-out, color 120ms ease-out, border-color 120ms ease-out;
+    }
+    .btn:hover { background: var(--ink); border-color: var(--ink); color: var(--deep); }
+    .btn:active { transform: translateY(1px); }
+    .btn--primario { background: var(--amber); border-color: var(--amber); color: var(--deep); }
+    .btn--primario:hover { background: var(--ink); border-color: var(--ink); }
+    .btn:disabled { opacity: 0.55; cursor: not-allowed; background: transparent; color: var(--ink); border-color: var(--ink); transform: none; }
+    .btn--papel { color: var(--paper-ink); }
+    .btn--papel:hover { background: var(--paper-ink); border-color: var(--paper-ink); color: var(--paper); }
+
+    /* ---------- Ficha do sócio (papel pequeno) ---------- */
+    .ficha {
+      grid-area: ficha; position: relative; max-width: 760px; padding: 16px 16px 18px;
+      background: var(--paper); color: var(--paper-ink); rotate: -0.6deg; box-shadow: 0 5px 0 var(--deep);
+      font: 400 0.95rem/1.35 var(--f-dati);
+    }
+    .ficha :focus-visible { outline-color: var(--paper-ink); }
+    .ficha__titulo { font: 400 1.75rem/1 var(--f-placa); letter-spacing: 0.05em; padding-right: 112px; }
+    .ficha__socio { margin-top: 6px; color: var(--paper-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+    .ficha__falta { margin-top: 12px; font: 400 1.25rem/1.3 var(--f-mao); }
+    .ficha__resto { margin-top: 6px; max-width: 60ch; }
+    .ficha__resto strong { font: 400 1.25rem/1 var(--f-placa); font-variant-numeric: tabular-nums; }
+    .ficha__acoes { margin-top: 14px; }
+    .ficha__carimbo {
+      position: absolute; top: 14px; right: 14px; padding: 2px 8px; border: 3px solid currentColor;
+      color: var(--stamp); rotate: -6deg;
+      font: 800 1rem/1.3 var(--f-texto); letter-spacing: 0.12em; text-transform: uppercase;
+    }
+
+    /* ---------- TV de tubo (objeto da cena; o cartaz repete o h1, por isso aria-hidden) ---------- */
+    .mesa-tv { grid-area: tv; position: relative; align-self: end; justify-self: center; width: min(100%, 270px); padding-top: 64px; }
+    @media (min-width: 760px) { .mesa-tv { width: 100%; } }
+    .tv { position: relative; container-type: inline-size; }
+    /* brilho teal local: respira só em opacity */
+    .tv__brilho {
+      position: absolute; left: -12%; right: -12%; top: -20%; bottom: -12%; pointer-events: none;
+      background: radial-gradient(closest-side, rgb(70 195 181 / 0.24), rgb(70 195 181 / 0.09) 50%, rgb(70 195 181 / 0.02) 80%, transparent);
+      animation: respira 9s ease-in-out infinite alternate;
+    }
+    @keyframes respira { from { opacity: 0.8; } to { opacity: 1; } }
+    .tv__antena { position: absolute; left: 50%; bottom: 100%; width: 16cqw; height: 4.5cqw; translate: -50% 0; border-radius: 8cqw 8cqw 0 0; background: linear-gradient(180deg, #3a332b, #221d19); }
+    .tv__antena::before, .tv__antena::after {
+      content: ''; position: absolute; bottom: 60%; left: 50%; width: 2px; height: 26cqw; transform-origin: bottom center;
+      background: linear-gradient(180deg, #8a8070 0 3px, #5a5246 3px);
+    }
+    .tv__antena::before { transform: rotate(-28deg); }
+    .tv__antena::after { transform: rotate(24deg); }
+    .tv__caixa {
+      position: relative; display: grid; grid-template-columns: 1fr 15%; gap: 4cqw; padding: 5cqw;
+      border-radius: 3cqw 3cqw 2cqw 2cqw;
+      background: linear-gradient(180deg, #a3977f, #857964 45%, #5d5444);
+      box-shadow: inset 0 2px 0 rgb(255 240 215 / 0.28), inset 0 -3px 0 rgb(12 6 9 / 0.35),
+                  inset -12px 0 16px -12px rgb(70 195 181 / 0.25), 0 6px 0 var(--deep);
+    }
+    .tv__moldura { padding: 3.5cqw; border-radius: 12% / 15%; background: #221d19; box-shadow: inset 0 0 0 2px #3b332b; }
+    .tv__vidro {
+      position: relative; aspect-ratio: 4 / 3; overflow: hidden; border-radius: 9% / 12%;
+      background: radial-gradient(ellipse 75% 70% at 50% 45%, #1d5c56, #103a39 55%, #0a2022);
+      box-shadow: inset 0 0 8cqw 2cqw rgb(6 14 14 / 0.7);
+    }
+    /* reflexo: Fresnel nas bordas + o abajur refletido no canto (objeto que existe na cena) */
+    .tv__vidro::before {
+      content: ''; position: absolute; inset: 0; z-index: 2; border-radius: inherit; pointer-events: none;
+      background:
+        radial-gradient(ellipse 22% 12% at 18% 14%, rgb(255 210 150 / 0.16), transparent 70%),
+        radial-gradient(ellipse at 50% 50%, transparent 55%, rgb(232 246 255 / 0.10) 100%);
+    }
+    /* scanlines: só aqui, no vidro */
+    .tv__vidro::after {
+      content: ''; position: absolute; inset: 0; z-index: 3; border-radius: inherit; pointer-events: none;
+      background: repeating-linear-gradient(to bottom, transparent 0 1px, rgb(6 14 14 / 0.12) 1px 2px);
+    }
+    /* faixa clara rolando pelo tubo (V2), bem fraca: só transform */
+    .tv__rolo {
+      position: absolute; left: 0; right: 0; top: 0; height: 30%; z-index: 1; pointer-events: none;
+      background: linear-gradient(180deg, transparent, rgb(232 246 255 / 0.07), transparent);
+      animation: tv-rolo 8s linear infinite;
+    }
+    @keyframes tv-rolo { from { transform: translateY(-100%); } to { transform: translateY(340%); } }
+    /* poeira flutuando na luz da TV (V2): poucas partículas, um elemento por grupo (box-shadow) */
+    .poeira { position: absolute; inset: 0 -6% 22%; z-index: 2; pointer-events: none; }
+    .cisco {
+      position: absolute; width: 2px; height: 2px; border-radius: 50%;
+      background: rgb(214 245 240 / 0.75); color: rgb(214 245 240 / 0.5);
+      animation: cisco 26s ease-in-out infinite alternate;
+    }
+    .cisco--a { left: 18%; top: 34%; box-shadow: 40px 60px 0 0, 110px 22px 0 0, -18px 120px 0 1px, 150px 138px 0 0; }
+    .cisco--b { left: 62%; top: 22%; box-shadow: -60px 50px 0 0, 40px 108px 0 1px, 76px -10px 0 0; animation-duration: 34s; animation-delay: -8s; }
+    .cisco--c { left: 40%; top: 58%; box-shadow: 70px 30px 0 0, -80px 56px 0 0, 22px 96px 0 0; animation-duration: 30s; animation-delay: -15s; }
+    @keyframes cisco {
+      0% { transform: translate3d(0, 0, 0); opacity: 0.25; }
+      50% { opacity: 0.8; }
+      100% { transform: translate3d(24px, -36px, 0); opacity: 0.35; }
+    }
+    @media (max-width: 759px) { .cisco--c { display: none; } }
+    .tv__cartaz {
+      position: absolute; inset: 0; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      color: #e8f6ff; text-align: center;
+    }
+    .tv__osd { position: absolute; top: 9%; left: 10%; font: 400 5.5cqw/1 var(--f-placa); letter-spacing: 0.08em; color: #8fe6db; }
+    .tv__fase {
+      font: 400 17cqw/0.9 var(--f-placa); letter-spacing: 0.04em;
+      text-shadow: -1px 0 rgb(255 40 80 / 0.55), 1px 0 rgb(40 220 255 / 0.55); /* aberração: só título grande, só no vidro */
+    }
+    .tv__linha { margin-top: 1.5cqw; padding-top: 1.5cqw; border-top: 2px solid rgb(143 230 219 / 0.6); font: 400 7.5cqw/1 var(--f-placa); letter-spacing: 0.12em; }
+    .tv__painel { display: flex; flex-direction: column; align-items: center; gap: 3cqw; padding-top: 2cqw; }
+    .tv__botao { width: 9cqw; height: 9cqw; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #6d665a, #2b2722 70%); box-shadow: 0 2px 0 rgb(12 6 9 / 0.5); }
+    .tv__grade { flex: 1; width: 11cqw; margin-bottom: 2cqw; background: repeating-linear-gradient(180deg, #3e3930 0 2px, transparent 2px 5px); }
+    /* rack baixo da TV com o console */
+    .movel-tv { position: relative; margin: 0 -6%; }
+    .movel-tv__tampo { display: block; height: 10px; background: linear-gradient(180deg, #a07652 0 1px, var(--wood-5) 1px 3px, var(--wood-4) 3px 6px, var(--wood-3) 6px); }
+    .movel-tv__corpo {
+      display: grid; place-items: center; height: 52px;
+      background: var(--grain-h) -80px -40px / 640px 160px, linear-gradient(90deg, var(--wood-1), var(--wood-2) 8%, var(--wood-2) 92%, var(--wood-1));
+      box-shadow: 0 6px 0 var(--deep);
+    }
+    .movel-tv__nicho { display: grid; place-items: end center; width: 72%; height: 36px; padding-bottom: 4px; background: var(--deep); }
+    .console {
+      position: relative; width: 70%; height: 20px; border-radius: 3px 3px 2px 2px;
+      background: linear-gradient(180deg, #3a383f, #232227); box-shadow: inset 0 2px 0 rgb(232 230 240 / 0.08);
+    }
+    .console::before { content: ''; position: absolute; left: 30%; right: 30%; top: 5px; height: 3px; background: #121114; }
+    .console::after { content: ''; position: absolute; right: 8%; top: 8px; width: 4px; height: 4px; border-radius: 50%; background: var(--stamp); }
+
+    /* ---------- Estante ---------- */
+    .estante { grid-area: estante; position: relative; margin-top: 20px; }
+    .estante__titulo { font: 400 clamp(2rem, 6.5vw, 2.6rem)/0.95 var(--f-placa); letter-spacing: 0.04em; }
+    .estante__nota { margin-top: 6px; color: var(--muted); max-width: 68ch; }
+
+    /* props em cima do móvel (aria-hidden, sem clique) */
+    .cenario {
+      position: relative; display: flex; align-items: flex-end; justify-content: space-between; gap: 8px;
+      height: 112px; margin-top: 16px; padding: 0 10px; pointer-events: none;
+    }
+    .cenario svg { display: block; width: 100%; height: auto; }
+    .cenario .so-pc { display: none; }
+    .abajur { position: relative; width: 50px; flex: none; }
+    .abajur svg { position: relative; display: block; width: 100%; height: auto; }
+    /* brilho local do abajur na parede (a poça grande vem da camada de luz) */
+    .abajur::before {
+      content: ''; position: absolute; left: -90%; right: -90%; top: -60%; bottom: 10%;
+      background: radial-gradient(closest-side, rgb(255 193 94 / 0.2), rgb(255 193 94 / 0.06) 55%, transparent);
+    }
+    /* consoles: silhuetas genéricas em SVG, sem logo; LEDs são as únicas luzinhas */
+    .console-obj { position: relative; flex: none; }
+    .console-obj--switch { width: 80px; }
+    .console-obj--x360 { width: 34px; }
+    .console-obj--pilha { width: 180px; display: flex; flex-direction: column; align-items: center; }
+    .console-obj--pilha .snes { width: 78%; margin-bottom: -1px; }
+    .console-obj--ps2 { width: 34px; }
+    .console-obj--gb { width: 44px; rotate: -8deg; margin-bottom: 2px; }
+    .led { animation: led 5s ease-in-out infinite alternate; }
+    @keyframes led { from { opacity: 0.55; } to { opacity: 1; } }
+
+    /* capinhas deitadas, lombada pra frente */
+    .capas-pilha { width: 118px; flex: none; display: flex; flex-direction: column; }
+    .capinha {
+      position: relative; display: flex; align-items: center; gap: 6px; height: 20px; margin-top: 1px; padding: 0 8px 0 0;
+      overflow: hidden; background: var(--c); color: var(--t, var(--ink));
+      box-shadow: inset 0 1px 0 rgb(255 245 230 / 0.16), inset 0 -2px 0 rgb(12 6 9 / 0.35), 0 2px 0 var(--deep);
+      font: 400 0.72rem/1 var(--f-placa); letter-spacing: 0.03em; white-space: nowrap;
+    }
+    /* faixa de plataforma na ponta da lombada */
+    .capinha::before { content: ''; flex: none; align-self: stretch; width: 7px; background: var(--faixa); }
+    .capinha--mario { --c: #a8242c; --t: #ffd25a; --faixa: #6f6c69; width: 86%; margin-left: 4%; rotate: -4deg; }
+    .capinha--sims { --c: #1c2a54; --faixa: #3a8f4a; width: 92%; margin-left: 7%; rotate: 1.5deg; }
+    .capinha--tlou { --c: #1d4b86; --faixa: #e9eef5; width: 96%; margin-left: 1%; }
+    .capinha--gta { --c: #151417; --t: #f2c14e; --faixa: #2a4fa0; width: 100%; }
+    .capinha__losango { flex: none; width: 8px; height: 11px; background: #59d36a; clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); }
+
+    @media (min-width: 760px) {
+      .cenario { height: 150px; gap: 16px; padding: 0 24px; }
+      .cenario .so-pc { display: block; }
+      .cenario .console-obj--pilha.so-pc { display: flex; }
+      .abajur { width: 80px; }
+      .console-obj--switch { width: 130px; }
+      .console-obj--x360 { width: 46px; }
+      .capas-pilha { width: 196px; }
+      .capinha { height: 26px; font-size: 0.95rem; letter-spacing: 0.06em; gap: 8px; padding-right: 10px; }
+      .capinha::before { width: 9px; }
+    }
+
+    /* ---------- Chão do V2: rodapé + carpete em perspectiva (sem as estantes vizinhas) ---------- */
+    .chao {
+      position: absolute; z-index: -1; left: 50%; top: calc(100% - 34px); width: 100vw; height: 170px; translate: -50% 0;
+      perspective: 420px; pointer-events: none;
+      -webkit-mask: linear-gradient(180deg, #000 50%, transparent); mask: linear-gradient(180deg, #000 50%, transparent);
+    }
+    .chao::before {
+      content: ''; position: absolute; left: 0; right: 0; top: 0; height: 14px; z-index: 1;
+      background: linear-gradient(180deg, #7a5a40 0 1px, var(--wood-2) 1px 4px, var(--wood-1));
+      box-shadow: 0 2px 0 rgb(12 6 9 / 0.5);
+    }
+    .chao__carpete {
+      position: absolute; inset: 14px 0 -60px; transform-origin: top; transform: rotateX(52deg);
+      background:
+        radial-gradient(ellipse 34% 70% at 16% 0%, rgb(255 193 94 / 0.16), transparent 72%),
+        radial-gradient(ellipse 34% 70% at 84% 0%, rgb(70 195 181 / 0.10), transparent 72%),
+        linear-gradient(180deg, rgb(12 6 9 / 0.55), transparent 45%),
+        var(--carpet) 0 0 / 96px 96px;
+    }
+
+    /* ---------- Móvel: montantes, coroa, rodapé (herdado do V2, madeira em luz baixa) ---------- */
+    .movel { position: relative; padding: 32px 9px 44px; background:
+        var(--grain-v) 0 0 / 160px 640px,
+        linear-gradient(90deg, var(--wood-1), var(--wood-4) 4px, var(--wood-3) 10px, var(--wood-2) 16px,
+          var(--wood-2) calc(100% - 16px), var(--wood-3) calc(100% - 10px), var(--wood-4) calc(100% - 4px), var(--wood-1));
+    }
+    /* sombra do móvel no carpete (V2) */
+    .movel::before {
+      content: ''; position: absolute; z-index: -1; left: -4%; right: -4%; top: calc(100% - 6px); height: 46px; pointer-events: none;
+      background: radial-gradient(ellipse 50% 100% at 50% 0%, rgb(12 6 9 / 0.75), transparent 100%);
+    }
+    .movel__coroa, .movel__base { position: absolute; left: -4px; right: -4px; z-index: 1; pointer-events: none; }
+    .movel__coroa {
+      top: 0; height: 32px; box-shadow: 0 4px 0 rgb(12 6 9 / 0.45);
+      background:
+        linear-gradient(180deg, #a07652 0 1px, var(--wood-5) 1px 3px, var(--wood-4) 3px 7px, var(--wood-1) 7px 9px,
+          var(--wood-2) 9px 12px, transparent 12px calc(100% - 3px), rgb(12 6 9 / 0.4) calc(100% - 3px)),
+        var(--grain-h) -120px -30px / 640px 160px,
+        linear-gradient(180deg, var(--wood-3), var(--wood-2));
+    }
+    .movel__base {
+      bottom: 0; height: 44px;
+      background:
+        linear-gradient(180deg, var(--wood-5) 0 1px, var(--wood-4) 1px 3px, transparent 3px calc(100% - 14px),
+          var(--wood-1) calc(100% - 14px) calc(100% - 12px), #170d08 calc(100% - 12px)),
+        var(--grain-h) -300px -90px / 640px 160px,
+        linear-gradient(180deg, var(--wood-3), var(--wood-2));
+    }
+    @media (min-width: 760px) {
+      .movel { padding: 38px 22px 52px; }
+      .movel__coroa, .movel__base { left: -10px; right: -10px; }
+      .movel__coroa { height: 38px; }
+      .movel__base { height: 52px; }
+    }
+
+    /* ---------- Prateleira 3D (estrutura do V2) ----------
+       REGRA: nada de filter, opacity<1, mix-blend-mode, isolation, mask ou clip-path aqui nem nos ancestrais. */
+    .rack {
+      position: relative; z-index: 0; list-style: none; padding: 0; margin: 0;
+      display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+      background: var(--deep); box-shadow: 0 0 0 2px var(--wood-1);
+    }
+    @media (min-width: 760px) { .rack { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+
+    /* Cada nicho é uma caixa 3D com ponto de fuga por coluna; --gx/--gy emendam o veio entre nichos. */
+    .rack__slot {
+      --vx: 100%; --gx: 0px; --gy: 0px; --shade: 0;
+      /* luz do quarto dentro do nicho: âmbar do abajur (esquerda), teal da TV (direita) */
+      --luz: 255 193 94; --lx: 30%;
+      --seam: linear-gradient(transparent, transparent);
+      --scratch: linear-gradient(transparent, transparent);
+      container-type: inline-size;
+      position: relative; display: flex; flex-direction: column; min-width: 0;
+    }
+    .rack__slot:nth-child(2n) { --vx: 0%; --gx: -100cqw; --luz: 70 195 181; --lx: 75%; }
+    .rack__slot:nth-child(6n + 3), .rack__slot:nth-child(6n + 4) { --gy: -52px; --shade: 0.12; }
+    .rack__slot:nth-child(6n + 5), .rack__slot:nth-child(6n + 6) { --gy: -104px; --shade: 0.06; }
+    .rack__slot:nth-child(6n + 4) { --seam: linear-gradient(90deg, rgb(12 6 9 / 0.55) 0 1px, rgb(255 220 180 / 0.12) 1px 2px, transparent 2px); }
+    @media (min-width: 760px) {
+      .rack__slot:nth-child(n) { --gx: 0px; --gy: 0px; --shade: 0; --seam: linear-gradient(transparent, transparent); }
+      .rack__slot:nth-child(4n + 1) { --vx: 200%; --luz: 255 193 94; --lx: 20%; }
+      .rack__slot:nth-child(4n + 2) { --vx: 100%; --gx: -100cqw; --luz: 255 193 94; --lx: 45%; }
+      .rack__slot:nth-child(4n + 3) { --vx: 0%; --gx: -200cqw; --luz: 70 195 181; --lx: 55%; }
+      .rack__slot:nth-child(4n + 4) { --vx: -100%; --gx: -300cqw; --luz: 70 195 181; --lx: 80%; }
+      .rack__slot:nth-child(8n + 5), .rack__slot:nth-child(8n + 6),
+      .rack__slot:nth-child(8n + 7), .rack__slot:nth-child(8n + 8) { --gy: -52px; --shade: 0.12; }
+      .rack__slot:nth-child(8n + 7) { --seam: linear-gradient(90deg, rgb(12 6 9 / 0.55) 0 1px, rgb(255 220 180 / 0.12) 1px 2px, transparent 2px); }
+    }
+    .rack__slot:nth-child(5n + 3) { --scratch: linear-gradient(172deg, transparent 0 40%, rgb(255 230 200 / 0.16) 41% 43%, transparent 44%); }
+    .rack__slot:hover, .rack__slot:focus-within { z-index: 2; }
+    .rack__slot--vazio.so-pc { display: none; }
+    @media (min-width: 760px) { .rack__slot--vazio.so-pc { display: flex; } }
+
+    .rack__bay { --D: 24cqw; position: relative; perspective: 900px; perspective-origin: var(--vx) 35%; }
+    /* sombra de contato da tábua de cima (sem LED: a luz do quarto vem da TV e do abajur) */
+    .rack__bay::after {
+      content: ''; position: absolute; z-index: 2; left: 0; right: 0; top: 0; height: 30px; pointer-events: none;
+      background: linear-gradient(180deg, rgb(12 6 9 / 0.65) 0 3px, rgb(12 6 9 / 0.25) 3px, transparent 30px);
+    }
+    .rack__scene { position: relative; transform-style: preserve-3d; padding: 26px 2% 0 3%; pointer-events: none; }
+    .rack__face { position: absolute; display: block; pointer-events: none; }
+    .rack__wall {
+      inset: 0; transform: translateZ(calc(var(--D) * -1));
+      background:
+        linear-gradient(180deg, rgb(12 6 9 / 0.6), transparent 18%),
+        radial-gradient(ellipse 95% 70% at var(--lx) 0%, rgb(var(--luz) / 0.2), rgb(var(--luz) / 0.06) 45%, transparent 78%),
+        var(--specks) 0 0 / 180px 180px,
+        linear-gradient(180deg, #2c1a1f, var(--shelf) 50%, #170d12);
+    }
+    .rack__wall::after { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 36% 38% at 55% 66%, rgb(12 6 9 / 0.62), transparent 100%); }
+    .rack__slot--vazio .rack__wall::after { display: none; }
+    .rack__ceil {
+      top: 0; left: 0; right: 0; height: var(--D); transform-origin: top; transform: rotateX(-90deg);
+      background: var(--grain-h) var(--gx) var(--gy) / 640px 160px, linear-gradient(180deg, #2e1c12, #1a0f0a);
+    }
+    .rack__floor {
+      bottom: 0; left: 0; right: 0; height: var(--D); transform-origin: bottom; transform: rotateX(90deg);
+      background:
+        linear-gradient(0deg, var(--wood-5) 0 2px, transparent 2px),
+        radial-gradient(ellipse 50% 40% at 52% 62%, rgb(12 6 9 / 0.4), transparent 100%),
+        var(--specks) 0 0 / 180px 180px,
+        var(--seam),
+        var(--grain-h) var(--gx) var(--gy) / 640px 160px,
+        linear-gradient(rgb(12 6 9 / var(--shade)), rgb(12 6 9 / var(--shade))),
+        linear-gradient(180deg, #3e281a, var(--wood-3) 45%, var(--wood-4) 88%);
+    }
+    /* sombra dura da caixa na tábua */
+    .rack__floor::after { content: ''; position: absolute; left: 12%; right: 9%; bottom: 36%; height: 22%; background: rgb(12 6 9 / 0.72); }
+    .rack__slot--vazio .rack__floor::after { display: none; }
+    .rack__side { display: none; top: 0; bottom: 0; width: var(--D); background: var(--grain-h) 0 0 / 640px 160px, linear-gradient(90deg, var(--wood-1), var(--wood-2)); }
+    .rack__side--l { left: 0; transform-origin: left; transform: rotateY(90deg); }
+    .rack__side--r { right: 0; transform-origin: right; transform: rotateY(-90deg); background: var(--grain-h) 0 0 / 640px 160px, linear-gradient(270deg, var(--wood-1), var(--wood-2)); }
+    .rack__slot:nth-child(2n + 1) .rack__side--l, .rack__slot:nth-child(2n) .rack__side--r { display: block; }
+    @media (min-width: 760px) {
+      .rack__bay { --D: 30cqw; }
+      .rack__scene { padding: 30px 11% 0; }
+      .rack__slot:nth-child(n) .rack__side { display: none; }
+      .rack__slot:nth-child(4n + 1) .rack__side--l, .rack__slot:nth-child(4n) .rack__side--r { display: block; }
+    }
+
+    /* a caixa entra no nicho como um plano em pé, com o próprio ponto de vista (lombada à mostra) */
+    .rack__stage { position: relative; transform: translateZ(calc(var(--D) * -0.3)); perspective: 640px; perspective-origin: -40% -30%; }
+    @media (min-width: 760px) { .rack__stage { transform: translateZ(calc(var(--D) * -0.45)); } }
+    .rack__spacer { display: block; aspect-ratio: 3 / 4; }
+
+    /* beiço: 14 px de tábua + 6 px de borda iluminada */
+    .rack__beico {
+      position: relative; z-index: 1; height: 20px;
+      background:
+        linear-gradient(180deg, #a07652 0 1px, var(--wood-5) 1px 3px, var(--wood-4) 3px 6px, rgb(12 6 9 / 0.3) 6px 7px,
+          transparent 7px calc(100% - 2px), rgb(12 6 9 / 0.5) calc(100% - 2px)),
+        var(--scratch), var(--seam),
+        var(--grain-h) var(--gx) calc(var(--gy) - 24px) / 640px 160px,
+        linear-gradient(rgb(12 6 9 / var(--shade)), rgb(12 6 9 / var(--shade))),
+        linear-gradient(180deg, var(--wood-3), var(--wood-2));
+    }
+
+    /* frente do móvel abaixo do beiço: madeira lisa e sólida, é onde o texto mora */
+    .rack__info { flex: 1; display: flex; flex-direction: column; padding: 12px 8px 18px; background: var(--wood); }
+    @media (min-width: 760px) { .rack__info { padding: 14px 14px 20px; } }
+
+    /* post-it colado na frente do móvel: faixa de cola mais escura em cima e a ponta descolando */
+    .postit {
+      position: relative; padding: 14px 10px 14px; rotate: -1.4deg;
+      background: linear-gradient(180deg, #ecd56a 0 12px, #f7e48a 12px);
+      color: var(--paper-ink); box-shadow: 0 4px 0 var(--deep);
+      transition: rotate 160ms ease-out;
+    }
+    .rack__slot:nth-child(2n) .postit { rotate: 1.2deg; }
+    .postit::after {
+      content: ''; position: absolute; right: 0; bottom: 0; width: 18px; height: 18px;
+      background: linear-gradient(315deg, var(--wood) 0 50%, #d8c160 50%);
+    }
+    @media (hover: hover) { .rack__slot:hover .postit { rotate: 0deg; } }
+    .rack__nome { font: 400 1.15rem/1.2 var(--f-mao); overflow-wrap: anywhere; }
+    .rack__meta { margin-top: 2px; font-size: 0.875rem; line-height: 1.3; color: var(--paper-muted); }
+    .rack__acoes { margin-top: auto; padding-top: 14px; }
+
+    /* ---------- Caixa fechada (6 faces, herdada do V2) ---------- */
+    .case {
+      --ry: 11deg; --t: 15cqw;
+      position: relative; display: block; width: 100%; aspect-ratio: 3 / 4;
+      transform-style: preserve-3d; transform-origin: 50% 100%;
+      /* --tilt-x/--tilt-y: inclinação que segue o ponteiro no PC (V2) */
+      transform: translateY(var(--lift, 0px)) translateZ(var(--tz, 0px))
+                 rotateX(var(--tilt-x, 0deg)) rotateY(calc(var(--ry) + var(--tilt-y, 0deg)));
+      transition: transform 280ms cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    @media (min-width: 760px) { .case { --ry: 24deg; } }
+    /* passar o mouse no card ou focar o botão endireita a caixa */
+    @media (hover: hover) { .rack__slot:hover .case { --ry: 0deg; --tz: 34px; --lift: -6px; } }
+    /* só foco de teclado endireita a caixa (foco devolvido pelo script depois de um clique não conta) */
+    .rack__slot:has(:focus-visible) .case { --ry: 0deg; --tz: 34px; --lift: -6px; }
+
+    .case__face { position: absolute; display: block; backface-visibility: hidden; }
+    .case__front { inset: 0; }
+    .case__spine {
+      top: 0; bottom: 0; right: 100%; width: var(--t); transform-origin: right center; transform: rotateY(-90deg);
+      display: flex; align-items: center; justify-content: center; overflow: hidden;
+      font: calc(var(--t) * 0.62) / 1 var(--f-placa);
+      background: linear-gradient(90deg, hsl(var(--hue) 30% 12%), hsl(var(--hue) 34% 22%) 45%, hsl(var(--hue) 30% 14%));
+    }
+    .case__spine span { writing-mode: vertical-rl; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-height: 90%; color: var(--ink); letter-spacing: 0.04em; }
+    .case__side { top: 0; bottom: 0; left: 100%; width: var(--t); transform-origin: left center; transform: rotateY(90deg); background: hsl(var(--hue) 26% 9%); }
+    .case__top { left: 0; right: 0; bottom: 100%; height: var(--t); transform-origin: center bottom; transform: rotateX(90deg); background: linear-gradient(90deg, hsl(var(--hue) 28% 22%), hsl(var(--hue) 24% 15%)); }
+
+    /* capa genérica por código: cor por hash do nome (no app), 3 faixas diagonais, motivo geométrico, nome em Bebas */
+    .capa {
+      position: absolute; inset: 0; display: block;
+      background:
+        linear-gradient(135deg, transparent 0 56%, var(--risca) 56% 60%, transparent 60% 64%, var(--risca) 64% 68%, transparent 68% 72%, var(--risca) 72% 76%, transparent 76%),
+        var(--capa);
+      box-shadow: inset 0 0 0 2px rgb(12 6 9 / 0.4);
+    }
+    /* brilho do plástico do estojo: reflexo que segue o ponteiro (V2), luz do abajur e lustro fixo.
+       Fica abaixo do nome (z 1), então nunca passa por cima de texto. */
+    .capa::after {
+      content: ''; position: absolute; inset: 0; pointer-events: none;
+      background:
+        radial-gradient(circle at var(--sx, 50%) var(--sy, 0%), rgb(243 230 216 / var(--sa, 0)), transparent 48%),
+        linear-gradient(105deg, rgb(255 193 94 / 0.10), transparent 35%),
+        linear-gradient(110deg, rgb(243 230 216 / 0.08), transparent 30%);
+    }
+    .capa__motivo { position: absolute; left: 22%; top: 18%; width: 56%; height: auto; }
+    .capa__nome {
+      position: absolute; z-index: 1; left: 7%; right: 7%; bottom: 6%; padding: 4px 6px 2px;
+      background: var(--deep); color: var(--ink); font: 400 11cqw/0.95 var(--f-placa); letter-spacing: 0.04em;
+    }
+    @media (min-width: 760px) { .capa__nome { font-size: 9cqw; } }
+    .tarja {
+      position: absolute; z-index: 2; left: 0; top: 18%; padding: 2px 8px; background: var(--pink); color: var(--deep);
+      font: 700 0.75rem/1.3 var(--f-texto); letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap;
+    }
+    .preco {
+      position: absolute; z-index: 2; right: -6px; top: -8px; padding: 2px 10px; rotate: 5deg;
+      background: var(--amber); color: var(--deep); font: 400 1.1rem/1.3 var(--f-mao); box-shadow: 0 3px 0 var(--deep); white-space: nowrap;
+    }
+    .carimbo {
+      position: absolute; z-index: 3; left: 50%; top: 50%; padding: 4px 10px; border: 3px solid currentColor;
+      background: rgb(20 11 16 / 0.85); color: var(--amber); white-space: nowrap;
+      font: 800 1rem/1.3 var(--f-texto); letter-spacing: 0.12em; text-transform: uppercase;
+      transform: translate(-50%, -50%) rotate(-12deg);
+    }
+    .carimbo--seu { color: var(--pink); top: 40%; }
+    .carimbo.bate { animation: bate 420ms cubic-bezier(0.16, 1, 0.3, 1); }
+    @keyframes bate {
+      from { transform: translate(-50%, -50%) rotate(-12deg) scale(1.9); }
+      to { transform: translate(-50%, -50%) rotate(-12deg) scale(1); }
+    }
+    .capa--img { background-size: cover; background-position: center; }
+    .capa--img .capa__motivo { display: none; }
+
+    /* ---------- Sua vaga: estojo vazio de plástico no nicho ---------- */
+    .case--vazio .case__spine, .case--vazio .case__side, .case--vazio .case__top { background: #232027; }
+    .capa-vazia, .tampa__vazia {
+      position: absolute; inset: 0; display: grid; place-items: center;
+      background: linear-gradient(115deg, rgb(243 230 216 / 0.12), transparent 38%), #19171c;
+      box-shadow: inset 0 0 0 3px #2c2a31;
+    }
+    .capa-vazia::before, .tampa__vazia::before { content: ''; position: absolute; inset: 8%; border: 2px dashed rgb(243 230 216 / 0.3); }
+    .capa-vazia span, .tampa__vazia span {
+      color: var(--muted); font: 400 11cqw/0.95 var(--f-placa); letter-spacing: 0.06em; text-align: center; text-transform: uppercase;
+    }
+    @media (min-width: 760px) { .capa-vazia span { font-size: 9cqw; } }
+
+    /* ações do seu jogo na prateleira */
+    .rack__acoes--meu { display: grid; gap: 8px; }
+    .rack__acoes .btn { width: 100%; padding-inline: 8px; }
+    .btn--perigo { color: var(--pink); }
+    .btn--perigo:hover { background: var(--pink); border-color: var(--pink); color: var(--deep); }
+    .btn--fantasma { border-color: transparent; color: var(--muted); }
+    .btn--fantasma:hover { background: var(--shelf); border-color: var(--shelf); color: var(--ink); }
+    .btn--papel-primario { background: var(--paper-ink); border-color: var(--paper-ink); color: var(--paper); }
+    .btn--papel-primario:hover { background: var(--stamp); border-color: var(--stamp); color: var(--paper); }
+    /* confirmação dentro da página: papel logo abaixo do botão */
+    .confirma { padding: 12px; background: var(--paper); color: var(--paper-ink); rotate: -0.4deg; box-shadow: 0 4px 0 var(--deep); }
+    .confirma[hidden] { display: none; }
+    .confirma p { font: 700 0.95rem/1.3 var(--f-texto); }
+    .confirma :focus-visible { outline-color: var(--paper-ink); }
+    .confirma__acoes { display: grid; gap: 8px; margin-top: 10px; }
+    .postit.cola { animation: postit-cola 380ms cubic-bezier(0.2, 0.8, 0.2, 1.15) both; }
+    @keyframes postit-cola { from { transform: translateY(-14px) rotate(-6deg) scale(1.06); opacity: 0; } to { transform: none; opacity: 1; } }
+
+    /* ---------- Modal do estojo ----------
+       Ordem de cena: fundo escuro → estojo 3D → textos e botões. O estojo é a própria UI:
+       frente = capa (nome + imagem), verso da tampa = manual (o resto), base = bandeja com o CD.
+       Movimento: tudo por WAAPI no JS; aqui só o estado de repouso. */
+    html.trava { overflow: hidden; }
+    html { scrollbar-gutter: stable; }
+    .modal { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 16px; overflow: hidden; }
+    .modal[hidden] { display: none; }
+    .modal__fundo { position: absolute; inset: 0; background: radial-gradient(ellipse 70% 60% at 50% 45%, rgb(20 11 16 / 0.9), rgb(12 6 9 / 0.97)); }
+    .modal__palco { position: relative; display: flex; flex-direction: column; align-items: center; gap: 10px; width: 100%; perspective: 1800px; }
+    .modal__titulo { font: 400 clamp(1.9rem, 6vw, 2.4rem)/1 var(--f-placa); letter-spacing: 0.05em; text-align: center; }
+    .modal__dica { max-width: 46ch; color: var(--muted); text-align: center; }
+    .modal__form { display: flex; flex-direction: column; align-items: center; gap: 10px; width: 100%; }
+    .modal__erro { min-height: 1.5em; color: var(--pink); font-weight: 700; text-align: center; }
+    .modal__acoes { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+    .modal__acoes [hidden] { display: none; }
+
+    .estojo {
+      --w: min(360px, 42vw, calc((100dvh - 260px) * 0.75));
+      position: relative; width: var(--w); aspect-ratio: 3 / 4; margin-top: 8px; perspective: 1600px;
+    }
+    @media (max-width: 759px) { .estojo { --w: min(84vw, calc((100dvh - 260px) * 0.75)); } }
+    .estojo__sombra {
+      position: absolute; left: 4%; right: 4%; bottom: -20px; height: 24px; border-radius: 50%;
+      background: radial-gradient(closest-side, rgb(12 6 9 / 0.75), transparent);
+    }
+    .estojo__corpo { position: absolute; inset: 0; transform-style: preserve-3d; }
+    .estojo__base {
+      position: absolute; inset: 0; border-radius: 3px 8px 8px 3px; transform: translateZ(-2px);
+      background:
+        radial-gradient(circle at 50% 50%, #34313a 0 7%, #16151a 7.5% 10%, transparent 10.5%),
+        linear-gradient(160deg, #26232b, #141317);
+      box-shadow: inset 0 0 0 3px #322f37, inset 0 0 0 7px #1a181d;
+    }
+    .estojo__tampa { position: absolute; inset: 0; transform-origin: 0 50%; transform: translateZ(2px); transform-style: preserve-3d; }
+    /* caixinha fechada e parada (passo da capa): 3D achatado, senão o Chrome erra o clique nos campos da capa */
+    .estojo.plano .estojo__corpo, .estojo.plano .estojo__tampa { transform-style: flat; }
+    .tampa__frente, .tampa__verso {
+      position: absolute; inset: 0; overflow: hidden; border-radius: 3px 8px 8px 3px;
+      backface-visibility: hidden; -webkit-backface-visibility: hidden;
+    }
+    .tampa__frente { background: #19171c; box-shadow: inset 0 0 0 3px #2c2a31; }
+    .tampa__frente .capa { inset: 4px; }
+    /* dentro do 3D o clique ignora z-index: só os controles recebem ponteiro */
+    .tampa__frente > :not(.capa-escolha, .placa) { pointer-events: none; }
+    .tampa__frente .capa__nome { font-size: calc(var(--w) * 0.09); }
+    .tampa__frente:not(.vestida) .capa__nome { visibility: hidden; }
+    .tampa__vazia { z-index: 2; pointer-events: none; }
+    .tampa__vazia span { font-size: calc(var(--w) * 0.12); }
+    /* lustro do plástico por cima da arte, abaixo dos controles */
+    .tampa__frente::after {
+      content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+      background: linear-gradient(115deg, rgb(243 230 216 / 0.12), transparent 32% 70%, rgb(243 230 216 / 0.05));
+    }
+    .tampa__frente .tarja, .tampa__frente .preco { z-index: 2; }
+    .tampa__frente .preco { right: 8px; top: 8px; }
+    .tampa__frente .carimbo { font-size: calc(var(--w) * 0.06); }
+
+    /* controles da capa: faixas sólidas (texto nunca sobre a arte) */
+    .capa-escolha { position: absolute; z-index: 3; left: 0; right: 0; top: 0; margin: 0; padding: 8px 10px 10px; border: 0; background: var(--deep); }
+    .capa-escolha legend { float: left; width: 100%; margin-bottom: 6px; padding: 0; color: var(--muted); font: 700 0.8125rem/1.2 var(--f-texto); }
+    .capa-escolha__opcoes { clear: both; display: flex; flex-wrap: wrap; gap: 6px; }
+    .amostra { position: relative; flex: none; width: 44px; height: 44px; }
+    .amostra input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; }
+    .amostra > span {
+      display: grid; place-items: center; width: 100%; height: 100%; border: 2px solid var(--edge); border-radius: 4px;
+      background: #2a2630 center / cover; color: var(--ink); font: 700 0.75rem/1 var(--f-texto);
+    }
+    .amostra input:checked + span { border-color: var(--amber); box-shadow: 0 0 0 2px var(--amber); }
+    .amostra input:focus-visible + span { outline: 3px solid var(--amber); outline-offset: 3px; }
+    .campo-link, .placa__input {
+      width: 100%; min-height: var(--toque); border: 2px solid var(--edge); border-radius: 4px; background: #0c0609; color: var(--ink);
+    }
+    .campo-link { margin-top: 8px; padding: 8px 10px; font: 400 0.95rem/1.3 var(--f-texto); }
+    .campo-link[hidden] { display: none; }
+    .campo-link:focus-visible, .placa__input:focus-visible { outline: 3px solid var(--amber); outline-offset: 1px; }
+    .placa { position: absolute; z-index: 3; left: 6%; right: 6%; bottom: 6%; padding: 8px 10px 10px; background: var(--deep); box-shadow: 0 3px 0 rgb(12 6 9 / 0.6); }
+    .placa__rotulo { display: block; margin-bottom: 4px; color: var(--muted); font: 700 0.8125rem/1.2 var(--f-texto); }
+    .placa__input { padding: 4px 8px; font: 400 calc(var(--w) * 0.085)/1.1 var(--f-placa); letter-spacing: 0.04em; }
+    .placa__input::placeholder { color: rgb(201 181 168 / 0.6); }
+    .busca {
+      position: absolute; left: 0; right: 0; bottom: calc(100% + 6px); margin: 0; padding: 4px; list-style: none;
+      max-height: calc(var(--w) * 0.62); overflow-y: auto; background: var(--deep); border: 2px solid var(--edge); border-radius: 4px;
+    }
+    .busca[hidden] { display: none; }
+    .busca__item {
+      display: flex; align-items: center; gap: 10px; width: 100%; min-height: 48px; padding: 4px 6px; border: 0; border-radius: 4px;
+      background: none; color: var(--ink); text-align: left; font: 600 0.95rem/1.2 var(--f-texto); cursor: pointer;
+    }
+    .busca__item:hover, .busca__item:focus-visible { background: var(--shelf); outline-offset: -3px; }
+    .busca__capa { flex: none; width: 30px; aspect-ratio: 3 / 4; background: center / cover; }
+    .busca__item small { display: block; color: var(--muted); font-size: 0.8125rem; font-weight: 400; }
+    .busca__vazio { padding: 8px; color: var(--muted); font-size: 0.875rem; }
+
+    /* bandeja: CD com rótulo impresso nas cores da capa e reflexo girando (camada ambiente) */
+    .cd {
+      position: absolute; left: 50%; top: 50%; width: 86%; aspect-ratio: 1; margin: -43% 0 0 -43%; border-radius: 50%;
+      background: conic-gradient(from 20deg, #c9c6cf, #e8e6ee, #a9c7d6, #d6c2e0, #f0e2b8, #c9c6cf 50%, #e8e6ee, #b9d6cf, #d9c8e8, #c9c6cf);
+      box-shadow: 0 3px 0 var(--deep), inset 0 0 0 2px rgb(255 255 255 / 0.35);
+    }
+    .cd::after {
+      content: ''; position: absolute; inset: 0; border-radius: 50%; pointer-events: none;
+      background: conic-gradient(transparent 0 20%, rgb(255 255 255 / 0.25) 25%, transparent 30% 70%, rgb(255 255 255 / 0.18) 75%, transparent 80%);
+      animation: brilho-cd 7s linear infinite;
+    }
+    @keyframes brilho-cd { to { rotate: 360deg; } }
+    .cd__rotulo {
+      position: absolute; inset: 7%; display: grid; place-items: end center; padding: 0 18% 17%; overflow: hidden; border-radius: 50%;
+      background:
+        radial-gradient(circle, transparent 0 21%, rgb(255 255 255 / 0.55) 21% 22.5%, transparent 23%),
+        var(--rotulo-img, linear-gradient(transparent, transparent)) center / cover,
+        var(--rotulo, #3a2848);
+      color: var(--ink); font: 400 calc(var(--w) * 0.065)/1 var(--f-placa); letter-spacing: 0.06em; text-align: center;
+    }
+    /* com imagem impressa, o nome ganha uma faixa sólida (texto nunca direto sobre a arte) */
+    .cd__rotulo.com-img { padding-bottom: 14%; }
+    .cd__rotulo.com-img span { padding: 2px 6px; background: var(--deep); }
+    .cd__furo { position: absolute; left: 50%; top: 50%; width: 13%; aspect-ratio: 1; translate: -50% -50%; border-radius: 50%; background: #16151a; box-shadow: 0 0 0 3px #2b2930; }
+
+    /* verso da tampa: manual preso por duas presilhas */
+    .tampa__verso { transform: rotateY(180deg); padding: 6% 6%; background: linear-gradient(200deg, #222026, #141317); box-shadow: inset 0 0 0 3px #322f37; }
+    .presilha { position: absolute; z-index: 2; left: 50%; width: 22%; height: 10px; translate: -50% 0; border-radius: 3px; background: #2f2c35; }
+    .presilha--cima { top: 3.4%; }
+    .presilha--baixo { bottom: 3.4%; }
+    .manual {
+      position: relative; height: 100%; overflow-y: auto; overscroll-behavior: contain; padding: 14px 14px 18px;
+      background: var(--paper); color: var(--paper-ink); rotate: -0.6deg; box-shadow: 0 4px 0 var(--deep);
+      scrollbar-width: thin; scrollbar-color: var(--paper-muted) transparent;
+    }
+    .manual :focus-visible { outline-color: var(--paper-ink); }
+    .manual__cabeca {
+      display: flex; justify-content: space-between; align-items: baseline; padding-bottom: 6px; border-bottom: 2px solid var(--paper-ink);
+      font: 400 1.05rem/1 var(--f-placa); letter-spacing: 0.1em; text-transform: uppercase;
+    }
+    .manual__pag { font: 400 0.75rem/1 var(--f-dati); letter-spacing: 0; text-transform: none; }
+    .manual__jogo { margin-top: 8px; font: 400 1.6rem/1 var(--f-placa); letter-spacing: 0.04em; overflow-wrap: anywhere; }
+    .mcampo { display: grid; gap: 4px; min-width: 0; margin: 12px 0 0; padding: 0; border: 0; }
+    .mcampo > span, .mcampo > legend { padding: 0; font: 700 0.875rem/1.25 var(--f-texto); }
+    .mcampo > legend { float: left; width: 100%; margin-bottom: 4px; }
+    .mcampo > legend + * { clear: both; }
+    .mcampo input, .mcampo textarea {
+      width: 100%; min-height: var(--toque); padding: 8px 10px; border: 2px solid var(--paper-ink); border-radius: 4px;
+      background: #fffaf0; color: var(--paper-ink); font: 400 1rem/1.35 var(--f-texto);
+    }
+    .mcampo textarea { min-height: 72px; resize: vertical; }
+    .mcampo textarea[name="pitch"] { min-height: 96px; }
+    .mcampo small { color: var(--paper-muted); font-size: 0.8125rem; }
+    .mcampo__cont { justify-self: end; color: var(--paper-muted); font: 600 0.8125rem/1 var(--f-texto); font-variant-numeric: tabular-nums; }
+    .mcampo__cont.estourou { color: var(--stamp); }
+    .mdupla { display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: 0 10px; }
+    .mchips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .mchip { position: relative; }
+    .mcampo .mchip input { position: absolute; inset: 0; width: 100%; min-height: 0; margin: 0; padding: 0; opacity: 0; cursor: pointer; }
+    .mchip span {
+      display: flex; align-items: center; gap: 6px; min-height: var(--toque); padding: 6px 10px;
+      border: 2px solid rgb(42 29 23 / 0.45); border-radius: 4px; font: 600 0.9rem/1 var(--f-texto);
+    }
+    .mchip span::before { content: ''; width: 12px; height: 12px; border: 2px solid currentColor; border-radius: 2px; }
+    .mchip--radio span::before { border-radius: 50%; }
+    .mchip input:checked + span { border-color: var(--paper-ink); background: var(--paper-ink); color: var(--paper); }
+    .mchip input:checked + span::before { border-color: var(--amber); background: var(--amber); }
+    .mchip input:focus-visible + span { outline: 3px solid var(--paper-ink); outline-offset: 2px; }
+    .bilhete {
+      position: absolute; z-index: 3; left: 6%; right: 8%; bottom: 7%; padding: 4px 8px; rotate: -3deg;
+      background: var(--paper); color: var(--paper-ink); font: 400 1rem/1.25 var(--f-mao);
+      box-shadow: 0 3px 6px rgb(12 6 9 / 0.5);
+    }
+
+    /* ---------- Rodapé ---------- */
+    .rodape { max-width: var(--max); margin: 0 auto; padding: 0 var(--gutter) 40px; color: var(--muted); font-size: 0.8125rem; }
+
+    /* ---------- Movimento e efeitos desligáveis ----------
+       reduced-motion e contraste alto desligam: movimento, grão, scanlines e aberração. */
+    /* Parallax por rolagem no celular (V2): a parede anda bem mais devagar que o conteúdo e as caixas
+       flutuam um pouco no nicho. Só onde existe animation-timeline; usa a propriedade translate
+       (família do transform) para não brigar com o translateZ do palco. */
+    @supports (animation-timeline: scroll()) {
+      @media (max-width: 759px) and (prefers-reduced-motion: no-preference) and (not (prefers-contrast: more)) {
+        .cena-parede { animation: par-parede linear both; animation-timeline: scroll(root); }
+        .rack__stage { animation: par-caixa linear both; animation-timeline: view(); }
+      }
+    }
+    @keyframes par-parede { from { transform: translateY(0); } to { transform: translateY(-120px); } }
+    @keyframes par-caixa { from { translate: 0 6px; } to { translate: 0 -6px; } }
+
+    @media (prefers-reduced-motion: reduce), (prefers-contrast: more) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+      .cena-grao, .poeira, .tv__rolo { display: none; }
+      .tv__vidro::after { display: none; }
+      .tv__fase { text-shadow: none; }
+      .neon__l.apaga { opacity: 1; }
+      .rack__slot:hover .case, .rack__slot:has(:focus-visible) .case { --tz: 0px; --lift: 0px; }
+      .btn:active { transform: none; }
+    }
+    @media (prefers-contrast: more) {
+      .cena-vinheta { background: radial-gradient(ellipse 85% 80% at 50% 42%, transparent 55%, rgb(12 6 9 / 0.3) 100%); }
+      .cena-luz { display: none; }
+    }
+  </style>
+  <!-- regra que o parallax do PC atualiza (um seletor, sem mexer em estilos inline) — V2 -->
+  <style id="par">.rack__stage {}</style>
+</head>
+<body>
+  <!-- cena: camadas irmãs da interface, decorativas -->
+  <div class="cena-parede" id="parede" aria-hidden="true"></div>
+  <div class="cena-luz" id="luz" aria-hidden="true"></div>
+  <div class="cena-grao" aria-hidden="true"></div>
+  <div class="cena-vinheta" aria-hidden="true"></div>
+
+  <div class="app">
+    <header class="topo">
+      <a class="marca" href="#rodada" aria-label="Clube dos Jogos, ir para a rodada">
+        <!-- letreiro de neon: o único neon do sistema; um traço por letra, núcleo claro, tubo apagado atrás, glow em 3 camadas -->
+        <svg class="neon" id="neon" viewBox="-10 -10 260 96" role="img" aria-label="Clube dos Jogos">
+          <defs>
+            <filter id="neon-glow" x="-20%" y="-40%" width="140%" height="180%" color-interpolation-filters="sRGB">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="0.8" result="a" />
+              <feGaussianBlur in="SourceGraphic" stdDeviation="3.5" result="b" />
+              <feGaussianBlur in="SourceGraphic" stdDeviation="9" result="c" />
+              <feMerge><feMergeNode in="c" /><feMergeNode in="b" /><feMergeNode in="a" /><feMergeNode in="SourceGraphic" /></feMerge>
+            </filter>
+            <path id="gC" d="M21 5C19 1 15 0 11 0C3 0 1 8 1 16C1 24 3 32 11 32C15 32 19 31 21 27" />
+            <path id="gL" d="M2 0V32H21" />
+            <path id="gU" d="M1 0V21C1 28 5 32 11 32C17 32 21 28 21 21V0" />
+            <path id="gB" d="M2 15H12C17 15 20 12 20 7.5C20 3 17 0 12 0H2V32H12C18 32 21 28.5 21 23.5C21 18.5 18 15 12 15" />
+            <path id="gE" d="M21 0H2V16H16H2V32H21" />
+            <path id="gD" d="M2 0V32H9C17 32 21 25 21 16C21 7 17 0 9 0Z" />
+            <path id="gO" d="M11 0C3 0 1 8 1 16C1 24 3 32 11 32C19 32 21 24 21 16C21 8 19 0 11 0Z" />
+            <path id="gS" d="M20 5C18 1 15 0 11 0C5 0 2 3 2 8C2 14 8 15 11 16C16 17 21 19 21 24C21 29 17 32 11 32C6 32 3 30 1 27" />
+            <path id="gJ" d="M21 0V22C21 29 17 32 11 32C5 32 2 29 1 25" />
+            <path id="gG" d="M20 5C18 1 15 0 11 0C3 0 1 8 1 16C1 24 3 32 11 32C19 32 21 26 21 18H12" />
+          </defs>
+          <!-- fio que sai por trás até o transformador, e os grampos -->
+          <path class="neon__fio" d="M236 18C252 22 252 60 248 86" />
+          <rect class="neon__grampo" x="38" y="33" width="6" height="4" /><rect class="neon__grampo" x="128" y="33" width="6" height="4" /><rect class="neon__grampo" x="205" y="33" width="6" height="4" />
+          <rect class="neon__grampo" x="72" y="75" width="6" height="4" /><rect class="neon__grampo" x="158" y="75" width="6" height="4" />
+          <!-- tubo apagado (aparece quando uma letra pisca) -->
+          <g class="neon__apagado">
+            <use href="#gC" x="0" /><use href="#gL" x="29" /><use href="#gU" x="58" /><use href="#gB" x="87" /><use href="#gE" x="116" />
+            <use href="#gD" x="157" /><use href="#gO" x="186" /><use href="#gS" x="215" />
+            <use href="#gJ" x="49.5" y="42" /><use href="#gO" x="78.5" y="42" /><use href="#gG" x="107.5" y="42" /><use href="#gO" x="136.5" y="42" /><use href="#gS" x="165.5" y="42" />
+          </g>
+          <!-- tubo aceso: cada letra num grupo, para o flicker raro de uma letra só -->
+          <g filter="url(#neon-glow)">
+            <g class="neon__l" transform="translate(0 0)"><use class="neon__tubo" href="#gC" /><use class="neon__nucleo" href="#gC" /></g>
+            <g class="neon__l" transform="translate(29 0)"><use class="neon__tubo" href="#gL" /><use class="neon__nucleo" href="#gL" /></g>
+            <g class="neon__l" transform="translate(58 0)"><use class="neon__tubo" href="#gU" /><use class="neon__nucleo" href="#gU" /></g>
+            <g class="neon__l" transform="translate(87 0)"><use class="neon__tubo" href="#gB" /><use class="neon__nucleo" href="#gB" /></g>
+            <g class="neon__l" transform="translate(116 0)"><use class="neon__tubo" href="#gE" /><use class="neon__nucleo" href="#gE" /></g>
+            <g class="neon__l" transform="translate(157 0)"><use class="neon__tubo" href="#gD" /><use class="neon__nucleo" href="#gD" /></g>
+            <g class="neon__l" transform="translate(186 0)"><use class="neon__tubo" href="#gO" /><use class="neon__nucleo" href="#gO" /></g>
+            <g class="neon__l" transform="translate(215 0)"><use class="neon__tubo" href="#gS" /><use class="neon__nucleo" href="#gS" /></g>
+            <g class="neon__l" transform="translate(49.5 42)"><use class="neon__tubo" href="#gJ" /><use class="neon__nucleo" href="#gJ" /></g>
+            <g class="neon__l" transform="translate(78.5 42)"><use class="neon__tubo" href="#gO" /><use class="neon__nucleo" href="#gO" /></g>
+            <g class="neon__l" transform="translate(107.5 42)"><use class="neon__tubo" href="#gG" /><use class="neon__nucleo" href="#gG" /></g>
+            <g class="neon__l" transform="translate(136.5 42)"><use class="neon__tubo" href="#gO" /><use class="neon__nucleo" href="#gO" /></g>
+            <g class="neon__l" transform="translate(165.5 42)"><use class="neon__tubo" href="#gS" /><use class="neon__nucleo" href="#gS" /></g>
+          </g>
+        </svg>
+      </a>
+      <nav class="nav" aria-label="Principal">
+        <ul>
+          <li><a href="#rodada" aria-current="page">Rodada</a></li>
+          <li><a href="#estante">Estante</a></li>
+          <li><a href="#stats">Stats</a></li>
+        </ul>
+      </nav>
+      <span class="avatar" role="img" aria-label="Você: Yuri">Y</span>
+    </header>
+
+    <main class="rodada" id="rodada">
+<div class="cabeca">
+        <h1>Fase 2</h1>
+        <p id="contagem">5 jogos na prateleira</p>
+      </div>
+
+      <ol class="faixa" aria-label="Etapas da rodada">
+        <li aria-current="step">Sugerindo</li>
+        <li>Votando</li>
+        <li>Jogando</li>
+        <li>Encerrada</li>
+      </ol>
+
+      <section class="ficha" aria-labelledby="ficha-titulo">
+        <span class="ficha__carimbo">Sugerindo</span>
+        <h2 class="ficha__titulo" id="ficha-titulo">Ficha do sócio</h2>
+        <p class="ficha__socio">Sócio: Yuri · Rodada 2</p>
+        <p class="ficha__falta" id="ficha-falta">Bota sua sugestão na prateleira.</p>
+        <p class="ficha__resto" id="ficha-resto">Um jogo por pessoa. Pode fazer com calma, a prateleira fica aberta até o admin abrir a votação.</p>
+        <div class="ficha__acoes">
+          <button class="btn btn--papel" type="button">
+            <svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M8 3h12v12h-3V6H8zM4 8h12v13H4zm3 3v7h6v-7z" /></svg>
+            Copiar mensagem pro grupo
+          </button>
+        </div>
+      </section>
+
+      <div class="mesa-tv" aria-hidden="true">
+        <div class="tv">
+          <span class="tv__brilho"></span>
+          <span class="tv__antena"></span>
+          <div class="tv__caixa">
+            <div class="tv__moldura">
+              <div class="tv__vidro" id="tv-vidro">
+                <div class="tv__cartaz">
+                  <span class="tv__osd">CH 02</span>
+                  <span class="tv__fase">Fase 2</span>
+                  <span class="tv__linha">· Sugestões ·</span>
+                </div>
+                <span class="tv__rolo"></span>
+              </div>
+            </div>
+            <div class="tv__painel"><span class="tv__botao"></span><span class="tv__botao"></span><span class="tv__grade"></span></div>
+          </div>
+        </div>
+        <div class="poeira" id="poeira"><span class="cisco cisco--a"></span><span class="cisco cisco--b"></span><span class="cisco cisco--c"></span></div>
+        <div class="movel-tv">
+          <span class="movel-tv__tampo"></span>
+          <div class="movel-tv__corpo"><div class="movel-tv__nicho"><span class="console"></span></div></div>
+        </div>
+      </div>
+
+      <section class="estante" aria-labelledby="estante-titulo">
+        <h2 class="estante__titulo" id="estante-titulo">NA PRATELEIRA</h2>
+        <p class="estante__nota">Um jogo por pessoa. A prateleira fica aberta até o admin abrir a votação.</p>
+
+        <div class="cenario" aria-hidden="true">
+          <span class="abajur" id="abajur">
+            <svg viewBox="0 0 60 92">
+              <defs>
+                <linearGradient id="cupula" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe2a6" /><stop offset="1" stop-color="#e8a04a" /></linearGradient>
+              </defs>
+              <path d="M15 6h30l11 34H4z" fill="url(#cupula)" />
+              <path d="M4 40h52v3H4z" fill="#ffd27a" />
+              <path d="M28 43h4v35h-4z" fill="#4a3222" />
+              <path d="M16 78h28l5 8H11z" fill="#3a2618" />
+              <path d="M16 78h28v2H16z" fill="#6b4a2f" />
+            </svg>
+          </span>
+          <!-- híbrido na base: joy-cons azul e vermelho dos lados, tela apagada pegando o teal da TV -->
+          <span class="console-obj console-obj--switch">
+            <svg viewBox="0 0 120 80">
+              <ellipse cx="60" cy="78" rx="56" ry="2.5" fill="#0c0609" />
+              <path d="M25 6h-7A10 10 0 0 0 8 16v48a8 8 0 0 0 8 8h9z" fill="#1d8bad" />
+              <path d="M95 6h7a10 10 0 0 1 10 10v48a8 8 0 0 1-8 8h-9z" fill="#c4423a" />
+              <path d="M25 6h-7A10 10 0 0 0 8 16v2a10 10 0 0 1 10-10h7z" fill="#5cc3e2" opacity="0.5" />
+              <path d="M95 6h7a10 10 0 0 1 10 10v2a10 10 0 0 0-10-10h-7z" fill="#f08a7f" opacity="0.4" />
+              <circle cx="16.5" cy="19" r="3.6" fill="#0f4a5e" />
+              <path d="M15 39h3v3h-3zM15 47h3v3h-3zM11 43h3v3h-3zM19 43h3v3h-3z" fill="#0f4a5e" />
+              <circle cx="103.5" cy="17" r="1.8" fill="#6a1f1a" /><circle cx="103.5" cy="27" r="1.8" fill="#6a1f1a" />
+              <circle cx="98.5" cy="22" r="1.8" fill="#6a1f1a" /><circle cx="108.5" cy="22" r="1.8" fill="#6a1f1a" />
+              <circle cx="103.5" cy="45" r="3.6" fill="#6a1f1a" />
+              <rect x="25" y="6" width="70" height="26" fill="#131216" />
+              <rect x="30" y="10" width="60" height="20" fill="#16282a" />
+              <path d="M70 10h12L64 30H52z" fill="#46c3b5" opacity="0.12" />
+              <path d="M28 25h64l3 53H25z" fill="#232227" />
+              <path d="M28 25h64l.3 3H27.8z" fill="#3a3940" />
+              <path d="M44 25h32" stroke="#0c0609" stroke-width="1.5" />
+              <circle cx="31" cy="72" r="1.1" class="led" fill="#7be36f" />
+            </svg>
+          </span>
+          <!-- console de cartucho empilhado em cima do console de mesa fininho com a barra de luz azul -->
+          <span class="console-obj console-obj--pilha so-pc">
+            <svg class="snes" viewBox="0 0 140 50">
+              <path d="M46 2h48v16H46z" fill="#5c5957" />
+              <rect x="52" y="4" width="36" height="9" fill="#f4ecd2" /><rect x="52" y="4" width="36" height="2.5" fill="#b3213f" />
+              <rect x="36" y="13" width="68" height="12" rx="3" fill="#77736f" />
+              <rect x="4" y="18" width="132" height="30" rx="10" fill="#8f8b86" />
+              <rect x="8" y="18" width="124" height="4" rx="2" fill="#aaa6a0" />
+              <rect x="14" y="25" width="13" height="5" rx="1.5" fill="#54486f" />
+              <rect x="113" y="25" width="13" height="5" rx="1.5" fill="#54486f" />
+              <rect x="62" y="27" width="16" height="4" rx="2" fill="#625e94" />
+              <rect x="20" y="36" width="12" height="7" rx="1.5" fill="#3a3836" /><rect x="36" y="36" width="12" height="7" rx="1.5" fill="#3a3836" />
+              <circle cx="58" cy="39.5" r="1.3" class="led" fill="#ff5c5c" />
+            </svg>
+            <svg class="ps" viewBox="0 0 180 40">
+              <ellipse cx="90" cy="38" rx="86" ry="2" fill="#0c0609" />
+              <path d="M11 4h167l-7 17H4z" fill="#1b1a1e" />
+              <path d="M11 4h167l-.8 2H10.2z" fill="#3c3b42" />
+              <path d="M30 12.5h70" stroke="#0a090c" stroke-width="1.6" />
+              <path d="M4 21h167l-1 3H5z" fill="#0c0b0e" />
+              <rect x="62" y="18.5" width="48" height="8" fill="#4aa8ff" opacity="0.18" class="led" />
+              <rect x="66" y="21.4" width="40" height="2" fill="#6cb8ff" class="led" />
+              <path d="M5 24h165l-5 12H11z" fill="#242328" />
+            </svg>
+          </span>
+          <!-- console branco em pé, com o anel verde aceso -->
+          <span class="console-obj console-obj--x360">
+            <svg viewBox="0 0 44 112">
+              <defs>
+                <linearGradient id="x360" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#c2bdb3" /><stop offset="0.6" stop-color="#a39e94" /><stop offset="1" stop-color="#7f7a72" /></linearGradient>
+              </defs>
+              <rect x="1" y="104" width="42" height="7" rx="2" fill="#2b2a2f" />
+              <path d="M5 4h34q-6 50 0 100H5q6-50 0-100z" fill="url(#x360)" />
+              <path d="M5 4h34" stroke="#ddd8cf" stroke-width="1.5" />
+              <path d="M29 34v58" stroke="#6e6a62" stroke-width="1.6" stroke-linecap="round" />
+              <circle cx="20" cy="18" r="9" fill="#7be36f" opacity="0.16" class="led" />
+              <circle cx="20" cy="18" r="5.6" fill="none" stroke="#7be36f" stroke-width="2.2" class="led" />
+              <circle cx="20" cy="18" r="3.3" fill="#d8d4cb" />
+              <rect x="27" y="14" width="4" height="8" rx="2" fill="#8a857c" />
+              <rect x="13" y="76" width="12" height="20" rx="2" fill="none" stroke="#8a857c" stroke-width="1" />
+            </svg>
+          </span>
+          <!-- console preto em pé na base, frente frisada -->
+          <span class="console-obj console-obj--ps2 so-pc">
+            <svg viewBox="0 0 34 120">
+              <path d="M2 110h30l-2 8H4z" fill="#3a3940" />
+              <rect x="7" y="4" width="20" height="106" fill="#1a191e" />
+              <rect x="7" y="4" width="20" height="2" fill="#3a3941" />
+              <rect x="9" y="9" width="16" height="44" fill="#141318" />
+              <path d="M10 60h14M10 64h14M10 68h14M10 72h14M10 76h14M10 80h14M10 84h14M10 88h14M10 92h14" stroke="#2d2c33" stroke-width="1.6" />
+              <circle cx="13" cy="15" r="1.3" class="led" fill="#62d26a" /><circle cx="21" cy="15" r="1.3" class="led" fill="#3f8cff" />
+            </svg>
+          </span>
+          <!-- portátil de bolso encostado nas capinhas -->
+          <span class="console-obj console-obj--gb so-pc">
+            <svg viewBox="0 0 40 66">
+              <path d="M3 2h34v50q0 12-12 12H5q-2 0-2-2z" fill="#9d998f" />
+              <path d="M3 2h34v2H3z" fill="#bdb9ae" />
+              <rect x="7" y="7" width="26" height="22" rx="2" fill="#46444f" />
+              <rect x="11" y="10" width="18" height="15" fill="#6c7a38" />
+              <path d="M9 40h4v-4h3v4h4v3h-4v4h-3v-4H9z" fill="#232227" />
+              <circle cx="28" cy="42" r="2.7" fill="#7d2643" /><circle cx="33.5" cy="38.5" r="2.7" fill="#7d2643" />
+              <path d="M26 58l6-5M29 60l6-5" stroke="#76726a" stroke-width="1.2" />
+            </svg>
+          </span>
+          <span class="capas-pilha">
+            <span class="capinha capinha--mario">Super Mario World</span>
+            <span class="capinha capinha--sims"><span class="capinha__losango"></span>The Sims 2</span>
+            <span class="capinha capinha--tlou">The Last of Us</span>
+            <span class="capinha capinha--gta">GTA San Andreas</span>
+          </span>
+        </div>
+
+        <div class="chao" aria-hidden="true"><div class="chao__carpete"></div></div>
+        <div class="movel">
+          <span class="movel__coroa" aria-hidden="true"></span>
+          <ul class="rack" id="rack" aria-label="Jogos sugeridos nesta rodada"></ul>
+          <span class="movel__base" aria-hidden="true"></span>
+        </div>
+      </section>
+      <p class="sr" id="aviso" aria-live="polite"></p>
+    </main>
+
+    <footer class="rodape">
+      <p>Clube de amigos, sem fins comerciais; não é afiliado a nenhuma fabricante, estúdio ou plataforma; marcas pertencem a seus titulares.</p>
+    </footer>
+  </div>
+
+  <!-- Modal do estojo: a caixinha É o formulário. Fica fora do .app para o .app virar inert. -->
+  <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-titulo" hidden>
+    <div class="modal__fundo" id="modal-fundo"></div>
+    <div class="modal__palco">
+      <h2 class="modal__titulo" id="modal-titulo">Sua sugestão: a capa</h2>
+      <p class="modal__dica" id="modal-dica">Busca o jogo e escolhe a capa. Depois a gente abre a caixinha.</p>
+      <form class="modal__form" id="form-sugestao" novalidate>
+        <div class="estojo" id="estojo">
+          <span class="estojo__sombra" id="estojo-sombra"></span>
+          <div class="estojo__corpo" id="estojo-corpo">
+            <div class="estojo__base">
+              <div class="cd" id="cd" aria-hidden="true"><span class="cd__rotulo" id="cd-rotulo">Seu jogo</span><span class="cd__furo"></span></div>
+            </div>
+            <div class="estojo__tampa" id="tampa">
+              <div class="tampa__frente" id="frente">
+                <span class="capa" id="capa-arte"></span>
+                <span class="tampa__vazia" id="tampa-vazia" aria-hidden="true"><span>Sua<br>vaga</span></span>
+                <span class="tarja" id="capa-tarja" hidden></span>
+                <span class="preco" id="capa-preco" hidden></span>
+                <span class="carimbo carimbo--seu" id="capa-carimbo" hidden>Seu</span>
+                <fieldset class="capa-escolha" id="capa-escolha">
+                  <legend>Imagem da capa</legend>
+                  <div class="capa-escolha__opcoes" id="capa-opcoes"></div>
+                  <input id="capa-arquivo" type="file" accept="image/*" hidden>
+                  <input class="campo-link" id="capa-link" type="url" inputmode="url" placeholder="https://… link da imagem" aria-label="Link da imagem da capa" hidden>
+                </fieldset>
+                <div class="placa" id="placa">
+                  <label class="placa__rotulo" for="nome">Nome do jogo</label>
+                  <input class="placa__input" id="nome" name="nome" autocomplete="off" maxlength="100" placeholder="Digita pra buscar" aria-describedby="busca-status">
+                  <ul class="busca" id="busca-lista" aria-label="Jogos encontrados" hidden></ul>
+                  <span class="sr" id="busca-status" aria-live="polite"></span>
+                </div>
+              </div>
+              <div class="tampa__verso" id="verso" inert>
+                <span class="presilha presilha--cima" aria-hidden="true"></span><span class="presilha presilha--baixo" aria-hidden="true"></span>
+                <div class="manual" id="manual">
+                  <p class="manual__cabeca" aria-hidden="true"><span>Manual de instruções</span><span class="manual__pag">pág. 1</span></p>
+                  <p class="manual__jogo" id="manual-jogo">Seu jogo</p>
+                  <label class="mcampo"><span>Do que se trata</span>
+                    <textarea name="descricao" maxlength="300" rows="3"></textarea>
+                  </label>
+                  <label class="mcampo"><span>Por que a gente deve jogar?</span>
+                    <textarea name="pitch" maxlength="260" rows="3" aria-describedby="pitch-cont"></textarea>
+                    <span class="mcampo__cont" id="pitch-cont">0/200</span>
+                  </label>
+                  <div class="mdupla">
+                    <label class="mcampo"><span>Ano</span><input name="ano" type="number" inputmode="numeric" min="1950" max="2100"></label>
+                    <label class="mcampo"><span>Gênero</span><input name="genero" maxlength="60"></label>
+                  </div>
+                  <fieldset class="mcampo"><legend>Tempo pra zerar</legend>
+                    <div class="mchips">
+                      <label class="mchip mchip--radio"><input type="radio" name="duracao" value="curto"><span>Curto</span></label>
+                      <label class="mchip mchip--radio"><input type="radio" name="duracao" value="medio" checked><span>Médio</span></label>
+                      <label class="mchip mchip--radio"><input type="radio" name="duracao" value="longo"><span>Longo</span></label>
+                    </div>
+                  </fieldset>
+                  <fieldset class="mcampo"><legend>Modo</legend>
+                    <div class="mchips">
+                      <label class="mchip mchip--radio"><input type="radio" name="modo" value="solo" checked><span>Solo</span></label>
+                      <label class="mchip mchip--radio"><input type="radio" name="modo" value="coop"><span>Co-op</span></label>
+                      <label class="mchip mchip--radio"><input type="radio" name="modo" value="multi"><span>Multi</span></label>
+                    </div>
+                  </fieldset>
+                  <label class="mcampo"><span>Preço aproximado (R$)</span>
+                    <input name="preco" type="number" inputmode="numeric" min="0" max="10000" step="1" aria-describedby="preco-ajuda">
+                    <small id="preco-ajuda">0 se for grátis.</small>
+                  </label>
+                  <fieldset class="mcampo"><legend>Plataformas</legend>
+                    <div class="mchips" id="plataformas"></div>
+                  </fieldset>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="modal__erro" id="modal-erro" role="alert"></p>
+        <div class="modal__acoes" id="modal-acoes">
+          <button class="btn btn--fantasma" type="button" id="btn-cancelar" hidden>Cancelar</button>
+          <button class="btn" type="button" id="btn-secundario">Cancelar</button>
+          <button class="btn btn--primario" type="submit" id="btn-primario">Avançar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Mock: só o necessário para a tela parecer viva. Nada aqui grava dados.
+    const calma = matchMedia('(prefers-reduced-motion: reduce), (prefers-contrast: more)');
+
+    // 1) Sugerindo: a prateleira é desenhada a partir dos dados; a sua vaga abre o estojo.
+    const $ = (sel) => document.querySelector(sel);
+    const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+    const norm = (s) => s.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase().trim();
+    const hash = (s) => [...s].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7);
+    const espera = (ms) => new Promise((r) => setTimeout(r, calma.matches ? 0 : ms));
+
+    const DUR = { curto: 'Curto', medio: 'Médio', longo: 'Longo' };
+    const MODO = { solo: 'Solo', coop: 'Co-op', multi: 'Multi' };
+    const PLATS = ['PC', 'PlayStation', 'Xbox', 'Nintendo', 'Mobile', 'Mac', 'Linux'];
+    // capa genérica por código (a mesma do app): cor, risca e motivo por índice
+    const PAL = [
+      { capa: '#1f3446', risca: '#8fb8c9', hue: 212 }, { capa: '#33452a', risca: '#d9b45a', hue: 92 },
+      { capa: '#4a1d26', risca: '#e0704a', hue: 352 }, { capa: '#3a2848', risca: '#d58ab0', hue: 292 },
+      { capa: '#4a2f1c', risca: '#c99a5e', hue: 28 }, { capa: '#1d3e3c', risca: '#ff8a6a', hue: 176 },
+    ];
+    const MOTIVO = [
+      '<svg class="capa__motivo" viewBox="0 0 100 100"><path d="M50 4 92 50 50 96 8 50z" fill="none" stroke="#e8f0f2" stroke-width="7" /><path d="M50 30 70 50 50 70 30 50z" fill="#e8f0f2" /></svg>',
+      '<svg class="capa__motivo" viewBox="0 0 100 100"><circle cx="82" cy="10" r="12" fill="#f0d27a" /><path d="M4 40h92v7H4zM4 58h92v7H4zM4 76h92v7H4z" fill="#5a7d40" /></svg>',
+      '<svg class="capa__motivo" viewBox="0 0 100 100"><path d="M50 8 94 86H6z" fill="none" stroke="#f2b07a" stroke-width="7" /><path d="M50 44 68 76H32z" fill="#f2b07a" /></svg>',
+      '<svg class="capa__motivo" viewBox="0 0 100 100"><path d="M2 88 36 30 54 58 68 40 98 88z" fill="#f2c4d8" /><path d="M36 30 44 44 36 40 28 44z" fill="#fff3fa" /></svg>',
+      '<svg class="capa__motivo" viewBox="0 0 100 100"><circle cx="50" cy="50" r="22" fill="#f4a95a" /><ellipse cx="50" cy="50" rx="46" ry="12" fill="none" stroke="#f3e6d8" stroke-width="5" transform="rotate(-18 50 50)" /></svg>',
+      '<svg class="capa__motivo" viewBox="0 0 100 100"><path d="M8 20h44v44H8z" fill="none" stroke="#ffc2a8" stroke-width="7" /><path d="M48 40h44v44H48z" fill="#ffc2a8" /></svg>',
+    ];
+    const OUTROS = [
+      { nome: 'Hollow Knight', ano: 2017, genero: 'Metroidvania', por: 'Bia', pal: 0, duracao: 'longo', modo: 'solo', preco: 47 },
+      { nome: 'Hades', ano: 2020, genero: 'Roguelike', por: 'Caio', pal: 2, duracao: 'medio', modo: 'solo', preco: 73 },
+      { nome: 'Celeste', ano: 2018, genero: 'Plataforma', por: 'Duda', pal: 3, duracao: 'curto', modo: 'solo', preco: 37 },
+      { nome: 'Outer Wilds', ano: 2019, genero: 'Exploração', por: 'Léo', pal: 4, duracao: 'medio', modo: 'solo', preco: 60 },
+      { nome: 'It Takes Two', ano: 2021, genero: 'Aventura', por: 'Mari', pal: 5, duracao: 'medio', modo: 'coop', preco: 199 },
+    ];
+    // busca de mentira (no app é o RAWG): artes geradas aqui fazem o papel das imagens
+    const TODAS = ['PC', 'PlayStation', 'Xbox', 'Nintendo', 'Mac'];
+    const BANCO = [
+      { nome: 'Stardew Valley', ano: 2016, genero: 'Simulação', plats: PLATS, pal: 1, arte: ['#2d4a2a', '#f0d27a', '#5a7d40'], desc: 'Você herda uma fazenda largada e troca a cidade grande por plantação, pesca e vizinhos.' },
+      { nome: 'Disco Elysium', ano: 2019, genero: 'RPG', plats: TODAS, pal: 2, arte: ['#3a2a3f', '#e0704a', '#1d1420'], desc: 'Um detetive acorda sem memória e precisa resolver um assassinato conversando com todo mundo.' },
+      { nome: 'Portal 2', ano: 2011, genero: 'Puzzle', plats: [...TODAS, 'Linux'], pal: 5, arte: ['#1d3e3c', '#ff8a6a', '#0f2222'], desc: 'Quebra-cabeças com uma arma de portais e uma inteligência artificial que adora te provocar.' },
+      { nome: 'Cuphead', ano: 2017, genero: 'Ação', plats: TODAS, pal: 4, arte: ['#4a2f1c', '#f4a95a', '#2a1a10'], desc: 'Chefões difíceis num visual de desenho animado antigo, sozinho ou em dupla.' },
+      { nome: 'Undertale', ano: 2015, genero: 'RPG', plats: [...TODAS, 'Linux'], pal: 3, arte: ['#151417', '#ffc15e', '#3a2848'], desc: 'Um RPG em que dá pra chegar ao fim sem machucar ninguém.' },
+      { nome: 'Unpacking', ano: 2021, genero: 'Puzzle', plats: PLATS, pal: 3, arte: ['#3a2848', '#ffc2a8', '#d58ab0'], desc: 'Desempacotar caixas de mudança e descobrir a vida de alguém pelos objetos.' },
+      { nome: 'Hi-Fi Rush', ano: 2023, genero: 'Ação', plats: ['PC', 'PlayStation', 'Xbox'], pal: 0, arte: ['#1f3446', '#ff5c8a', '#8fb8c9'], desc: 'Pancadaria em que cada golpe cai no ritmo da música.' },
+      { nome: 'Super Mario Odyssey', ano: 2017, genero: 'Plataforma', plats: ['Nintendo'], pal: 2, arte: ['#a8242c', '#ffd25a', '#1f3446'], desc: 'Uma viagem por vários reinos com um chapéu que toma o corpo dos inimigos.' },
+      { nome: 'The Last of Us Part I', ano: 2022, genero: 'Ação', plats: ['PC', 'PlayStation'], pal: 5, arte: ['#1d3e3c', '#c99a5e', '#0f1a18'], desc: 'Uma travessia por um país em ruínas, com uma garota que pode mudar tudo.' },
+      { nome: 'GTA San Andreas', ano: 2004, genero: 'Ação', plats: ['PC', 'PlayStation', 'Xbox', 'Mobile'], pal: 4, arte: ['#4a2f1c', '#f2c14e', '#151417'], desc: 'CJ volta pra casa depois de anos e se mete em confusão em três cidades.' },
+      { nome: 'The Sims 2', ano: 2004, genero: 'Simulação', plats: ['PC', 'Mac'], pal: 0, arte: ['#1c2a54', '#59d36a', '#e9eef5'], desc: 'Você controla a vida de uma família inteira, do berço à velhice.' },
+      { nome: 'Super Mario World', ano: 1990, genero: 'Plataforma', plats: ['Nintendo'], pal: 2, arte: ['#a8242c', '#ffd25a', '#33452a'], desc: 'Mario e Yoshi atravessam a Terra dos Dinossauros atrás da princesa.' },
+    ];
+    let meu = null; // sua sugestão (null = vaga livre)
+
+    // arte de mentira em SVG (3 composições), no lugar das imagens do RAWG
+    function arte([a, b, c], v) {
+      const corpo = [
+        `<rect width='300' height='400' fill='${a}'/><circle cx='200' cy='150' r='70' fill='${b}'/><path d='M0 400V250l80-70 70 60 60-90 90 110v140z' fill='${c}'/>`,
+        `<rect width='300' height='400' fill='${a}'/><path d='M-40 400 300 60v80L40 400zM60 400 300 160v60L140 400z' fill='${b}'/><circle cx='90' cy='120' r='46' fill='${c}'/>`,
+        `<rect width='300' height='400' fill='${a}'/><circle cx='150' cy='230' r='90' fill='${b}'/><rect y='230' width='300' height='170' fill='${c}'/><path d='M0 260h300M0 292h300M0 334h300M0 384h300M150 230 0 400M150 230l150 170M150 230v170' stroke='${b}' stroke-width='3' opacity='.6'/>`,
+      ][v];
+      return `data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 400'>${corpo}</svg>`)}`;
+    }
+    const linkSeguro = (v) => { try { const u = new URL(v.trim()); return /^https?:$/.test(u.protocol) ? u.href : ''; } catch { return ''; } };
+    const palDe = (nome) => hash(norm(nome) || 'x') % PAL.length;
+    const precoTxt = (p) => (p === 0 ? 'Grátis' : `R$ ${p}`);
+    const meta = (g) => [g.ano, esc(g.genero)].filter(Boolean).join(' · ');
+
+    // ---------- prateleira ----------
+    const rack = $('#rack');
+    const FACES = '<span class="rack__face rack__wall"></span><span class="rack__face rack__ceil"></span><span class="rack__face rack__floor"></span><span class="rack__face rack__side rack__side--l"></span><span class="rack__face rack__side rack__side--r"></span>';
+    const nicho = (dentro) => `<div class="rack__bay" aria-hidden="true"><div class="rack__scene">${FACES}<div class="rack__stage">${dentro}</div></div></div><div class="rack__beico" aria-hidden="true"></div>`;
+    const capaHtml = (g) => `<span class="capa${g.imagem ? ' capa--img' : ''}" style="--capa: ${PAL[g.pal].capa}; --risca: ${PAL[g.pal].risca}">${MOTIVO[g.pal]}<span class="capa__nome">${esc(g.nome)}</span></span>`;
+    const caixa = (g, seu) => `
+      <div class="case" style="--hue: ${PAL[g.pal].hue}">
+        <span class="case__face case__front">${capaHtml(g)}
+          <span class="tarja">${DUR[g.duracao]} · ${MODO[g.modo]}</span><span class="preco">${precoTxt(g.preco)}</span>
+          ${seu ? '<span class="carimbo carimbo--seu">Seu</span>' : ''}
+        </span>
+        <span class="case__face case__spine"><span>${esc(g.nome)}</span></span>
+        <span class="case__face case__side"></span><span class="case__face case__top"></span>
+      </div>`;
+    const postit = (titulo, linhas) => `<div class="postit"><h3 class="rack__nome">${titulo}</h3>${linhas.filter(Boolean).map((l) => `<p class="rack__meta">${l}</p>`).join('')}</div>`;
+
+    const slotOutro = (g) => `<li class="rack__slot">${nicho(caixa(g, false))}<div class="rack__info">${postit(esc(g.nome), [meta(g), `sugestão de ${esc(g.por)}`])}</div></li>`;
+    const slotMeu = (g) => `
+      <li class="rack__slot" id="slot-meu">${nicho(caixa(g, true))}
+        <div class="rack__info">${postit(esc(g.nome), [meta(g), 'sugestão sua'])}
+          <div class="rack__acoes rack__acoes--meu">
+            <button class="btn" type="button" data-editar>
+              <svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M15 3h3v3h3v3h-3v3h-3v3h-3v3H9v3H3v-6h3v-3h3v-3h3V6h3z" /></svg>Editar
+            </button>
+            <button class="btn btn--perigo" type="button" data-tirar>Tirar da prateleira</button>
+            <div class="confirma" data-confirma hidden>
+              <p>Tirar “${esc(g.nome)}” da prateleira?</p>
+              <div class="confirma__acoes">
+                <button class="btn btn--papel-primario" type="button" data-confirmar>Tirar da prateleira</button>
+                <button class="btn btn--papel" type="button" data-desistir>Deixa lá</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </li>`;
+    const slotVaga = () => `
+      <li class="rack__slot rack__slot--vaga" id="slot-meu">${nicho(`<div class="case case--vazio" style="--hue: 270"><span class="case__face case__front"><span class="capa-vazia"><span>Sua<br>vaga</span></span></span><span class="case__face case__spine"></span><span class="case__face case__side"></span><span class="case__face case__top"></span></div>`)}
+        <div class="rack__info">${postit('Sua vaga', ['Um jogo por pessoa. Dá pra trocar até a votação abrir.'])}
+          <div class="rack__acoes"><button class="btn btn--primario" type="button" data-adicionar>+ Adicionar sugestão</button></div>
+        </div>
+      </li>`;
+    const slotVazio = (soPc) => `<li class="rack__slot rack__slot--vazio${soPc ? ' so-pc' : ''}" aria-hidden="true">${nicho('<span class="rack__spacer"></span>')}<div class="rack__info"></div></li>`;
+
+    function desenhaPrateleira() {
+      const slots = [meu ? slotMeu(meu) : slotVaga(), ...OUTROS.map(slotOutro)];
+      const n = slots.length, celular = n % 2, pc = (4 - (n % 4)) % 4;
+      for (let i = 0; i < pc; i++) slots.push(slotVazio(i >= celular));
+      rack.innerHTML = slots.join('');
+      if (meu?.imagem) rack.querySelector('#slot-meu .capa').style.backgroundImage = `url("${meu.imagem}")`;
+      const total = OUTROS.length + (meu ? 1 : 0);
+      $('#contagem').textContent = `${total} jogos na prateleira`;
+      $('#ficha-falta').textContent = meu ? 'Sua sugestão já tá na prateleira.' : 'Bota sua sugestão na prateleira.';
+      $('#ficha-resto').textContent = meu
+        ? 'Dá pra editar ou trocar até a votação abrir. Sem pressa.'
+        : 'Um jogo por pessoa. Pode fazer com calma, a prateleira fica aberta até o admin abrir a votação.';
+    }
+    const avisar = (txt) => { $('#aviso').textContent = ''; setTimeout(() => ($('#aviso').textContent = txt), 50); };
+
+    // ---------- motor de movimento ----------
+    // Personalidade "objeto físico": plástico rígido, quase sem overshoot.
+    // Curva assinatura (entradas e voo): cubic-bezier(0.2, 0.8, 0.2, 1). Na tela: ease-in-out (0.65, 0, 0.35, 1).
+    // Durações: rápida 140–260ms (controles), padrão 560–760ms (tampa, voo), CD 1300ms (camada secundária).
+    const SAI = 'cubic-bezier(0.2, 0.8, 0.2, 1)';
+    const NA_TELA = 'cubic-bezier(0.65, 0, 0.35, 1)';
+    function anim(el, quadros, opts) {
+      if (calma.matches) {
+        const fim = { ...quadros[quadros.length - 1] };
+        Object.assign(el.style, fim);
+        return Promise.resolve();
+      }
+      const a = el.animate(quadros, { fill: 'both', ...opts });
+      return a.finished.then(() => { a.commitStyles(); a.cancel(); }).catch(() => {});
+    }
+    const entrar = (els, atraso = 0, passo = 0) => Promise.all(els.map((el, i) =>
+      anim(el, [{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }], { duration: 260, delay: atraso + i * passo, easing: SAI })));
+    const sumir = (els, dur = 140) => Promise.all(els.map((el) =>
+      anim(el, [{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(6px)' }], { duration: dur, easing: 'cubic-bezier(0.4, 0, 1, 1)' })));
+
+    const modal = $('#modal'), fundo = $('#modal-fundo'), estojo = $('#estojo'), corpo = $('#estojo-corpo');
+    const tampa = $('#tampa'), frente = $('#frente'), verso = $('#verso'), sombra = $('#estojo-sombra');
+    const cd = $('#cd'), capaEl = $('#capa-arte'), vazia = $('#tampa-vazia');
+    const form = $('#form-sugestao'), nome = $('#nome'), lista = $('#busca-lista'), link = $('#capa-link');
+    const escolha = $('#capa-escolha'), placa = $('#placa'), erro = $('#modal-erro');
+    const titulo = $('#modal-titulo'), dica = $('#modal-dica'), acoes = $('#modal-acoes');
+    const btnPri = $('#btn-primario'), btnSec = $('#btn-secundario'), btnCancelar = $('#btn-cancelar');
+    const app = document.querySelector('.app');
+    const st = { passo: 1, fonte: null, gatilho: null, editando: false, jogo: null, capa: 'gen', ocupado: false };
+
+    // de onde a caixa sai (ou para onde volta): o retângulo da capinha na prateleira
+    function deCaixa(el) {
+      const s = el.getBoundingClientRect(), t = estojo.getBoundingClientRect();
+      const dx = s.left + s.width / 2 - (t.left + t.width / 2), dy = s.top + s.height / 2 - (t.top + t.height / 2);
+      const k = s.height / t.height;
+      return {
+        longe: `translate(${dx}px, ${dy}px) scale(${k}) rotateY(22deg)`,
+        // ponto do meio levantado: o voo faz um arco, não uma reta
+        meio: `translate(${dx * 0.4}px, ${dy * 0.4 - 56}px) scale(${0.5 + k * 0.5}) rotateY(8deg)`,
+      };
+    }
+    // quanto o corpo anda quando a tampa abre: centraliza o par no PC; no celular centraliza o manual e o CD espia
+    const abertura = () => estojo.offsetWidth * (innerWidth < 760 ? 0.92 : 0.5);
+    const tremer = () => anim(estojo, [0, -12, 10, -6, 3, 0].map((x) => ({ transform: `translateX(${x}px)` })), { duration: 360, easing: 'ease-in-out' });
+
+    function abreTampa() {
+      const x = abertura(), w = estojo.offsetWidth;
+      // secundária: o CD aparece girando e desacelera (não segura o fim da etapa)
+      giraCd();
+      return Promise.all([
+        // antecipação: a tampa destrava (4deg pra dentro) antes de girar na dobradiça
+        anim(tampa, [{ transform: 'translateZ(2px) rotateY(0deg)' }, { transform: 'translateZ(2px) rotateY(4deg)', offset: 0.12 }, { transform: 'translateZ(2px) rotateY(-180deg)' }], { duration: 760, easing: NA_TELA }),
+        anim(corpo, [{ transform: 'translateX(0px)' }, { transform: `translateX(${x}px)` }], { duration: 760, easing: NA_TELA }),
+        anim(sombra, [{ transform: 'none' }, { transform: `translateX(${x - w / 2}px) scaleX(2)` }], { duration: 760, easing: NA_TELA }),
+      ]);
+    }
+    // o CD (com a imagem impressa) arranca girando e segue rodando devagar enquanto a caixinha está aberta
+    let giro = null;
+    function giraCd() {
+      if (calma.matches) return;
+      cd.getAnimations().forEach((a) => a.cancel());
+      giro = cd.animate([{ transform: 'rotate(0deg)' }, { transform: 'rotate(360deg)' }], { duration: 1400, delay: 200, easing: 'cubic-bezier(0.1, 0.6, 0.2, 1)' });
+      giro.finished.then(() => {
+        giro = cd.animate([{ transform: 'rotate(0deg)' }, { transform: 'rotate(360deg)' }], { duration: 9000, iterations: Infinity });
+      }).catch(() => {});
+    }
+    // ao fechar, o disco desacelera até parar
+    function paraCd() {
+      if (!giro) return;
+      const atual = getComputedStyle(cd).transform;
+      giro.cancel(); giro = null;
+      if (calma.matches || atual === 'none') return;
+      const ang = Math.atan2(...(atual.match(/matrix\(([^)]+)\)/)?.[1].split(',').slice(0, 2).map(Number).reverse() ?? [0, 1])) * 180 / Math.PI;
+      cd.animate([{ transform: `rotate(${ang}deg)` }, { transform: `rotate(${ang + 40}deg)` }], { duration: 500, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)', fill: 'forwards' });
+    }
+    function fechaTampa(dur = 560, easing = NA_TELA) {
+      paraCd();
+      return Promise.all([
+        anim(tampa, [{ transform: 'translateZ(2px) rotateY(-180deg)' }, { transform: 'translateZ(2px) rotateY(0deg)' }], { duration: dur, easing }),
+        anim(corpo, [{ transform: `translateX(${abertura()}px)` }, { transform: 'translateX(0px)' }], { duration: dur, easing }),
+        anim(sombra, [{ transform: `translateX(${abertura() - estojo.offsetWidth / 2}px) scaleX(2)` }, { transform: 'none' }], { duration: dur, easing }),
+      ]);
+    }
+
+    // ---------- conteúdo do estojo ----------
+    $('#plataformas').innerHTML = PLATS.map((p) => `<label class="mchip"><input type="checkbox" name="plats" value="${p}"><span>${p}</span></label>`).join('');
+    const imagemAtual = () => {
+      if (st.capa.startsWith('arte') && st.jogo) return arte(st.jogo.arte, Number(st.capa.slice(4)));
+      if (st.capa === 'link') return linkSeguro(link.value);
+      if (st.capa === 'arquivo') return st.arquivo;
+      return '';
+    };
+    function opcoesCapa() {
+      const ops = [
+        ...(st.jogo ? [0, 1, 2].map((v) => ({ v: `arte${v}`, rotulo: `Arte ${v + 1} do jogo`, img: arte(st.jogo.arte, v) })) : []),
+        { v: 'arquivo', rotulo: 'Imagem do seu aparelho', txt: st.arquivo ? '' : '↑', img: st.arquivo },
+        { v: 'gen', rotulo: 'Capa genérica', txt: 'Aa' },
+        { v: 'link', rotulo: 'Colar link de imagem', txt: 'URL' },
+      ];
+      if (!ops.some((o) => o.v === st.capa)) st.capa = 'gen';
+      $('#capa-opcoes').innerHTML = ops.map((o) => `
+        <label class="amostra"><input type="radio" name="capa" value="${o.v}" ${o.v === st.capa ? 'checked' : ''}>
+          <span ${o.img ? `style="background-image: url(&quot;${o.img}&quot;)"` : ''} aria-hidden="true">${o.txt ?? ''}</span><span class="sr">${o.rotulo}</span>
+        </label>`).join('');
+      link.hidden = st.capa !== 'link';
+    }
+    function pintaCapa() {
+      const txt = nome.value.trim() || 'Seu jogo';
+      const i = st.jogo ? st.jogo.pal : palDe(nome.value);
+      capaEl.style.setProperty('--capa', PAL[i].capa);
+      capaEl.style.setProperty('--risca', PAL[i].risca);
+      capaEl.innerHTML = `${MOTIVO[i]}<span class="capa__nome">${esc(txt)}</span>`;
+      const img = imagemAtual();
+      capaEl.classList.toggle('capa--img', Boolean(img));
+      capaEl.style.backgroundImage = img ? `url("${img}")` : '';
+      const rotulo = $('#cd-rotulo');
+      rotulo.innerHTML = `<span>${esc(txt)}</span>`;
+      rotulo.classList.toggle('com-img', Boolean(img));
+      if (img) rotulo.style.setProperty('--rotulo-img', `url("${img}")`); else rotulo.style.removeProperty('--rotulo-img');
+      cd.style.setProperty('--rotulo', PAL[i].capa);
+      $('#manual-jogo').textContent = txt;
+    }
+    function contaPitch() {
+      const n = form.elements.pitch.value.length;
+      $('#pitch-cont').textContent = `${n}/200`;
+      $('#pitch-cont').classList.toggle('estourou', n > 200);
+    }
+    function preencheManual(j) {
+      const f = form.elements;
+      f.descricao.value = j?.desc ?? j?.descricao ?? '';
+      f.pitch.value = j?.pitch ?? '';
+      f.ano.value = j?.ano ?? '';
+      f.genero.value = j?.genero ?? '';
+      f.preco.value = j?.preco ?? '';
+      form.querySelector(`[name=duracao][value=${j?.duracao ?? 'medio'}]`).checked = true;
+      form.querySelector(`[name=modo][value=${j?.modo ?? 'solo'}]`).checked = true;
+      const tem = new Set(j?.plats ?? []);
+      form.querySelectorAll('[name=plats]').forEach((c) => (c.checked = tem.has(c.value)));
+      contaPitch();
+    }
+    function prepara(j) {
+      st.jogo = j?.banco ?? null;
+      st.capa = j?.capa ?? 'gen';
+      st.arquivo = j?.arquivo ?? '';
+      nome.value = j?.nome ?? '';
+      link.value = j?.link ?? '';
+      lista.hidden = true;
+      erro.textContent = '';
+      preencheManual(j);
+      opcoesCapa();
+      pintaCapa();
+      frente.classList.remove('vestida');
+      ['#capa-tarja', '#capa-preco', '#capa-carimbo'].forEach((s) => ($(s).hidden = true));
+      $('#capa-carimbo').classList.remove('bate');
+      vazia.hidden = Boolean(j); // só a vaga nova sai vazia da prateleira
+    }
+    function passo(n) {
+      st.passo = n;
+      frente.inert = n !== 1;
+      verso.inert = n !== 2;
+      titulo.textContent = n === 1 ? 'Sua sugestão: a capa' : 'Sua sugestão: o manual';
+      dica.textContent = n === 1
+        ? 'Busca o jogo e escolhe a capa. Depois a gente abre a caixinha.'
+        : 'Preenche o manual. Quando fechar a caixinha, ela vai pra prateleira.';
+      btnPri.textContent = n === 1 ? 'Avançar' : 'Finalizar';
+      btnSec.textContent = n === 1 ? 'Cancelar' : 'Voltar pra capa';
+      btnCancelar.hidden = n === 1;
+    }
+    // validações iguais às do app (no app elas também valem nas rules)
+    function leManual() {
+      const f = form.elements;
+      const pitch = f.pitch.value.trim();
+      const ano = f.ano.value ? Number(f.ano.value) : null;
+      const preco = f.preco.value === '' ? NaN : Number(f.preco.value);
+      if (!pitch) return ['Conta em uma frase por que vale a pena jogar.', f.pitch];
+      if (pitch.length > 200) return ['O pitch passou de 200 caracteres. Enxuga um pouco.', f.pitch];
+      if (ano !== null && (!Number.isInteger(ano) || ano < 1950 || ano > 2100)) return ['Ano esquisito. Confere aí.', f.ano];
+      if (!Number.isInteger(preco) || preco < 0 || preco > 10000) return ['Preço em reais, número inteiro (0 se for grátis).', f.preco];
+      return {
+        descricao: f.descricao.value.trim(), pitch, ano, genero: f.genero.value.trim(),
+        duracao: f.duracao.value, modo: f.modo.value, preco,
+        plats: [...form.querySelectorAll('[name=plats]:checked')].map((c) => c.value),
+      };
+    }
+
+    // ---------- coreografia ----------
+    // Abrir: a capinha sai do nicho num arco até o centro e gira de frente; o fundo escurece;
+    // a capa "enche" quando pousa; os controles entram em cascata.
+    async function abreModal(fonte, gatilho, editando) {
+      if (st.ocupado) return;
+      st.ocupado = true;
+      st.fonte = fonte; st.gatilho = gatilho; st.editando = editando;
+      prepara(editando ? meu : null);
+      passo(1);
+      modal.hidden = false;
+      app.inert = true;
+      document.documentElement.classList.add('trava');
+      const de = deCaixa(fonte);
+      fonte.style.visibility = 'hidden';
+      await Promise.all([
+        anim(estojo, [{ transform: de.longe }, { transform: de.meio, offset: 0.55 }, { transform: 'none' }], { duration: 680, easing: SAI }),
+        anim(sombra, [{ transform: 'scale(0.3)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 680, easing: SAI }),
+        anim(fundo, [{ opacity: 0 }, { opacity: 1 }], { duration: 320, easing: 'ease-out' }),
+        entrar([titulo, dica, acoes], 240, 60),
+        vazia.hidden ? null : anim(vazia, [{ opacity: 1 }, { opacity: 0 }], { duration: 240, delay: 520, easing: 'ease-out' }),
+        entrar([escolha, placa], 560, 70),
+      ]);
+      st.ocupado = false;
+      estojo.classList.add('plano');
+      nome.focus();
+    }
+
+    // Avançar: os controles somem rápido, a tampa destrava e gira; o manual entra campo a campo.
+    async function avanca() {
+      if (!nome.value.trim()) { erro.textContent = 'Faltou o nome do jogo.'; tremer(); nome.focus(); return; }
+      if (st.capa === 'link' && !imagemAtual()) { erro.textContent = 'O link da capa precisa começar com http:// ou https://.'; tremer(); link.focus(); return; }
+      st.ocupado = true;
+      erro.textContent = '';
+      lista.hidden = true;
+      await sumir([escolha, placa]);
+      estojo.classList.remove('plano');
+      passo(2);
+      const campos = [...$('#manual').children];
+      await Promise.all([abreTampa(), entrar(campos, 520, 40), entrar([titulo, dica], 0)]);
+      st.ocupado = false;
+      form.elements.descricao.focus({ preventScroll: true });
+    }
+
+    async function volta() {
+      st.ocupado = true;
+      erro.textContent = '';
+      await fechaTampa();
+      passo(1);
+      await Promise.all([entrar([escolha, placa], 0, 70), entrar([titulo, dica], 0)]);
+      st.ocupado = false;
+      estojo.classList.add('plano');
+      nome.focus();
+    }
+
+    // Finalizar: fecha a tampa acelerando até o "clack", a capa ganha tarja e preço, o carimbo SEU bate
+    // e a caixa voa de volta pro nicho; lá o post-it cola.
+    async function finaliza() {
+      const dados = leManual();
+      if (Array.isArray(dados)) { erro.textContent = dados[0]; tremer(); dados[1].focus(); return; }
+      st.ocupado = true;
+      erro.textContent = '';
+      const jogo = {
+        nome: nome.value.trim(), banco: st.jogo, capa: st.capa, arquivo: st.arquivo, link: link.value.trim(), imagem: imagemAtual(),
+        pal: st.jogo ? st.jogo.pal : palDe(nome.value), ...dados,
+      };
+      estojo.classList.remove('plano');
+      frente.classList.add('vestida');
+      opacidade([escolha, placa], 0);
+      verso.inert = true;
+      await fechaTampa(560, 'cubic-bezier(0.55, 0, 0.85, 0.35)');
+      const tarja = $('#capa-tarja'), preco = $('#capa-preco'), carimbo = $('#capa-carimbo');
+      tarja.textContent = `${DUR[jogo.duracao]} · ${MODO[jogo.modo]}`;
+      preco.textContent = precoTxt(jogo.preco);
+      tarja.hidden = false; preco.hidden = false;
+      await Promise.all([
+        // squash do fechamento: o plástico bate e assenta
+        anim(corpo, [{ transform: 'none' }, { transform: 'scale(1.025, 0.985)', offset: 0.35 }, { transform: 'none' }], { duration: 220, easing: 'ease-out' }),
+        anim(tarja, [{ transform: 'translateX(-24px)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 240, easing: SAI }),
+        anim(preco, [{ transform: 'translateY(-18px) rotate(-14deg)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 280, delay: 80, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1.2)' }),
+        espera(120).then(() => { carimbo.hidden = false; if (!calma.matches) carimbo.classList.add('bate'); }),
+      ]);
+      await espera(300);
+      await voaDeVolta(560);
+      meu = jogo;
+      fechaModal();
+      desenhaPrateleira();
+      const slot = $('#slot-meu');
+      slot.querySelector('.postit').classList.add('cola');
+      anim(slot.querySelector('.rack__stage'), [{ translate: '0 -8px' }, { translate: '0 0' }], { duration: 300, easing: 'cubic-bezier(0.3, 1.5, 0.5, 1)' });
+      avisar(st.editando ? 'Sugestão atualizada.' : 'Tá na prateleira!');
+      slot.querySelector('[data-editar]').focus({ preventScroll: true });
+    }
+
+    async function cancela() {
+      if (st.ocupado) return;
+      st.ocupado = true;
+      lista.hidden = true;
+      erro.textContent = '';
+      estojo.classList.remove('plano');
+      if (st.passo === 2) { verso.inert = true; await fechaTampa(440); }
+      await sumir([escolha, placa]);
+      if (!vazia.hidden) await anim(vazia, [{ opacity: 0 }, { opacity: 1 }], { duration: 160, easing: 'ease-out' });
+      await voaDeVolta(520);
+      st.fonte.style.visibility = '';
+      fechaModal();
+      st.gatilho.focus({ preventScroll: true });
+    }
+
+    function voaDeVolta(dur) {
+      const para = deCaixa(st.fonte);
+      return Promise.all([
+        anim(estojo, [{ transform: 'none' }, { transform: para.meio, offset: 0.45 }, { transform: para.longe }], { duration: dur, easing: 'cubic-bezier(0.45, 0, 0.2, 1)' }),
+        anim(sombra, [{ transform: 'none', opacity: 1 }, { transform: 'scale(0.3)', opacity: 0 }], { duration: dur, easing: 'ease-in' }),
+        anim(fundo, [{ opacity: 1 }, { opacity: 0 }], { duration: 360, delay: dur - 360, easing: 'ease-in' }),
+        sumir([titulo, dica, acoes, erro], 160),
+      ]);
+    }
+    function opacidade(els, v) { els.forEach((el) => (el.style.opacity = v)); }
+    function fechaModal() {
+      modal.hidden = true;
+      app.inert = false;
+      document.documentElement.classList.remove('trava');
+      [estojo, corpo, sombra, fundo, cd, vazia, titulo, dica, acoes, erro, escolha, placa].forEach((el) => {
+        el.style.removeProperty('transform'); el.style.removeProperty('opacity');
+      });
+      tampa.style.transform = 'translateZ(2px)';
+      st.ocupado = false;
+    }
+
+    // ---------- eventos ----------
+    rack.addEventListener('click', async (event) => {
+      const alvo = event.target.closest('button');
+      if (!alvo) return;
+      const slot = alvo.closest('.rack__slot');
+      const caso = slot.querySelector('.case');
+      if (alvo.matches('[data-adicionar]')) abreModal(caso, alvo, false);
+      if (alvo.matches('[data-editar]')) abreModal(caso, alvo, true);
+      if (alvo.matches('[data-tirar]')) {
+        const conf = slot.querySelector('[data-confirma]');
+        conf.hidden = false;
+        anim(conf, [{ opacity: 0, transform: 'translateY(-6px)' }, { opacity: 1, transform: 'none' }], { duration: 200, easing: SAI });
+        conf.querySelector('[data-confirmar]').focus();
+      }
+      if (alvo.matches('[data-desistir]')) {
+        slot.querySelector('[data-confirma]').hidden = true;
+        slot.querySelector('[data-tirar]').focus();
+      }
+      if (alvo.matches('[data-confirmar]')) {
+        // a caixa sai do nicho vindo pra frente; a vaga vazia cai no lugar
+        await anim(slot.querySelector('.rack__stage'), [{ translate: '0 0 0' }, { translate: '0 -18px 240px' }], { duration: 340, easing: 'cubic-bezier(0.4, 0, 1, 1)' });
+        meu = null;
+        desenhaPrateleira();
+        const novo = $('#slot-meu');
+        anim(novo.querySelector('.rack__stage'), [{ translate: '0 -26px' }, { translate: '0 0' }], { duration: 360, easing: 'cubic-bezier(0.3, 1.4, 0.5, 1)' });
+        avisar('Sugestão removida. A vaga é sua de novo.');
+        novo.querySelector('[data-adicionar]').focus({ preventScroll: true });
+      }
+    });
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      if (st.ocupado) return;
+      if (st.passo === 1) avanca(); else finaliza();
+    });
+    btnSec.addEventListener('click', () => { if (st.ocupado) return; if (st.passo === 1) cancela(); else volta(); });
+    btnCancelar.addEventListener('click', cancela);
+    modal.addEventListener('keydown', (event) => {
+      if (event.key !== 'Escape') return;
+      if (!lista.hidden) { lista.hidden = true; nome.focus(); return; }
+      cancela();
+    });
+
+    // busca de mentira: filtra o banco a partir de 2 letras
+    nome.addEventListener('input', () => {
+      if (st.jogo && norm(nome.value) !== norm(st.jogo.nome)) { st.jogo = null; opcoesCapa(); }
+      pintaCapa();
+      const termo = norm(nome.value);
+      if (termo.length < 2) { lista.hidden = true; return; }
+      const achados = BANCO.filter((j) => norm(j.nome).includes(termo)).slice(0, 5);
+      lista.innerHTML = achados.length
+        ? achados.map((j) => `<li><button class="busca__item" type="button" data-i="${BANCO.indexOf(j)}"><span class="busca__capa" style="background-image: url(&quot;${arte(j.arte, 0)}&quot;)"></span><span>${esc(j.nome)}<small>${j.ano} · ${esc(j.genero)}</small></span></button></li>`).join('')
+        : '<li class="busca__vazio">Nada encontrado. Segue com o nome que você escreveu.</li>';
+      lista.hidden = false;
+      $('#busca-status').textContent = achados.length ? `${achados.length} jogos encontrados` : 'Nada encontrado';
+    });
+    nome.addEventListener('keydown', (event) => {
+      if (event.key === 'ArrowDown' && !lista.hidden) { event.preventDefault(); lista.querySelector('button')?.focus(); }
+    });
+    lista.addEventListener('keydown', (event) => {
+      const itens = [...lista.querySelectorAll('button')], i = itens.indexOf(document.activeElement);
+      if (event.key === 'ArrowDown') { event.preventDefault(); itens[Math.min(i + 1, itens.length - 1)]?.focus(); }
+      if (event.key === 'ArrowUp') { event.preventDefault(); (i <= 0 ? nome : itens[i - 1]).focus(); }
+    });
+    lista.addEventListener('click', (event) => {
+      const b = event.target.closest('[data-i]');
+      if (!b) return;
+      const j = BANCO[Number(b.dataset.i)];
+      st.jogo = j; st.capa = 'arte0';
+      nome.value = j.nome;
+      lista.hidden = true;
+      opcoesCapa(); pintaCapa();
+      // já deixa o manual adiantado com o que a busca sabe; o pitch é com a pessoa
+      preencheManual({ ...lerSoPitch(), desc: j.desc, ano: j.ano, genero: j.genero, plats: j.plats });
+      $('#busca-status').textContent = `Achei ${j.nome}. Escolhe a capa e avança.`;
+      nome.focus();
+    });
+    const lerSoPitch = () => ({ pitch: form.elements.pitch.value, preco: form.elements.preco.value === '' ? undefined : Number(form.elements.preco.value) });
+    frente.addEventListener('click', (event) => { if (!event.target.closest('.placa')) lista.hidden = true; });
+    $('#capa-opcoes').addEventListener('change', (event) => {
+      if (event.target.value === 'arquivo' && !st.arquivo) { arquivo.click(); return; }
+      st.capa = event.target.value;
+      link.hidden = st.capa !== 'link';
+      pintaCapa();
+      if (st.capa === 'link') link.focus();
+    });
+    link.addEventListener('input', pintaCapa);
+    // imagem do aparelho (decisão: comprimir no aparelho e guardar no próprio documento do Firestore, sem Storage pago).
+    // Corta em 3:4, reduz para 300x400 e salva JPEG; ~30–60 KB, longe do limite de 1 MB do documento.
+    async function comprime(f) {
+      const img = await createImageBitmap(f);
+      const W = 300, H = 400, k = Math.max(W / img.width, H / img.height);
+      const c = document.createElement('canvas'); c.width = W; c.height = H;
+      c.getContext('2d').drawImage(img, (W - img.width * k) / 2, (H - img.height * k) / 2, img.width * k, img.height * k);
+      img.close();
+      return c.toDataURL('image/jpeg', 0.8);
+    }
+    const arquivo = $('#capa-arquivo');
+    $('#capa-opcoes').addEventListener('click', (event) => {
+      if (event.target.value === 'arquivo' && st.arquivo) arquivo.click(); // já escolhida: clicar de novo troca
+    });
+    arquivo.addEventListener('change', async () => {
+      const f = arquivo.files[0];
+      if (!f) { opcoesCapa(); return; }
+      if (!f.type.startsWith('image/')) { erro.textContent = 'Esse arquivo não é imagem.'; opcoesCapa(); return; }
+      st.arquivo = await comprime(f);
+      st.capa = 'arquivo';
+      erro.textContent = '';
+      opcoesCapa(); pintaCapa();
+      arquivo.value = '';
+      $('#capa-opcoes [value=arquivo]').focus();
+    });
+    arquivo.addEventListener('cancel', opcoesCapa);
+    form.elements.pitch.addEventListener('input', contaPitch);
+
+    desenhaPrateleira();
+
+    // Atalho só do mock, para revisar cada etapa: ?demo=capa | busca | manual | pronto
+    const demo = new URLSearchParams(location.search).get('demo');
+    if (demo) (async () => {
+      await document.fonts?.ready;
+      if (!calma.matches) $('#slot-meu').scrollIntoView({ block: 'center' });
+      await abreModal($('#slot-meu .case'), $('[data-adicionar]'), false);
+      if (demo === 'capa') return;
+      nome.value = 'po'; nome.dispatchEvent(new Event('input'));
+      if (demo === 'busca') return;
+      lista.querySelector('button').click();
+      await avanca();
+      if (demo === 'manual') return;
+      form.elements.pitch.value = 'Puzzle em dupla pra rachar o bico. Dá pra jogar em uma semana.';
+      form.elements.preco.value = '20';
+      await finaliza();
+    })();
+
+    // 2) Luz motivada: as poças da camada de luz nascem dos objetos (TV, abajur, letreiro).
+    const luz = document.getElementById('luz');
+    function placeLights() {
+      const page = document.body.getBoundingClientRect();
+      const at = (el, fy = 0.5) => {
+        const r = el.getBoundingClientRect();
+        return [r.left - page.left + r.width / 2, r.top - page.top + r.height * fy, r];
+      };
+      const [tx, ty, tv] = at(document.getElementById('tv-vidro'));
+      const [lx, ly, lamp] = at(document.getElementById('abajur'), 0.35);
+      const [nx, ny, neon] = at(document.getElementById('neon'));
+      const set = (k, v) => luz.style.setProperty(k, `${Math.round(v)}px`);
+      set('--tv-x', tx); set('--tv-y', ty); set('--tv-r', tv.width * 2.6);
+      set('--lamp-x', lx); set('--lamp-y', ly); set('--lamp-r', lamp.width * 4.5);
+      set('--neon-x', nx); set('--neon-y', ny); set('--neon-w', neon.width * 0.85); set('--neon-h', neon.height * 0.9);
+    }
+    new ResizeObserver(placeLights).observe(document.body);
+    document.fonts?.ready.then(placeLights);
+
+    // 3) Flicker do letreiro: uma letra, 1–2 quadros, no máximo a cada 20–40 s. Desliga em reduced-motion/contraste.
+    const letters = [...document.querySelectorAll('.neon__l')];
+    function flickerLater() {
+      setTimeout(() => {
+        if (!calma.matches && document.visibilityState === 'visible') {
+          const l = letters[Math.floor(Math.random() * letters.length)];
+          l.classList.add('apaga');
+          setTimeout(() => l.classList.remove('apaga'), 70);
+        }
+        flickerLater();
+      }, 20000 + Math.random() * 20000);
+    }
+    flickerLater();
+
+    // 4) Interatividade 3D do V2, só no PC com mouse e sem reduced-motion/contraste:
+    //    a caixa inclina e o reflexo do plástico segue o ponteiro; a cena faz parallax em camadas
+    //    (parede vai com o olho, caixas e poeira vão contra, móvel e TV ficam parados como âncora).
+    const fino = matchMedia('(hover: hover) and (pointer: fine) and (min-width: 760px)');
+    if (fino.matches && !calma.matches) {
+      const rack = document.querySelector('.rack');
+      const TILT = ['--tilt-x', '--tilt-y', '--sx', '--sy', '--sa'];
+      const reset = (el) => TILT.forEach((p) => el.style.removeProperty(p));
+      let current = null, last = null, frame = 0;
+      rack.addEventListener('pointermove', (e) => {
+        const box = e.target.closest('.rack__slot')?.querySelector('.case') ?? null;
+        if (current && current !== box) reset(current);
+        current = box; last = e;
+        if (!box || frame) return;
+        frame = requestAnimationFrame(() => {
+          frame = 0;
+          if (!current || calma.matches) return;
+          // mede o palco (não a caixa girada); fora da capa, satura nas bordas
+          const r = current.parentElement.getBoundingClientRect();
+          const clamp = (v) => Math.max(-0.5, Math.min(0.5, v));
+          const x = clamp((last.clientX - r.left) / r.width - 0.5);
+          const y = clamp((last.clientY - r.top) / r.height - 0.5);
+          current.style.setProperty('--tilt-y', `${(x * 12).toFixed(2)}deg`);
+          current.style.setProperty('--tilt-x', `${(-y * 8).toFixed(2)}deg`);
+          current.style.setProperty('--sx', `${((x + 0.5) * 100).toFixed(1)}%`);
+          current.style.setProperty('--sy', `${((y + 0.5) * 100).toFixed(1)}%`);
+          current.style.setProperty('--sa', '0.2');
+        });
+      });
+      rack.addEventListener('pointerleave', () => { if (current) reset(current); current = null; });
+
+      const wall = document.getElementById('parede');
+      const dust = document.getElementById('poeira');
+      const stageRule = document.getElementById('par').sheet.cssRules[0].style;
+      let px = 0, py = 0, pframe = 0;
+      addEventListener('pointermove', (e) => {
+        px = e.clientX / innerWidth - 0.5; py = e.clientY / innerHeight - 0.5;
+        if (pframe) return;
+        pframe = requestAnimationFrame(() => {
+          pframe = 0;
+          if (calma.matches) return;
+          // amplitude ≤ 20 px (dossiê §5); só transform/translate
+          wall.style.transform = `translate3d(${(px * 18).toFixed(1)}px, ${(py * 10).toFixed(1)}px, 0)`;
+          dust.style.transform = `translate3d(${(px * -16).toFixed(1)}px, ${(py * -8).toFixed(1)}px, 0)`;
+          stageRule.translate = `${(px * -5).toFixed(1)}px ${(py * -3).toFixed(1)}px`;
+        });
+      }, { passive: true });
+    }
+  </script>
+</body>
+</html>

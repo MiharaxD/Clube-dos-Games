@@ -110,6 +110,105 @@
         ],
         "createdAt": "2026-11-14T00:44:50.810Z",
         "reason": "agent: archived decision-round sketch of an alternative direction, predates DESIGN.md, not shipped"
+      },
+      {
+        "rule": "marquee",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/prateleira-3d-v2.html"
+        ],
+        "createdAt": "2026-11-14T04:12:31.204Z",
+        "reason": "agent: brief pede TV de tubo mostrando em loop a arte de um jogo; desliga com reduced-motion"
+      },
+      {
+        "rule": "radial-halo",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/prateleira-3d-v2.html"
+        ],
+        "createdAt": "2026-11-14T04:12:31.675Z",
+        "reason": "agent: o gradiente #2b1a10 é o nó escuro da madeira na tábua, não um halo de brilho"
+      },
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/prateleira-3d-v2.html"
+        ],
+        "createdAt": "2026-11-14T04:12:32.110Z",
+        "reason": "agent: loja de ponta a ponta no celular de propósito (mantém a caixa >= 160px); o texto tem padding dentro da etiqueta"
+      },
+      {
+        "rule": "gradient-text",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/prateleira-3d-v3.html"
+        ],
+        "createdAt": "2026-11-14T04:39:42.655Z",
+        "reason": "user brief: texto com degradê permitido só no letreiro cromado ZERADOS (linguagem do mundo Y2K pedido)"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "michroma",
+        "files": [
+          ".impeccable/mocks/prateleira-3d-v3.html"
+        ],
+        "createdAt": "2026-11-14T04:39:43.095Z",
+        "reason": "user brief: até 2 famílias novas para o clima Y2K; mundo novo ainda não está no DESIGN.md"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "m plus rounded 1c",
+        "files": [
+          ".impeccable/mocks/prateleira-3d-v3.html"
+        ],
+        "createdAt": "2026-11-14T04:39:43.543Z",
+        "reason": "user brief: até 2 famílias novas para o clima Y2K; mundo novo ainda não está no DESIGN.md"
+      },
+      {
+        "rule": "nested-cards",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/rodada-votando.html"
+        ],
+        "createdAt": "2026-11-14T17:34:37.218Z",
+        "reason": "agent: post-it colado na frente de madeira do nicho foi pedido pelo usuário; a madeira é o móvel, não um card"
+      },
+      {
+        "rule": "nested-cards",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/rodada-sugerindo.html"
+        ],
+        "createdAt": "2026-11-14T17:56:45.584Z",
+        "reason": "agent: post-it colado na frente de madeira do nicho (pedido do usuário, mesma casca da votação); a madeira é o móvel, não um card"
+      },
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/rodada-jogando.html"
+        ],
+        "createdAt": "2026-11-14T19:25:27.708Z",
+        "reason": "DESIGN.md components.steps-item define padding 9px 2px na faixa de etapas; mesmo item do mock aprovado rodada-votando.html"
+      },
+      {
+        "rule": "wide-tracking",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/rodada-encerrada.html"
+        ],
+        "createdAt": "2026-11-14T20:19:45.248Z",
+        "reason": "Claude: todo tracking largo aqui é Bebas Neue (fonte só caixa alta) ou o Label do DESIGN.md (Atkinson 700, 0.75rem, 0.06em, caixa alta); medido no navegador, nenhum texto corrido tem tracking"
+      },
+      {
+        "rule": "flat-type-hierarchy",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/rodada-encerrada.html"
+        ],
+        "createdAt": "2026-11-14T20:19:45.814Z",
+        "reason": "Claude: os h2 visíveis da tela são só para leitor de tela (.sr) ou ficam em modais fechados; o h1 renderizado é a faixa em Bebas a 41.6px+ contra corpo 16px"
       }
     ]
   }

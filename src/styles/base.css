@@ -1,0 +1,106 @@
+/* ==========================================================================
+   Base: fontes, tokens (DESIGN.md) e elementos crus.
+   Mobile-first: os estilos base são do celular; @media (min-width) amplia.
+   ========================================================================== */
+
+/* ---------- Fontes (no próprio domínio; licenças em public/fonts/LICENSE.md) ---------- */
+@font-face {
+  font-family: 'Atkinson Hyperlegible Next';
+  src: url('/fonts/atkinson-hyperlegible-next-latin.woff2') format('woff2');
+  font-weight: 200 800; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'Bebas Neue';
+  src: url('/fonts/bebas-neue-latin.woff2') format('woff2');
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'Special Elite';
+  src: url('/fonts/special-elite-latin.woff2') format('woff2');
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'Permanent Marker';
+  src: url('/fonts/permanent-marker-latin.woff2') format('woff2');
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+
+/* ---------- Tokens ---------- */
+:root {
+  /* sombra e madeira */
+  --ground: #140b10; --shelf: #1e1218; --wood: #3b2417; --lip: #6b4a2f; --edge: #7a6153; --deep: #0c0609;
+  /* tinta */
+  --ink: #f3e6d8; --muted: #c9b5a8;
+  /* luz: abajur, neon, TV */
+  --amber: #ffc15e; --pink: #ff5c8a; --teal: #46c3b5;
+  /* papelada */
+  --paper: #f4ecd2; --paper-ink: #2a1d17; --paper-muted: #4f3d33; --stamp: #b3213f;
+
+  /* madeira do móvel em luz baixa (wood e lip são tokens; o resto são os tons vizinhos) */
+  --wood-1: #22140c; --wood-2: #3b2417; --wood-3: #4d3020; --wood-4: #6b4a2f; --wood-5: #8c6646;
+
+  --f-placa: 'Bebas Neue', 'Atkinson Hyperlegible Next', sans-serif;
+  --f-texto: 'Atkinson Hyperlegible Next', system-ui, sans-serif;
+  --f-dati: 'Special Elite', 'Atkinson Hyperlegible Next', monospace;
+  --f-mao: 'Permanent Marker', 'Atkinson Hyperlegible Next', cursive;
+
+  --r-bar: 2px; --r: 4px;
+  --gutter: 16px; --max: 1120px; --toque: 44px;
+
+  /* sombras duras (objetos) e macias (só o que flutua) */
+  --sh-estojo: 0 6px 0 var(--deep);
+  --sh-ficha: 0 5px 0 var(--deep);
+  --sh-papel: 0 4px 0 var(--deep);
+  --sh-adesivo: 0 3px 0 var(--deep);
+  --sh-bilhete: 0 3px 6px rgb(0 0 0 / 0.45);
+  --sh-aviso: 0 6px 12px rgb(0 0 0 / 0.55), 0 2px 3px rgb(0 0 0 / 0.5);
+
+  color-scheme: dark;
+}
+
+/* ---------- Base ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+* { margin: 0; }
+
+html {
+  -webkit-text-size-adjust: 100%;
+  background: var(--ground);
+  scrollbar-color: var(--lip) var(--ground);
+}
+
+body {
+  position: relative; min-height: 100dvh; overflow-x: clip;
+  background: var(--ground); color: var(--ink);
+  font: 400 1rem/1.5 var(--f-texto);
+  caret-color: var(--amber);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection { background: var(--amber); color: var(--deep); }
+
+img { display: block; max-width: 100%; }
+button, input, select, textarea { font: inherit; color: inherit; }
+
+a { color: var(--teal); text-underline-offset: 3px; text-decoration-thickness: 2px; }
+a:hover { color: var(--ink); }
+
+/* foco: âmbar na parede; paper-ink dentro de papel (regra em components.css) */
+:focus-visible { outline: 3px solid var(--amber); outline-offset: 3px; }
+
+.icon { width: 1.25em; height: 1.25em; flex: none; }
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0;
+}
+
+/* ---------- Tipografia ---------- */
+h1, h2, .display { font-family: var(--f-placa); font-weight: 400; letter-spacing: 0.04em; line-height: 0.95; text-wrap: balance; }
+h1 { font-size: clamp(3.25rem, 12vw, 5rem); }
+h2 { font-size: clamp(2rem, 6.5vw, 2.6rem); margin-bottom: 8px; }
+h3 { font-size: 1.15rem; font-weight: 700; line-height: 1.25; }
+p { max-width: 68ch; }
+
+.muted { color: var(--muted); }
+.small { font-size: 0.875rem; }
+.num { font-family: var(--f-placa); font-weight: 400; font-variant-numeric: tabular-nums; line-height: 1; }

@@ -1,0 +1,878 @@
+<!doctype html>
+<!--
+  Mock estático EM REVISÃO: tela "Stats", no mundo "Sexta no quarto" (DESIGN.md + Estetica/DOSSIE.md). Não é código do app.
+  Mesma cena da estante (parede, TV, letreiro). As contas saem das rodadas guardadas (os mesmos dados do mock da estante):
+  gêneros como tábuas com as lombadas em pé (o mais escolhido ganha o carimbo), o "sócio do mês" de quem mais emplacou
+  jogo, quem zera primeiro e o lanterninha (pela ordem de chegada das estatuetas) e umas curiosidades em papel.
+
+  FONTES: o <link> do Google Fonts abaixo é TEMPORÁRIO, só para o mock (o app hospeda os .woff2 com a licença).
+  DADOS: tudo aqui depende do que a estante guarda por rodada (gênero, quem sugeriu, ordem e tempo de quem zerou).
+-->
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mock: Stats (quarto gamer)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;600;700;800&family=Bebas+Neue&family=Permanent+Marker&family=Special+Elite&display=swap" rel="stylesheet" />
+  <style>
+    /* ---------- Tokens (DESIGN.md) ---------- */
+    :root {
+      --ground: #140b10; --shelf: #1e1218; --wood: #3b2417; --lip: #6b4a2f; --edge: #7a6153; --deep: #0c0609;
+      --ink: #f3e6d8; --muted: #c9b5a8; --amber: #ffc15e; --pink: #ff5c8a; --teal: #46c3b5;
+      --paper: #f4ecd2; --paper-ink: #2a1d17; --paper-muted: #4f3d33; --stamp: #b3213f;
+
+      --f-placa: 'Bebas Neue', 'Atkinson Hyperlegible Next', sans-serif;
+      --f-texto: 'Atkinson Hyperlegible Next', system-ui, sans-serif;
+      --f-dati: 'Special Elite', 'Atkinson Hyperlegible Next', monospace;
+      --f-mao: 'Permanent Marker', 'Atkinson Hyperlegible Next', cursive;
+
+      --gutter: 16px; --max: 1120px; --toque: 44px;
+
+      /* madeira do móvel em luz baixa (wood e lip são tokens; o resto são os tons vizinhos) */
+      --wood-1: #22140c; --wood-2: #3b2417; --wood-3: #4d3020; --wood-4: #6b4a2f; --wood-5: #8c6646;
+
+      /* veio de madeira e poeira: ruído renderizado uma vez como imagem (herdado do V2) */
+      --grain-h: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='640' height='160'><filter id='a' x='0' y='0' width='1' height='1'><feTurbulence type='fractalNoise' baseFrequency='0.0032 0.075' numOctaves='4' seed='9' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.10 0 0 0 0 0.05 0 0 0 0 0.02 1.4 0 0 0 -0.2'/><feComponentTransfer><feFuncA type='table' tableValues='0 0.42 0.04 0.36 0 0.46 0.06 0.32 0 0.4 0.05 0.3 0'/></feComponentTransfer></filter><filter id='b' x='0' y='0' width='1' height='1'><feTurbulence type='fractalNoise' baseFrequency='0.002 0.42' numOctaves='2' seed='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 0.86 0 0 0 0 0.7 2.6 0 0 0 -1.45'/></filter><rect width='640' height='160' filter='url(%23a)'/><rect width='640' height='160' filter='url(%23b)' opacity='0.3'/></svg>");
+      --grain-v: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='640'><filter id='a' x='0' y='0' width='1' height='1'><feTurbulence type='fractalNoise' baseFrequency='0.075 0.0032' numOctaves='4' seed='5' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.10 0 0 0 0 0.05 0 0 0 0 0.02 1.4 0 0 0 -0.2'/><feComponentTransfer><feFuncA type='table' tableValues='0 0.42 0.04 0.36 0 0.46 0.06 0.32 0 0.4 0.05 0.3 0'/></feComponentTransfer></filter><filter id='b' x='0' y='0' width='1' height='1'><feTurbulence type='fractalNoise' baseFrequency='0.42 0.002' numOctaves='2' seed='8' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 0.86 0 0 0 0 0.7 2.6 0 0 0 -1.45'/></filter><rect width='160' height='640' filter='url(%23a)'/><rect width='160' height='640' filter='url(%23b)' opacity='0.3'/></svg>");
+      --specks: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='d' x='0' y='0' width='1' height='1'><feTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='1' seed='4' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.86 0 0 0 0 0.82 0 0 0 0 0.74 7 0 0 0 -4.6'/></filter><rect width='180' height='180' filter='url(%23d)' opacity='0.25'/></svg>");
+      /* carpete geométrico de locadora (V2), base puxada para o vinho */
+      --carpet: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='96' height='96'><rect width='96' height='96' fill='%231c1418'/><path d='M6 14l9-8 9 8 9-8 9 8' fill='none' stroke='%232d6468' stroke-width='4'/><path d='M60 54h18l-9 15z' fill='%23a0702b'/><path d='M12 62h5v5h-5zM21 70h5v5h-5zM30 62h5v5h-5z' fill='%23a3354f'/><circle cx='78' cy='22' r='7' fill='none' stroke='%23a3354f' stroke-width='3'/><path d='M38 84h22v4H38z' fill='%232d6468'/><path d='M86 78h3v3h-3zM4 40h3v3H4zM50 30h3v3h-3zM70 90h3v3h-3z' fill='%23c9b98f'/></svg>");
+      /* bordas rasgadas do ticket (picote serrilhado) */
+      --serra-d: polygon(0 0, calc(100% - 4px) 0, 100% 10%, calc(100% - 4px) 20%, 100% 30%, calc(100% - 4px) 40%, 100% 50%, calc(100% - 4px) 60%, 100% 70%, calc(100% - 4px) 80%, 100% 90%, calc(100% - 4px) 100%, 0 100%);
+      --serra-e: polygon(4px 0, 100% 0, 100% 100%, 4px 100%, 0 90%, 4px 80%, 0 70%, 4px 60%, 0 50%, 4px 40%, 0 30%, 4px 20%, 0 10%);
+    }
+
+    /* ---------- Base e superfícies do navegador ---------- */
+    *, *::before, *::after { box-sizing: border-box; }
+    html { color-scheme: dark; background: var(--ground); scrollbar-color: var(--lip) var(--ground); }
+    body {
+      position: relative; margin: 0; min-height: 100vh;
+      color: var(--ink); font: 400 1rem/1.5 var(--f-texto); caret-color: var(--amber);
+      background: var(--ground); overflow-x: clip;
+      -webkit-font-smoothing: antialiased;
+    }
+    ::selection { background: var(--amber); color: var(--deep); }
+    :focus-visible { outline: 3px solid var(--amber); outline-offset: 3px; }
+    h1, h2, h3, p { margin: 0; }
+    .sr { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+    .icone { width: 20px; height: 20px; flex: none; }
+    /* ---------- A cena: camadas irmãs, todas atrás da interface ----------
+       Ordem: parede (fundo do body) → luz (screen) → grão (overlay) → vinheta. A UI fica acima (z 10),
+       fora de qualquer blend. Nenhuma delas é ancestral da estante 3D.
+       Blend em tela cheia: 2 (luz + grão), dentro do limite de 3 no PC e 2 no celular. */
+    /* parede: pegboard do V2 (furos escuros com quina clara), em camada própria para o parallax */
+    .cena-parede {
+      position: fixed; inset: -32px -32px -160px; z-index: 0; pointer-events: none;
+      background:
+        radial-gradient(circle at 11px 11px, #0a0507 0 2.3px, rgb(255 230 210 / 0.05) 2.6px 3.1px, transparent 3.4px) 0 0 / 22px 22px,
+        var(--specks) 0 0 / 180px 180px,
+        linear-gradient(180deg, #251a1c, var(--ground) 75%);
+    }
+    .cena-luz {
+      position: absolute; inset: 0; z-index: 1; pointer-events: none; mix-blend-mode: screen;
+      /* posições medidas por JS a partir dos objetos (TV, abajur, letreiro); queda ~1/d² por paradas */
+      background:
+        radial-gradient(circle var(--tv-r, 520px) at var(--tv-x, 75%) var(--tv-y, 360px),
+          rgb(70 195 181 / 0.42) 0, rgb(70 195 181 / 0.34) 12%, rgb(70 195 181 / 0.21) 25%,
+          rgb(70 195 181 / 0.085) 50%, rgb(70 195 181 / 0.03) 75%, transparent 100%),
+        radial-gradient(circle var(--lamp-r, 340px) at var(--lamp-x, 10%) var(--lamp-y, 900px),
+          rgb(255 193 94 / 0.24) 0, rgb(255 193 94 / 0.19) 12%, rgb(255 193 94 / 0.12) 25%,
+          rgb(255 193 94 / 0.05) 50%, rgb(255 193 94 / 0.017) 75%, transparent 100%),
+        radial-gradient(ellipse var(--neon-w, 170px) var(--neon-h, 90px) at var(--neon-x, 90px) var(--neon-y, 40px),
+          rgb(255 92 138 / 0.12), rgb(255 92 138 / 0.05) 50%, transparent 100%);
+    }
+    .cena-grao {
+      position: fixed; inset: 0; z-index: 2; pointer-events: none; opacity: 0.08; mix-blend-mode: overlay;
+      background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>") 0 0 / 160px 160px;
+    }
+    .cena-vinheta {
+      position: fixed; inset: 0; z-index: 3; pointer-events: none;
+      background: radial-gradient(ellipse 85% 80% at 50% 42%, transparent 48%, rgb(12 6 9 / 0.5) 100%);
+    }
+    .app { position: relative; z-index: 10; }
+
+    /* ---------- Barra superior ---------- */
+    .topo {
+      max-width: var(--max); margin: 0 auto; padding: 12px var(--gutter) 8px;
+      display: grid; grid-template-columns: 1fr auto; grid-template-areas: "marca avatar" "nav nav";
+      align-items: center; gap: 6px 12px; border-bottom: 2px solid var(--edge);
+    }
+    .marca { grid-area: marca; display: block; width: 158px; }
+    .neon { display: block; width: 100%; height: auto; overflow: visible; }
+    .neon__fio { fill: none; stroke: #2a1a20; stroke-width: 1.6; stroke-linecap: round; }
+    .neon__grampo { fill: #2a1a20; }
+    .neon__apagado { fill: none; stroke: #3e2632; stroke-width: 4.6; stroke-linecap: round; stroke-linejoin: round; }
+    .neon__tubo { fill: none; stroke: var(--pink); stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
+    .neon__nucleo { fill: none; stroke: rgb(255 243 250 / 0.55); stroke-width: 1.1; stroke-linecap: round; stroke-linejoin: round; }
+    .neon__l { transition: none; }
+    .neon__l.apaga { opacity: 0.12; }
+
+    .nav { grid-area: nav; }
+    .nav ul { list-style: none; margin: 0; padding: 0; display: flex; gap: 4px; overflow-x: auto; }
+    .nav a {
+      display: flex; align-items: center; min-height: var(--toque); padding: 8px 12px; border-radius: 4px;
+      color: var(--muted); font: 600 0.95rem/1.2 var(--f-texto); text-decoration: none; white-space: nowrap;
+      transition: background-color 120ms ease-out, color 120ms ease-out;
+    }
+    .nav a:hover { background: var(--shelf); color: var(--ink); }
+    .nav a[aria-current="page"] { background: var(--amber); color: var(--deep); }
+    .avatar {
+      grid-area: avatar; display: grid; place-items: center; width: var(--toque); height: var(--toque);
+      border-radius: 50%; border: 3px solid var(--ink); background: var(--pink); color: var(--deep);
+      font: 800 1.1rem/1 var(--f-texto);
+    }
+    @media (min-width: 760px) {
+      .topo { grid-template-columns: auto 1fr auto; grid-template-areas: "marca nav avatar"; gap: 20px; padding-top: 14px; }
+      .marca { width: 196px; }
+      .nav { justify-self: end; }
+    }
+
+    /* ---------- Botões ---------- */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      min-height: var(--toque); padding: 8px 16px; border: 2px solid currentColor; border-radius: 4px;
+      background: transparent; color: var(--ink); font: 700 1rem/1.2 var(--f-texto); cursor: pointer;
+      transition: background-color 120ms ease-out, color 120ms ease-out, border-color 120ms ease-out;
+    }
+    .btn:hover { background: var(--ink); border-color: var(--ink); color: var(--deep); }
+    .btn:active { transform: translateY(1px); }
+    .btn--primario { background: var(--amber); border-color: var(--amber); color: var(--deep); }
+    .btn--primario:hover { background: var(--ink); border-color: var(--ink); }
+    .btn:disabled { opacity: 0.55; cursor: not-allowed; background: transparent; color: var(--ink); border-color: var(--ink); transform: none; }
+    .btn--papel { color: var(--paper-ink); }
+    .btn--papel:hover { background: var(--paper-ink); border-color: var(--paper-ink); color: var(--paper); }
+    /* ---------- TV de tubo (objeto da cena; o cartaz repete o h1, por isso aria-hidden) ---------- */
+    .mesa-tv { grid-area: tv; position: relative; align-self: end; justify-self: center; width: min(100%, 270px); padding-top: 64px; }
+    @media (min-width: 760px) { .mesa-tv { width: 100%; } }
+    .tv { position: relative; container-type: inline-size; }
+    /* brilho teal local: respira só em opacity */
+    .tv__brilho {
+      position: absolute; left: -12%; right: -12%; top: -20%; bottom: -12%; pointer-events: none;
+      background: radial-gradient(closest-side, rgb(70 195 181 / 0.24), rgb(70 195 181 / 0.09) 50%, rgb(70 195 181 / 0.02) 80%, transparent);
+      animation: respira 9s ease-in-out infinite alternate;
+    }
+    @keyframes respira { from { opacity: 0.8; } to { opacity: 1; } }
+    .tv__antena { position: absolute; left: 50%; bottom: 100%; width: 16cqw; height: 4.5cqw; translate: -50% 0; border-radius: 8cqw 8cqw 0 0; background: linear-gradient(180deg, #3a332b, #221d19); }
+    .tv__antena::before, .tv__antena::after {
+      content: ''; position: absolute; bottom: 60%; left: 50%; width: 2px; height: 26cqw; transform-origin: bottom center;
+      background: linear-gradient(180deg, #8a8070 0 3px, #5a5246 3px);
+    }
+    .tv__antena::before { transform: rotate(-28deg); }
+    .tv__antena::after { transform: rotate(24deg); }
+    .tv__caixa {
+      position: relative; display: grid; grid-template-columns: 1fr 15%; gap: 4cqw; padding: 5cqw;
+      border-radius: 3cqw 3cqw 2cqw 2cqw;
+      background: linear-gradient(180deg, #a3977f, #857964 45%, #5d5444);
+      box-shadow: inset 0 2px 0 rgb(255 240 215 / 0.28), inset 0 -3px 0 rgb(12 6 9 / 0.35),
+                  inset -12px 0 16px -12px rgb(70 195 181 / 0.25), 0 6px 0 var(--deep);
+    }
+    .tv__moldura { padding: 3.5cqw; border-radius: 12% / 15%; background: #221d19; box-shadow: inset 0 0 0 2px #3b332b; }
+    .tv__vidro {
+      position: relative; aspect-ratio: 4 / 3; overflow: hidden; border-radius: 9% / 12%;
+      background: radial-gradient(ellipse 75% 70% at 50% 45%, #1d5c56, #103a39 55%, #0a2022);
+      box-shadow: inset 0 0 8cqw 2cqw rgb(6 14 14 / 0.7);
+    }
+    /* reflexo: Fresnel nas bordas + o abajur refletido no canto (objeto que existe na cena) */
+    .tv__vidro::before {
+      content: ''; position: absolute; inset: 0; z-index: 2; border-radius: inherit; pointer-events: none;
+      background:
+        radial-gradient(ellipse 22% 12% at 18% 14%, rgb(255 210 150 / 0.16), transparent 70%),
+        radial-gradient(ellipse at 50% 50%, transparent 55%, rgb(232 246 255 / 0.10) 100%);
+    }
+    /* scanlines: só aqui, no vidro */
+    .tv__vidro::after {
+      content: ''; position: absolute; inset: 0; z-index: 3; border-radius: inherit; pointer-events: none;
+      background: repeating-linear-gradient(to bottom, transparent 0 1px, rgb(6 14 14 / 0.12) 1px 2px);
+    }
+    /* faixa clara rolando pelo tubo (V2), bem fraca: só transform */
+    .tv__rolo {
+      position: absolute; left: 0; right: 0; top: 0; height: 30%; z-index: 1; pointer-events: none;
+      background: linear-gradient(180deg, transparent, rgb(232 246 255 / 0.07), transparent);
+      animation: tv-rolo 8s linear infinite;
+    }
+    @keyframes tv-rolo { from { transform: translateY(-100%); } to { transform: translateY(340%); } }
+    /* poeira flutuando na luz da TV (V2): poucas partículas, um elemento por grupo (box-shadow) */
+    .poeira { position: absolute; inset: 0 -6% 22%; z-index: 2; pointer-events: none; }
+    .cisco {
+      position: absolute; width: 2px; height: 2px; border-radius: 50%;
+      background: rgb(214 245 240 / 0.75); color: rgb(214 245 240 / 0.5);
+      animation: cisco 26s ease-in-out infinite alternate;
+    }
+    .cisco--a { left: 18%; top: 34%; box-shadow: 40px 60px 0 0, 110px 22px 0 0, -18px 120px 0 1px, 150px 138px 0 0; }
+    .cisco--b { left: 62%; top: 22%; box-shadow: -60px 50px 0 0, 40px 108px 0 1px, 76px -10px 0 0; animation-duration: 34s; animation-delay: -8s; }
+    .cisco--c { left: 40%; top: 58%; box-shadow: 70px 30px 0 0, -80px 56px 0 0, 22px 96px 0 0; animation-duration: 30s; animation-delay: -15s; }
+    @keyframes cisco {
+      0% { transform: translate3d(0, 0, 0); opacity: 0.25; }
+      50% { opacity: 0.8; }
+      100% { transform: translate3d(24px, -36px, 0); opacity: 0.35; }
+    }
+    @media (max-width: 759px) { .cisco--c { display: none; } }
+    .tv__cartaz {
+      position: absolute; inset: 0; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      color: #e8f6ff; text-align: center;
+    }
+    .tv__osd { position: absolute; top: 9%; left: 10%; font: 400 5.5cqw/1 var(--f-placa); letter-spacing: 0.08em; color: #8fe6db; }
+    .tv__fase {
+      font: 400 17cqw/0.9 var(--f-placa); letter-spacing: 0.04em;
+      text-shadow: -1px 0 rgb(255 40 80 / 0.55), 1px 0 rgb(40 220 255 / 0.55); /* aberração: só título grande, só no vidro */
+    }
+    .tv__linha { margin-top: 1.5cqw; padding-top: 1.5cqw; border-top: 2px solid rgb(143 230 219 / 0.6); font: 400 7.5cqw/1 var(--f-placa); letter-spacing: 0.12em; }
+    .tv__painel { display: flex; flex-direction: column; align-items: center; gap: 3cqw; padding-top: 2cqw; }
+    .tv__botao { width: 9cqw; height: 9cqw; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #6d665a, #2b2722 70%); box-shadow: 0 2px 0 rgb(12 6 9 / 0.5); }
+    .tv__grade { flex: 1; width: 11cqw; margin-bottom: 2cqw; background: repeating-linear-gradient(180deg, #3e3930 0 2px, transparent 2px 5px); }
+    /* rack baixo da TV com o console */
+    .movel-tv { position: relative; margin: 0 -6%; }
+    .movel-tv__tampo { display: block; height: 10px; background: linear-gradient(180deg, #a07652 0 1px, var(--wood-5) 1px 3px, var(--wood-4) 3px 6px, var(--wood-3) 6px); }
+    .movel-tv__corpo {
+      display: grid; place-items: center; height: 52px;
+      background: var(--grain-h) -80px -40px / 640px 160px, linear-gradient(90deg, var(--wood-1), var(--wood-2) 8%, var(--wood-2) 92%, var(--wood-1));
+      box-shadow: 0 6px 0 var(--deep);
+    }
+    .movel-tv__nicho { display: grid; place-items: end center; width: 72%; height: 36px; padding-bottom: 4px; background: var(--deep); }
+    .console {
+      position: relative; width: 70%; height: 20px; border-radius: 3px 3px 2px 2px;
+      background: linear-gradient(180deg, #3a383f, #232227); box-shadow: inset 0 2px 0 rgb(232 230 240 / 0.08);
+    }
+    .console::before { content: ''; position: absolute; left: 30%; right: 30%; top: 5px; height: 3px; background: #121114; }
+    .console::after { content: ''; position: absolute; right: 8%; top: 8px; width: 4px; height: 4px; border-radius: 50%; background: var(--stamp); }
+    /* ---------- Placar: versão em texto das estatuetas ---------- */
+    .placar { grid-area: placar; align-self: start; padding: 20px 16px; border-radius: 4px; background: var(--shelf); }
+    .placar__lista { list-style: none; margin: 12px 0 0; padding: 0; }
+    .placar__item { display: grid; grid-template-columns: 52px 44px minmax(0, 1fr); gap: 10px; align-items: start; padding: 12px 0; border-top: 1px solid rgb(122 97 83 / 0.4); }
+    .placar__item:first-child { border-top: 0; }
+    .pos {
+      justify-self: start; padding: 3px 8px 0; rotate: -3deg; background: var(--m); color: var(--deep);
+      font: 400 1.6rem/1 var(--f-placa); font-variant-numeric: tabular-nums; box-shadow: 0 3px 0 var(--deep);
+    }
+    .foto { display: block; width: 44px; height: 44px; overflow: hidden; border-radius: 50%; border: 3px solid var(--ink); }
+    .foto svg { display: block; width: 100%; height: 100%; }
+    .placar__nome { font-weight: 700; }
+    .placar__tempo { color: var(--muted); font-weight: 400; font-variant-numeric: tabular-nums; }
+    .placar__txt { margin-top: 2px; color: var(--ink); }
+    .placar__item.novo { animation: realce 1600ms ease-out; }
+    @keyframes realce { from { background: rgb(255 193 94 / 0.18); } to { background: transparent; } }
+    .placar__ainda { margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--edge); color: var(--muted); }
+    .placar__vazio { color: var(--muted); }
+    .rodape { max-width: var(--max); margin: 0 auto; padding: 0 var(--gutter) 40px; color: var(--muted); font-size: 0.875rem; }
+
+    /* ---------- Stats ---------- */
+    figure { margin: 0; }
+    .avatar { display: block; overflow: hidden; background: none; }
+    .avatar svg { display: block; width: 100%; height: 100%; }
+    .foto svg, .retrato__foto svg, .premio__foto svg, .barra__foto svg { display: block; width: 100%; height: 100%; }
+
+    .tela {
+      max-width: var(--max); margin: 0 auto; padding: 28px var(--gutter) 64px;
+      display: grid; grid-template-columns: minmax(0, 1fr); row-gap: 40px;
+      grid-template-areas: "cabeca" "tv" "generos" "rapido" "socio" "fatos";
+    }
+    @media (min-width: 760px) {
+      .tela {
+        grid-template-columns: minmax(0, 1fr) minmax(250px, 380px); column-gap: 40px; padding-top: 40px;
+        grid-template-areas: "cabeca tv" "generos generos" "rapido socio" "fatos fatos";
+      }
+    }
+    .cabeca { grid-area: cabeca; align-self: center; }
+    .cabeca h1 { font: 400 clamp(3.25rem, 12vw, 5rem)/0.95 var(--f-placa); letter-spacing: 0.04em; text-wrap: balance; }
+    .cabeca p { margin-top: 6px; color: var(--muted); max-width: 52ch; }
+    .sec__titulo { font: 400 clamp(2rem, 6.5vw, 2.6rem)/0.95 var(--f-placa); letter-spacing: 0.04em; }
+    .sec__nota { margin-top: 6px; color: var(--muted); max-width: 68ch; }
+    .painel { margin-top: 16px; padding: 16px; border-radius: 4px; background: var(--shelf); }
+    .painel__titulo { color: var(--teal); font: 400 1.6rem/1 var(--f-placa); letter-spacing: 0.05em; }
+
+    /* ---------- Gêneros: cada gênero é uma tábua, com as lombadas dos jogos em pé (a contagem é a pilha) ---------- */
+    .generos-sec { grid-area: generos; }
+    .generos {
+      position: relative; margin: 16px 0 0; padding: 26px 10px 18px; list-style: none;
+      background:
+        var(--grain-v) 0 0 / 160px 640px,
+        linear-gradient(90deg, var(--wood-1), var(--wood-4) 4px, var(--wood-3) 10px, var(--wood-2) 16px,
+          var(--wood-2) calc(100% - 16px), var(--wood-3) calc(100% - 10px), var(--wood-4) calc(100% - 4px), var(--wood-1));
+      box-shadow: 0 6px 0 var(--deep);
+    }
+    @media (min-width: 760px) { .generos { padding: 30px 22px 22px; display: grid; grid-template-columns: 1fr 1fr; column-gap: 28px; } }
+    .gen {
+      position: relative; display: grid; grid-template-columns: minmax(88px, 132px) minmax(0, 1fr) auto; align-items: end; gap: 10px;
+      padding: 10px 6px 14px;
+      /* a tábua: beiço iluminado embaixo de cada fileira */
+      background: linear-gradient(180deg, transparent calc(100% - 14px), #a07652 calc(100% - 14px) calc(100% - 13px),
+        var(--wood-5) calc(100% - 13px) calc(100% - 11px), var(--wood-4) calc(100% - 11px) calc(100% - 4px), rgb(12 6 9 / 0.5) calc(100% - 4px));
+    }
+    /* o mais escolhido ocupa a largura toda no PC */
+    @media (min-width: 760px) { .gen--top { grid-column: 1 / -1; } }
+    .gen__nome { align-self: center; color: var(--ink); font: 700 1rem/1.25 var(--f-texto); overflow-wrap: anywhere; }
+    .gen__lombadas {
+      position: relative; display: flex; align-items: flex-end; gap: 2px; min-height: 134px; padding: 8px 8px 0;
+      background: linear-gradient(180deg, rgb(12 6 9 / 0.75), rgb(12 6 9 / 0.45) 30%, rgb(12 6 9 / 0.25)), var(--deep);
+    }
+    .lombada {
+      position: relative; display: flex; align-items: center; justify-content: center; flex: none;
+      width: 28px; height: var(--alt, 92px); padding: 6px 0; overflow: visible;
+      border-top: 5px solid var(--c);
+      background: linear-gradient(90deg, hsl(var(--hue) 30% 13%), hsl(var(--hue) 34% 25%) 45%, hsl(var(--hue) 30% 15%));
+      box-shadow: inset -1px 0 0 rgb(12 6 9 / 0.5);
+      color: var(--ink); font: 400 0.95rem/1 var(--f-placa); letter-spacing: 0.04em; writing-mode: vertical-rl; white-space: nowrap;
+    }
+    .lombada span { overflow: hidden; text-overflow: ellipsis; max-height: 100%; }
+    @media (min-width: 760px) { .lombada { width: 34px; font-size: 1.05rem; } }
+    /* dica no hover: etiqueta de papel com o nome e a rodada */
+    .lombada::after {
+      content: attr(data-dica); position: absolute; z-index: 2; left: 50%; bottom: calc(100% + 8px); translate: -50% 0;
+      writing-mode: horizontal-tb; padding: 4px 8px; background: var(--paper); color: var(--paper-ink); white-space: nowrap;
+      font: 400 0.875rem/1.2 var(--f-dati); box-shadow: 0 3px 0 var(--deep); opacity: 0; pointer-events: none; transition: opacity 120ms ease-out;
+    }
+    .lombada:hover::after { opacity: 1; }
+    .gen__n { align-self: center; min-width: 1.6ch; text-align: right; font: 400 2.2rem/1 var(--f-placa); font-variant-numeric: tabular-nums; }
+    /* a prova numérica do campeão: adesivo teal */
+    .gen--top .gen__n { padding: 4px 10px 0; rotate: -3deg; background: var(--teal); color: var(--deep); box-shadow: 0 3px 0 var(--deep); }
+    .carimbo {
+      position: absolute; z-index: 1; padding: 3px 8px; border: 3px solid currentColor;
+      background: rgb(20 11 16 / 0.85); color: var(--amber); white-space: nowrap;
+      font: 800 0.875rem/1.3 var(--f-texto); letter-spacing: 0.12em; text-transform: uppercase;
+    }
+    /* celular: o carimbo fica batido no canto de cima do nicho; PC: ao lado das lombadas */
+    .gen__lombadas .carimbo { right: -6px; top: -10px; rotate: -8deg; font-size: 0.8rem; }
+    @media (min-width: 760px) { .gen__lombadas .carimbo { right: auto; left: calc(8px + var(--n) * 36px + 24px); top: 50%; translate: 0 -50%; font-size: 1rem; } }
+
+    /* ---------- Quem zera primeiro (ordem de chegada das estatuetas) ---------- */
+    .rapido-sec { grid-area: rapido; min-width: 0; }
+    .premios { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 16px; }
+    .premio {
+      position: relative; display: grid; justify-items: start; gap: 6px; padding: 14px 12px 16px; rotate: -0.8deg;
+      background: var(--paper); color: var(--paper-ink); box-shadow: 0 4px 0 var(--deep);
+    }
+    .premio + .premio { rotate: 0.6deg; }
+    .premio__selo { position: absolute; right: 8px; top: -14px; width: 48px; height: 48px; rotate: 8deg; }
+    .premio__titulo { padding-right: 44px; font: 400 1.5rem/1 var(--f-placa); letter-spacing: 0.05em; }
+    .premio__quem { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
+    .premio__foto { width: 52px; height: 52px; flex: none; overflow: hidden; border-radius: 50%; border: 3px solid var(--paper-ink); }
+    .premio__nome { font: 700 1.15rem/1.2 var(--f-texto); overflow-wrap: anywhere; }
+    .premio__dado { font: 400 0.95rem/1.35 var(--f-dati); }
+    .premio__piada { font-size: 0.95rem; line-height: 1.35; color: var(--paper-muted); }
+    @media (max-width: 439.98px) { .premios { grid-template-columns: minmax(0, 1fr); } }
+
+    .ranking { margin: 12px 0 0; padding: 0; list-style: none; }
+    .ranking li { display: grid; grid-template-columns: 52px 44px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 10px 0; border-top: 1px solid rgb(122 97 83 / 0.4); }
+    .ranking li:first-child { border-top: 0; }
+    .ranking__nome { font-weight: 700; }
+    .ranking__sub { display: block; color: var(--muted); font-size: 0.875rem; font-variant-numeric: tabular-nums; }
+    .ranking__media { font: 400 2rem/1 var(--f-placa); font-variant-numeric: tabular-nums; }
+
+    /* ---------- Sócio do mês: o retrato de quem mais emplacou jogo, com luz de quadro ---------- */
+    .socio-sec { grid-area: socio; min-width: 0; }
+    .retrato-wrap { position: relative; display: grid; justify-items: center; margin-top: 28px; }
+    /* luminária de quadro (latão) presa em cima da moldura: é o objeto dono da luz âmbar aqui */
+    .luz-quadro { position: relative; z-index: 1; width: 120px; height: 26px; margin-bottom: -6px; }
+    .luz-quadro svg { display: block; width: 100%; height: 100%; overflow: visible; }
+    .luz-quadro::after {
+      content: ''; position: absolute; left: -20%; right: -20%; top: 60%; height: 220px; pointer-events: none;
+      background: radial-gradient(ellipse 50% 60% at 50% 0%, rgb(255 193 94 / 0.22), rgb(255 193 94 / 0.06) 60%, transparent);
+    }
+    .retrato {
+      position: relative; width: min(100%, 260px); padding: 14px; rotate: 1deg;
+      background: var(--grain-h) -40px -20px / 640px 160px, linear-gradient(135deg, var(--wood-5), var(--wood-4) 40%, var(--wood-3));
+      box-shadow: 0 6px 0 var(--deep), inset 0 0 0 2px #a07652, inset 0 0 0 6px var(--wood-2);
+    }
+    .retrato__foto { aspect-ratio: 1; overflow: hidden; box-shadow: 0 0 0 4px var(--wood-1); }
+    .retrato__placa {
+      margin-top: 12px; padding: 6px 8px 3px; text-align: center; color: var(--deep);
+      background: linear-gradient(180deg, #f1cf6e, #d9a93c 55%, #b8862a); box-shadow: inset 0 0 0 1px #fff0b0, 0 2px 0 var(--wood-1);
+      font: 400 1.35rem/1.05 var(--f-placa); letter-spacing: 0.08em;
+    }
+    .socio__nome { margin-top: 16px; text-align: center; font: 400 clamp(2.6rem, 9vw, 3.4rem)/0.95 var(--f-placa); letter-spacing: 0.04em; }
+    .socio__txt { margin-top: 4px; text-align: center; color: var(--muted); }
+    .socio__txt strong { color: var(--ink); font: 400 1.5rem/1 var(--f-placa); }
+    .bilhete {
+      justify-self: center; margin-top: 12px; padding: 6px 14px; rotate: -3deg; text-align: center;
+      background: var(--paper); color: var(--paper-ink); font: 400 1.05rem/1.3 var(--f-mao); box-shadow: 0 3px 6px rgb(0 0 0 / 0.45);
+    }
+    .barras { margin: 12px 0 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+    .barras li { display: grid; grid-template-columns: 32px minmax(64px, auto) minmax(0, 1fr) 2ch; gap: 10px; align-items: center; }
+    .barra__foto { width: 32px; height: 32px; overflow: hidden; border-radius: 50%; border: 2px solid var(--ink); }
+    .barra__nome { font-weight: 700; }
+    .barra__trilho { height: 10px; border-radius: 2px; background: rgb(122 97 83 / 0.35); }
+    .barra__cheia { display: block; height: 100%; width: var(--p); border-radius: 2px; background: var(--teal); }
+    .barra__n { font: 400 1.5rem/1 var(--f-placa); text-align: right; font-variant-numeric: tabular-nums; }
+
+    /* ---------- Curiosidades: fatos em papel com o número num adesivo teal ---------- */
+    .fatos-sec { grid-area: fatos; }
+    .fatos { margin: 16px 0 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr)); gap: 22px 20px; }
+    .fato { padding: 16px 14px 18px; rotate: -0.8deg; background: var(--paper); color: var(--paper-ink); box-shadow: 0 4px 0 var(--deep); }
+    .fato:nth-child(2n) { rotate: 0.6deg; }
+    .fato__n {
+      display: inline-block; padding: 4px 10px 0; rotate: -3deg; background: var(--teal); color: var(--deep);
+      font: 400 2.2rem/1 var(--f-placa); font-variant-numeric: tabular-nums; box-shadow: 0 3px 0 var(--deep);
+    }
+    .fato__txt { margin-top: 10px; }
+    /* ---------- Movimento e efeitos desligáveis ----------
+       reduced-motion e contraste alto desligam: movimento, grão, scanlines e aberração. */
+    /* Parallax por rolagem no celular (V2): a parede anda bem mais devagar que o conteúdo e as caixas
+       flutuam um pouco no nicho. Só onde existe animation-timeline; usa a propriedade translate
+       (família do transform) para não brigar com o translateZ do palco. */
+    @supports (animation-timeline: scroll()) {
+      @media (max-width: 759px) and (prefers-reduced-motion: no-preference) and (not (prefers-contrast: more)) {
+        .cena-parede { animation: par-parede linear both; animation-timeline: scroll(root); }
+        .rack__stage { animation: par-caixa linear both; animation-timeline: view(); }
+      }
+    }
+    @keyframes par-parede { from { transform: translateY(0); } to { transform: translateY(-120px); } }
+    @keyframes par-caixa { from { translate: 0 6px; } to { translate: 0 -6px; } }
+
+    @media (prefers-reduced-motion: reduce), (prefers-contrast: more) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+      .cena-grao, .poeira, .tv__rolo { display: none; }
+      .tv__vidro::after { display: none; }
+      .tv__fase { text-shadow: none; }
+      .neon__l.apaga { opacity: 1; }
+      .rack__slot:hover .case, .rack__slot:has(:focus-visible) .case { --tz: 0px; --lift: 0px; }
+      .btn:active { transform: none; }
+      .ticket:not(:disabled):hover, .ticket:not(:disabled):active { translate: none; }
+    }
+    @media (prefers-contrast: more) {
+      .cena-vinheta { background: radial-gradient(ellipse 85% 80% at 50% 42%, transparent 55%, rgb(12 6 9 / 0.3) 100%); }
+      .cena-luz { display: none; }
+    }
+  </style>
+  <!-- regra que o parallax do PC atualiza (um seletor, sem mexer em estilos inline) — V2 -->
+  <style id="par">.rack__stage {}</style>
+</head>
+<body>
+  <!-- cena: camadas irmãs da interface, decorativas -->
+  <div class="cena-parede" id="parede" aria-hidden="true"></div>
+  <div class="cena-luz" id="luz" aria-hidden="true"></div>
+  <div class="cena-grao" aria-hidden="true"></div>
+  <div class="cena-vinheta" aria-hidden="true"></div>
+  <div class="app" id="app">
+    <header class="topo">
+      <a class="marca" href="rodada-sugerindo.html" aria-label="Clube dos Jogos, ir para a rodada">
+        <!-- letreiro de neon: o único neon do sistema; um traço por letra, núcleo claro, tubo apagado atrás, glow em 3 camadas -->
+        <svg class="neon" id="neon" viewBox="-10 -10 260 96" role="img" aria-label="Clube dos Jogos">
+          <defs>
+            <filter id="neon-glow" x="-20%" y="-40%" width="140%" height="180%" color-interpolation-filters="sRGB">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="0.8" result="a" />
+              <feGaussianBlur in="SourceGraphic" stdDeviation="3.5" result="b" />
+              <feGaussianBlur in="SourceGraphic" stdDeviation="9" result="c" />
+              <feMerge><feMergeNode in="c" /><feMergeNode in="b" /><feMergeNode in="a" /><feMergeNode in="SourceGraphic" /></feMerge>
+            </filter>
+            <path id="gC" d="M21 5C19 1 15 0 11 0C3 0 1 8 1 16C1 24 3 32 11 32C15 32 19 31 21 27" />
+            <path id="gL" d="M2 0V32H21" />
+            <path id="gU" d="M1 0V21C1 28 5 32 11 32C17 32 21 28 21 21V0" />
+            <path id="gB" d="M2 15H12C17 15 20 12 20 7.5C20 3 17 0 12 0H2V32H12C18 32 21 28.5 21 23.5C21 18.5 18 15 12 15" />
+            <path id="gE" d="M21 0H2V16H16H2V32H21" />
+            <path id="gD" d="M2 0V32H9C17 32 21 25 21 16C21 7 17 0 9 0Z" />
+            <path id="gO" d="M11 0C3 0 1 8 1 16C1 24 3 32 11 32C19 32 21 24 21 16C21 8 19 0 11 0Z" />
+            <path id="gS" d="M20 5C18 1 15 0 11 0C5 0 2 3 2 8C2 14 8 15 11 16C16 17 21 19 21 24C21 29 17 32 11 32C6 32 3 30 1 27" />
+            <path id="gJ" d="M21 0V22C21 29 17 32 11 32C5 32 2 29 1 25" />
+            <path id="gG" d="M20 5C18 1 15 0 11 0C3 0 1 8 1 16C1 24 3 32 11 32C19 32 21 26 21 18H12" />
+          </defs>
+          <!-- fio que sai por trás até o transformador, e os grampos -->
+          <path class="neon__fio" d="M236 18C252 22 252 60 248 86" />
+          <rect class="neon__grampo" x="38" y="33" width="6" height="4" /><rect class="neon__grampo" x="128" y="33" width="6" height="4" /><rect class="neon__grampo" x="205" y="33" width="6" height="4" />
+          <rect class="neon__grampo" x="72" y="75" width="6" height="4" /><rect class="neon__grampo" x="158" y="75" width="6" height="4" />
+          <!-- tubo apagado (aparece quando uma letra pisca) -->
+          <g class="neon__apagado">
+            <use href="#gC" x="0" /><use href="#gL" x="29" /><use href="#gU" x="58" /><use href="#gB" x="87" /><use href="#gE" x="116" />
+            <use href="#gD" x="157" /><use href="#gO" x="186" /><use href="#gS" x="215" />
+            <use href="#gJ" x="49.5" y="42" /><use href="#gO" x="78.5" y="42" /><use href="#gG" x="107.5" y="42" /><use href="#gO" x="136.5" y="42" /><use href="#gS" x="165.5" y="42" />
+          </g>
+          <!-- tubo aceso: cada letra num grupo, para o flicker raro de uma letra só -->
+          <g filter="url(#neon-glow)">
+            <g class="neon__l" transform="translate(0 0)"><use class="neon__tubo" href="#gC" /><use class="neon__nucleo" href="#gC" /></g>
+            <g class="neon__l" transform="translate(29 0)"><use class="neon__tubo" href="#gL" /><use class="neon__nucleo" href="#gL" /></g>
+            <g class="neon__l" transform="translate(58 0)"><use class="neon__tubo" href="#gU" /><use class="neon__nucleo" href="#gU" /></g>
+            <g class="neon__l" transform="translate(87 0)"><use class="neon__tubo" href="#gB" /><use class="neon__nucleo" href="#gB" /></g>
+            <g class="neon__l" transform="translate(116 0)"><use class="neon__tubo" href="#gE" /><use class="neon__nucleo" href="#gE" /></g>
+            <g class="neon__l" transform="translate(157 0)"><use class="neon__tubo" href="#gD" /><use class="neon__nucleo" href="#gD" /></g>
+            <g class="neon__l" transform="translate(186 0)"><use class="neon__tubo" href="#gO" /><use class="neon__nucleo" href="#gO" /></g>
+            <g class="neon__l" transform="translate(215 0)"><use class="neon__tubo" href="#gS" /><use class="neon__nucleo" href="#gS" /></g>
+            <g class="neon__l" transform="translate(49.5 42)"><use class="neon__tubo" href="#gJ" /><use class="neon__nucleo" href="#gJ" /></g>
+            <g class="neon__l" transform="translate(78.5 42)"><use class="neon__tubo" href="#gO" /><use class="neon__nucleo" href="#gO" /></g>
+            <g class="neon__l" transform="translate(107.5 42)"><use class="neon__tubo" href="#gG" /><use class="neon__nucleo" href="#gG" /></g>
+            <g class="neon__l" transform="translate(136.5 42)"><use class="neon__tubo" href="#gO" /><use class="neon__nucleo" href="#gO" /></g>
+            <g class="neon__l" transform="translate(165.5 42)"><use class="neon__tubo" href="#gS" /><use class="neon__nucleo" href="#gS" /></g>
+          </g>
+        </svg>
+      </a>
+      <nav class="nav" aria-label="Principal">
+        <ul>
+          <li><a href="rodada-sugerindo.html">Rodada</a></li>
+          <li><a href="estante.html">Estante</a></li>
+          <li><a href="stats.html" aria-current="page">Stats</a></li>
+        </ul>
+      </nav>
+      <span class="avatar" id="avatar-topo" role="img" aria-label="Você: Yuri"></span>
+    </header>
+
+    <main class="tela" id="tela">
+      <div class="cabeca">
+        <h1>Stats</h1>
+        <p id="resumo"></p>
+      </div>
+
+      <div class="mesa-tv" aria-hidden="true">
+        <div class="tv">
+          <span class="tv__brilho"></span>
+          <span class="tv__antena"></span>
+          <div class="tv__caixa">
+            <div class="tv__moldura">
+              <div class="tv__vidro" id="tv-vidro">
+                <div class="tv__cartaz">
+                  <span class="tv__osd">CH 05</span>
+                  <span class="tv__fase">Stats</span>
+                  <span class="tv__linha">· 8 rodadas ·</span>
+                </div>
+                <span class="tv__rolo"></span>
+              </div>
+            </div>
+            <div class="tv__painel"><span class="tv__botao"></span><span class="tv__botao"></span><span class="tv__grade"></span></div>
+          </div>
+        </div>
+        <div class="poeira" id="poeira"><span class="cisco cisco--a"></span><span class="cisco cisco--b"></span><span class="cisco cisco--c"></span></div>
+        <div class="movel-tv">
+          <span class="movel-tv__tampo"></span>
+          <div class="movel-tv__corpo"><div class="movel-tv__nicho"><span class="console"></span></div></div>
+        </div>
+      </div>
+
+      <section class="generos-sec" aria-labelledby="g-titulo">
+        <h2 class="sec__titulo" id="g-titulo">O que o clube mais aluga</h2>
+        <p class="sec__nota" id="g-nota"></p>
+        <ol class="generos" id="generos" aria-label="Jogos escolhidos por gênero"></ol>
+      </section>
+
+      <section class="rapido-sec" aria-labelledby="r-titulo">
+        <h2 class="sec__titulo" id="r-titulo">Quem zera primeiro</h2>
+        <p class="sec__nota">Pela ordem de chegada das estatuetas: a colocação média de cada um nos jogos que zerou.</p>
+        <div class="premios" id="premios"></div>
+        <div class="painel">
+          <h3 class="painel__titulo">Média de chegada</h3>
+          <ol class="ranking" id="ranking"></ol>
+        </div>
+      </section>
+
+      <section class="socio-sec" aria-labelledby="s-titulo">
+        <h2 class="sec__titulo" id="s-titulo">Quem mais emplaca jogo</h2>
+        <div class="retrato-wrap">
+          <span class="luz-quadro" id="luz-quadro" aria-hidden="true">
+            <svg viewBox="0 0 120 26"><path d="M56 0h8v8h-8z" fill="#6b4a2f"/><path d="M58 6h4v8h-4z" fill="#8c6646"/><path d="M8 12h104l-8 12H16z" fill="#c99a2e"/><path d="M8 12h104v3H8z" fill="#f1cf6e"/><path d="M18 22h84v2H18z" fill="#fff0b0" opacity="0.8"/></svg>
+          </span>
+          <figure class="retrato">
+            <div class="retrato__foto" id="socio-foto"></div>
+            <figcaption class="retrato__placa">Sócio do mês</figcaption>
+          </figure>
+          <p class="socio__nome" id="socio-nome"></p>
+          <p class="socio__txt" id="socio-txt"></p>
+          <p class="bilhete" id="socio-bilhete"></p>
+        </div>
+        <div class="painel">
+          <h3 class="painel__titulo">Jogos escolhidos por sócio</h3>
+          <ol class="barras" id="barras"></ol>
+        </div>
+      </section>
+
+      <section class="fatos-sec" aria-labelledby="f-titulo">
+        <h2 class="sec__titulo" id="f-titulo">Curiosidades</h2>
+        <ul class="fatos" id="fatos"></ul>
+      </section>
+    </main>
+
+    <footer class="rodape">
+      <p>Clube entre amigos, sem fins comerciais. Sem afiliação com fabricantes, estúdios ou plataformas.</p>
+    </footer>
+  </div>
+
+  <script>
+    // Mock: só o necessário para a tela parecer viva. Nada aqui grava dados.
+    const $ = (s, el = document) => el.querySelector(s);
+    const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const calma = matchMedia('(prefers-reduced-motion: reduce), (prefers-contrast: more)');
+
+    // ---------- dados do mock ----------
+    // no app a foto vem da conta Google (safeUrl); aqui um retratinho desenhado faz o papel
+    const PESSOAS = {
+      Yuri: { bg: '#ff5c8a', pele: '#e0ac83', cabelo: '#2a1a12', estilo: 'curto', roupa: '#2a3b4f' },
+      Mari: { bg: '#f59a5b', pele: '#c58b62', cabelo: '#1c120c', estilo: 'longo', roupa: '#5b2a3a' },
+      Caio: { bg: '#46c3b5', pele: '#8d5a3b', cabelo: '#120b08', estilo: 'cacho', roupa: '#3b2417' },
+      Bia: { bg: '#c58cf0', pele: '#f0c9a8', cabelo: '#a0522d', estilo: 'coque', roupa: '#1f3446' },
+      Duda: { bg: '#ffc15e', pele: '#d9a179', cabelo: '#3b2417', estilo: 'longo', roupa: '#33452a' },
+      Léo: { bg: '#9fd16b', pele: '#f2d2b6', cabelo: '#d9a441', estilo: 'curto', roupa: '#4a1d26' },
+    };
+    // cor do post-it de cada um (a mesma da votação)
+    const PAPEL = { Yuri: '#f6c1cf', Mari: '#f6cf9e', Caio: '#bfe0ea', Bia: '#e3d0f2', Duda: '#f7e48a', Léo: '#cfe7b4' };
+    // ---------- rodadas guardadas (dados do mock; a Estante e os Stats usam os mesmos) ----------
+    // zerados: na ordem de chegada (1º = quem zerou primeiro); min = tempo de jogo até zerar
+    const RODADAS = [
+      { n: 1, mes: 'mar 2026',
+        jogo: { nome: 'Celeste', por: 'Duda', capa: '#3a2848', risca: '#d58ab0', hue: 292, ano: 2018, genero: 'Plataforma', duracao: 'Curto', modo: 'Solo', preco: 'R$ 37',
+          plats: ['PC', 'PlayStation', 'Xbox', 'Nintendo'], motivo: '<path d="M2 88 36 30 54 58 68 40 98 88z" fill="#f2c4d8"/><path d="M36 30 44 44 36 40 28 44z" fill="#fff3fa"/>',
+          desc: 'Uma garota decide escalar uma montanha e acaba enfrentando a própria ansiedade.', pitch: 'Curtinho, difícil na medida e a trilha é absurda.' },
+        zerados: [
+          { quem: 'Léo', min: 430, txt: 'Morri umas 1.900 vezes. Recomendo.' }, { quem: 'Duda', min: 485, txt: 'Sugeri e zerei. Respeitem.' },
+          { quem: 'Mari', min: 520, txt: 'Chorei no capítulo 7.' }, { quem: 'Yuri', min: 570, txt: '' },
+          { quem: 'Caio', min: 735, txt: 'O morango é opcional? Ninguém me avisou.' }, { quem: 'Bia', min: 840, txt: 'Zerei no último dia. Conta.' },
+        ],
+        naoZerou: [],
+        paginas: [
+          { quem: 'Duda', txt: 'Eu disse que era curto. Ninguém disse que era fácil.' }, { quem: 'Mari', txt: 'A trilha da montanha tá no meu repeat até hoje.' },
+          { quem: 'Caio', txt: 'Ódio e amor no mesmo controle.' },
+        ],
+        coment: [{ quem: 'Léo', txt: 'Curtinho, bom pra estrear o clube.' }, { quem: 'Bia', txt: 'Tenho medo de jogo difícil.' }] },
+
+      { n: 2, mes: 'abr 2026',
+        jogo: { nome: 'Outer Wilds', por: 'Léo', capa: '#4a2f1c', risca: '#c99a5e', hue: 28, ano: 2019, genero: 'Exploração', duracao: 'Médio', modo: 'Solo', preco: 'R$ 60',
+          plats: ['PC', 'PlayStation', 'Xbox', 'Nintendo'], motivo: '<circle cx="50" cy="50" r="22" fill="#f4a95a"/><ellipse cx="50" cy="50" rx="46" ry="12" fill="none" stroke="#f3e6d8" stroke-width="5" transform="rotate(-18 50 50)"/>',
+          desc: 'Um sistema solar em miniatura preso num ciclo de 22 minutos. O resto você descobre.', pitch: 'Não pesquisem nada. Só confiem em mim.' },
+        zerados: [
+          { quem: 'Mari', min: 700, txt: 'Fácil. Próximo.' }, { quem: 'Caio', min: 965, txt: 'Demorei porque tive medo do espaço. Me deixem.' },
+          { quem: 'Yuri', min: 860, txt: 'Zerei antes do Léo, que SUGERIU o jogo. Pensem nisso.' }, { quem: 'Léo', min: 590, txt: 'Zerei de novo só pra acompanhar vocês. De nada.' },
+          { quem: 'Bia', min: 1275, txt: 'Cheguei. Atrasada, mas cheguei.' },
+        ],
+        naoZerou: ['Duda'],
+        paginas: [
+          { quem: 'Mari', txt: 'O final me desmontou. Obrigada, Léo. Te odeio, Léo.' }, { quem: 'Léo', txt: 'Eu avisei. Melhor jogo que esse clube já jogou e vai jogar.' },
+          { quem: 'Caio', txt: 'Continuo com medo do espaço, mas valeu cada loop. Até o do buraco negro.' },
+          { quem: 'Duda', txt: 'Não zerei, mas li o quadro inteiro. Me sinto spoilada e feliz.' }, { quem: 'Bia', txt: 'Chorei no museu e não vou explicar.' },
+          { quem: 'Yuri', txt: 'Fiquei uma semana olhando pro céu de noite. Obrigado, Léo.' },
+        ],
+        coment: [
+          { quem: 'Mari', txt: 'NÃO PESQUISEM NADA.' }, { quem: 'Bia', txt: 'concordo com a Mari' },
+          { quem: 'Caio', txt: 'Fiquei curioso, mas tenho medo de jogo espacial.' }, { quem: 'Duda', txt: '+1 pro Léo' },
+        ] },
+
+      { n: 3, mes: 'mai 2026',
+        jogo: { nome: 'Hades', por: 'Caio', capa: '#4a1d26', risca: '#e0704a', hue: 352, ano: 2020, genero: 'Roguelike', duracao: 'Médio', modo: 'Solo', preco: 'R$ 73',
+          plats: ['PC', 'PlayStation', 'Xbox', 'Nintendo'], motivo: '<path d="M50 8 94 86H6z" fill="none" stroke="#f2b07a" stroke-width="7"/><path d="M50 44 68 76H32z" fill="#f2b07a"/>',
+          desc: 'O filho do deus dos mortos tenta fugir do submundo, morrendo e voltando mais forte.', pitch: 'Cada morte é uma piada nova. Dá pra jogar meia hora por noite.' },
+        zerados: [
+          { quem: 'Caio', min: 1110, txt: 'Primeira fuga na run 14. Fácil.' }, { quem: 'Yuri', min: 1330, txt: 'O Zagreus é meu amigo agora.' },
+          { quem: 'Mari', min: 1200, txt: '' }, { quem: 'Léo', min: 1540, txt: 'Zerei. Agora vou zerar de novo. E de novo.' },
+        ],
+        naoZerou: ['Bia', 'Duda'],
+        paginas: [
+          { quem: 'Caio', txt: 'Viram? Roguelike é vida.' }, { quem: 'Bia', txt: 'Larguei no pai dele. Não consigo.' },
+          { quem: 'Yuri', txt: 'Melhor dublagem que já ouvi num jogo.' }, { quem: 'Duda', txt: 'Joguei três horas e entendi o hype. Mas não zerei.' },
+        ],
+        coment: [{ quem: 'Mari', txt: 'Dá pra jogar meia hora por noite, topo.' }, { quem: 'Duda', txt: 'Roguelike me dá ansiedade.' }] },
+
+      { n: 4, mes: 'jun 2026',
+        jogo: { nome: 'Stardew Valley', por: 'Yuri', capa: '#33452a', risca: '#d9b45a', hue: 92, ano: 2016, genero: 'Simulação', duracao: 'Longo', modo: 'Co-op', preco: 'R$ 25',
+          plats: ['PC', 'PlayStation', 'Xbox', 'Nintendo', 'Mobile'], motivo: '<circle cx="82" cy="10" r="12" fill="#f0d27a"/><path d="M4 40h92v7H4zM4 58h92v7H4zM4 76h92v7H4z" fill="#5a7d40"/>',
+          desc: 'Você herda uma fazenda largada e troca a cidade grande por plantação, pesca e vizinhos.', pitch: 'Fazendinha relaxante. Zerar = fechar o segundo ano, regra do clube.' },
+        zerados: [
+          { quem: 'Bia', min: 1800, txt: 'Casei com a Abigail. Zerado.' }, { quem: 'Mari', min: 2100, txt: 'Minha fazenda tá mais organizada que minha vida.' },
+          { quem: 'Duda', min: 2040, txt: '' }, { quem: 'Yuri', min: 2460, txt: 'Sugeri, joguei, amei. Nessa ordem.' },
+        ],
+        naoZerou: ['Caio', 'Léo'],
+        paginas: [
+          { quem: 'Bia', txt: 'Melhor rodada. Quero fazendinha de novo.' }, { quem: 'Léo', txt: 'Fiquei preso na pescaria. Desisti com dignidade.' },
+          { quem: 'Yuri', txt: 'O co-op da call de sábado salvou a rodada.' },
+        ],
+        coment: [{ quem: 'Caio', txt: 'Vou plantar e me arrepender.' }, { quem: 'Bia', txt: 'SIM.' }] },
+
+      { n: 5, mes: 'jul 2026',
+        jogo: { nome: 'Dead Cells', por: 'Caio', capa: '#2b2440', risca: '#7fd6c2', hue: 250, ano: 2018, genero: 'Roguelike', duracao: 'Médio', modo: 'Solo', preco: 'R$ 65',
+          plats: ['PC', 'PlayStation', 'Xbox', 'Nintendo', 'Mobile'], motivo: '<circle cx="50" cy="50" r="30" fill="none" stroke="#7fd6c2" stroke-width="7"/><circle cx="50" cy="50" r="10" fill="#7fd6c2"/>',
+          desc: 'Uma massa de células toma um corpo emprestado e tenta sair de uma ilha que muda a cada morte.', pitch: 'O combate mais gostoso que eu já joguei. Confia.' },
+        zerados: [
+          { quem: 'Léo', min: 980, txt: 'Primeiro chefe na raça, o resto foi ladeira abaixo.' }, { quem: 'Caio', min: 1080, txt: 'Mais um roguelike pra conta.' },
+          { quem: 'Duda', min: 1590, txt: 'Agora eu gosto de roguelike. Culpa do Caio.' },
+        ],
+        naoZerou: ['Yuri', 'Mari', 'Bia'],
+        paginas: [{ quem: 'Mari', txt: 'Caio, chega de roguelike.' }, { quem: 'Caio', txt: 'Nunca.' }, { quem: 'Duda', txt: 'Fui convertida.' }],
+        coment: [{ quem: 'Bia', txt: 'De novo roguelike, Caio?' }, { quem: 'Léo', txt: 'O combate é muito bom, vai.' }] },
+
+      { n: 6, mes: 'ago 2026',
+        jogo: { nome: 'Hollow Knight', por: 'Bia', capa: '#1f3446', risca: '#8fb8c9', hue: 212, ano: 2017, genero: 'Metroidvania', duracao: 'Longo', modo: 'Solo', preco: 'R$ 47',
+          plats: ['PC', 'PlayStation', 'Xbox', 'Nintendo'], motivo: '<path d="M50 4 92 50 50 96 8 50z" fill="none" stroke="#e8f0f2" stroke-width="7"/><path d="M50 30 70 50 50 70 30 50z" fill="#e8f0f2"/>',
+          desc: 'Um cavaleiro pequenininho explora um reino de insetos em ruínas, cheio de caminho escondido.', pitch: 'Explorar aquele mapa sem guia é a melhor coisa que já fiz num controle.' },
+        zerados: [
+          { quem: 'Bia', min: 1920, txt: 'Mapa todo, sem guia. Cadê meu troféu?' }, { quem: 'Léo', min: 2160, txt: '' },
+          { quem: 'Mari', min: 2460, txt: 'Hornet, a gente se vê no próximo.' },
+        ],
+        naoZerou: ['Yuri', 'Caio', 'Duda'],
+        paginas: [
+          { quem: 'Yuri', txt: 'Perdi meu dinheiro quatro vezes seguidas e larguei.' }, { quem: 'Bia', txt: 'Quem largou, volta. Vale cada minuto.' },
+          { quem: 'Caio', txt: 'O mapa me venceu.' }, { quem: 'Mari', txt: 'A trilha sonora é coisa de outro mundo.' },
+        ],
+        coment: [{ quem: 'Caio', txt: 'Joguei metade em 2019 e larguei.' }, { quem: 'Duda', txt: 'Não é longo demais pra um mês?' }] },
+
+      { n: 7, mes: 'set 2026',
+        jogo: { nome: 'It Takes Two', por: 'Mari', capa: '#1d3e3c', risca: '#ff8a6a', hue: 176, ano: 2021, genero: 'Aventura', duracao: 'Médio', modo: 'Co-op', preco: 'R$ 199',
+          plats: ['PC', 'PlayStation', 'Xbox', 'Nintendo'], motivo: '<path d="M8 20h44v44H8z" fill="none" stroke="#ffc2a8" stroke-width="7"/><path d="M48 40h44v44H48z" fill="#ffc2a8"/>',
+          desc: 'Um casal à beira do divórcio vira dois bonequinhos e precisa se acertar pra voltar.', pitch: 'Feito pra jogar em dupla. Quem topa comigo?' },
+        zerados: [
+          { quem: 'Mari', min: 720, txt: 'Eu e o Yuri, dupla imbatível.' }, { quem: 'Yuri', min: 720, txt: 'A Mari carregou. Admito.' },
+          { quem: 'Caio', min: 810, txt: '' }, { quem: 'Duda', min: 810, txt: 'O Caio esqueceu de pular umas 40 vezes.' },
+          { quem: 'Bia', min: 900, txt: '' }, { quem: 'Léo', min: 900, txt: 'Sem comentários sobre a elefanta.' },
+        ],
+        naoZerou: [],
+        paginas: [
+          { quem: 'Mari', txt: 'Todo mundo zerou! Primeira vez desde o Celeste!' }, { quem: 'Duda', txt: 'Melhor jogo de dupla da vida.' },
+          { quem: 'Léo', txt: 'Ainda não superei a elefanta.' },
+        ],
+        coment: [{ quem: 'Léo', txt: 'Precisa de dupla. Quem topa?' }, { quem: 'Yuri', txt: 'Eu topo, Mari.' }] },
+
+      { n: 8, mes: 'out 2026',
+        jogo: { nome: 'Rogue Legacy 2', por: 'Caio', capa: '#3d2a18', risca: '#f2c14e', hue: 38, ano: 2022, genero: 'Roguelike', duracao: 'Médio', modo: 'Solo', preco: 'R$ 89',
+          plats: ['PC', 'PlayStation', 'Xbox', 'Nintendo'], motivo: '<path d="M30 92V40h8v-8h8v8h8v-8h8v8h8v52z" fill="#f2c14e"/><path d="M45 92V70h10v22z" fill="#3d2a18"/>',
+          desc: 'Cada vez que você morre, um herdeiro com um defeito diferente continua a conquista do castelo.', pitch: 'Esse é mais tranquilo, juro. Quase nem é roguelike.' },
+        zerados: [
+          { quem: 'Caio', min: 1200, txt: 'Três de três. O clube é roguelike agora.' }, { quem: 'Duda', min: 1680, txt: 'Minha 40ª herdeira finalmente venceu.' },
+          { quem: 'Léo', min: 1380, txt: '' },
+        ],
+        naoZerou: ['Yuri', 'Mari', 'Bia'],
+        paginas: [
+          { quem: 'Bia', txt: 'Caio, isso é uma intervenção.' }, { quem: 'Caio', txt: 'Próxima rodada: adivinha.' },
+          { quem: 'Mari', txt: 'Votei contra e perdi. Democracia dói.' },
+        ],
+        coment: [{ quem: 'Mari', txt: 'Mais um roguelike??' }, { quem: 'Duda', txt: 'Esse é mais tranquilo, juro.' }] },
+    ];
+    // material por posição: ouro, prata, bronze e depois metais/pedras próprios, cada um com sua cor
+    const METAIS = [
+      { nome: 'ouro', m: '#e3b341', m2: '#fff0b0', m3: '#8a6312' },
+      { nome: 'prata', m: '#c4c9d1', m2: '#f4f6fa', m3: '#6e737c' },
+      { nome: 'bronze', m: '#c27a43', m2: '#f2c08e', m3: '#6d3f1c' },
+      { nome: 'pátina', m: '#8fa36b', m2: '#d8e6b4', m3: '#4c5a32' },
+      { nome: 'ametista', m: '#a585c4', m2: '#e2d2f2', m3: '#55406e' },
+      { nome: 'cobre rosé', m: '#d68a7c', m2: '#f6cdc4', m3: '#7a3f36' },
+      { nome: 'jade', m: '#5fae98', m2: '#bfe7da', m3: '#2c5c4f' },
+      { nome: 'ferro', m: '#9a8e88', m2: '#d6ccc6', m3: '#4a403c' },
+      { nome: 'âmbar', m: '#d79a4a', m2: '#f6d6a2', m3: '#6e4a1c' },
+      { nome: 'cobalto', m: '#7d93c9', m2: '#d0dbf3', m3: '#3a4a74' },
+      { nome: 'latão', m: '#b8a960', m2: '#ece2ad', m3: '#5e5428' },
+      { nome: 'granada', m: '#b9636f', m2: '#ecbcc3', m3: '#5f2b33' },
+    ];
+    // ---------- retratinho (foto falsa) ----------
+    function foto(nome) {
+      const p = PESSOAS[nome];
+      const rosto = `<rect x="27" y="38" width="10" height="10" fill="${p.pele}"/><ellipse cx="32" cy="29" rx="11" ry="13" fill="${p.pele}"/>
+        <circle cx="28" cy="29" r="1.5" fill="#1a1013"/><circle cx="36" cy="29" r="1.5" fill="#1a1013"/>
+        <path d="M28 35q4 3 8 0" fill="none" stroke="#1a1013" stroke-width="1.5" stroke-linecap="round"/>`;
+      const atras = p.estilo === 'longo' ? `<path d="M17 31c-1-12 6-19 15-19s16 7 15 19l1 17H41c0-8-2-14-9-16-7 2-9 8-9 16H16z" fill="${p.cabelo}"/>` : '';
+      const cabelo = {
+        curto: `<path d="M20 27c-1-10 5-15 12-15s13 5 12 15c-2-5-6-8-12-8s-10 3-12 8z" fill="${p.cabelo}"/>`,
+        longo: `<path d="M20 26c2-7 7-10 12-10s10 3 12 10c-4-3-8-4-12-4s-8 1-12 4z" fill="${p.cabelo}"/>`,
+        cacho: `<g fill="${p.cabelo}"><circle cx="22" cy="20" r="7"/><circle cx="32" cy="15" r="8"/><circle cx="42" cy="20" r="7"/><circle cx="20" cy="27" r="4.5"/><circle cx="44" cy="27" r="4.5"/></g>`,
+        coque: `<g fill="${p.cabelo}"><circle cx="32" cy="9" r="6"/><path d="M20 27c-1-10 5-15 12-15s13 5 12 15c-2-5-6-8-12-8s-10 3-12 8z"/></g>`,
+      }[p.estilo];
+      return `<svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" fill="${p.bg}"/>${atras}
+        <path d="M8 64c1-12 11-18 24-18s23 6 24 18z" fill="${p.roupa}"/>${rosto}${cabelo}</svg>`;
+    }
+    // letreiro: uma letra pisca a cada 20–40 s
+    function flickerLater() {
+      setTimeout(() => {
+        const ls = document.querySelectorAll('.neon__l');
+        if (!calma.matches && document.visibilityState === 'visible' && ls.length) {
+          const l = ls[Math.floor(Math.random() * ls.length)];
+          l.classList.add('apaga'); setTimeout(() => l.classList.remove('apaga'), 70);
+        }
+        flickerLater();
+      }, 20000 + Math.random() * 20000);
+    }
+    flickerLater();
+
+    // ---------- contas (no app: src/lib/tally.js) ----------
+    const RS = RODADAS;
+    const quem = (q) => (q === 'Yuri' ? 'Você' : esc(q));
+    const lista = (xs) => (xs.length < 2 ? xs.join('') : `${xs.slice(0, -1).join(', ')} e ${xs.at(-1)}`);
+    const ordinal = (m) => `${m.toFixed(1).replace('.', ',')}º`;
+    const totalZeradas = RS.reduce((a, R) => a + R.zerados.length, 0);
+    const horas = Math.round(RS.reduce((a, R) => a + R.zerados.reduce((b, z) => b + z.min, 0), 0) / 60);
+    $('#resumo').textContent = `${RS.length} rodadas fechadas, ${totalZeradas} zeradas e resenha que não acaba mais.`;
+
+    // gêneros: quantos jogos de cada um o clube escolheu
+    const porGenero = {};
+    RS.forEach((R) => (porGenero[R.jogo.genero] ??= []).push(R));
+    const generos = Object.entries(porGenero).sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0]));
+    const maxG = generos[0][1].length, topos = generos.filter(([, rs]) => rs.length === maxG).map(([g]) => g);
+    $('#g-nota').textContent = topos.length > 1
+      ? `Empate: ${lista(topos)}, com ${maxG} jogos cada.`
+      : `${topos[0]} ganhou ${maxG} das ${RS.length} rodadas.${generos.slice(1).every(([, rs]) => rs.length === 1) ? ' Os outros gêneros ganharam uma vez só.' : ''}`;
+    $('#generos').innerHTML = generos.map(([g, rs]) => {
+      const top = rs.length === maxG && maxG > 1;
+      const lombadas = rs.map((R) => `<span class="lombada" style="--hue:${R.jogo.hue};--c:${R.jogo.risca};--alt:${110 + ((R.n * 7) % 16)}px" data-dica="${esc(R.jogo.nome)} · rodada ${R.n}"><span>${esc(R.jogo.nome)}</span></span>`).join('');
+      return `<li class="gen${top ? ' gen--top' : ''}">
+        <span class="gen__nome">${esc(g)}</span>
+        <span class="gen__lombadas" aria-hidden="true">${lombadas}${top ? `<span class="carimbo" style="--n:${rs.length}">Mais alugado</span>` : ''}</span>
+        <span class="gen__n" aria-hidden="true">${rs.length}</span>
+        <span class="sr">: ${rs.length} ${rs.length > 1 ? 'jogos' : 'jogo'} (${rs.map((R) => esc(R.jogo.nome)).join(', ')})${top ? ', o mais escolhido' : ''}</span>
+      </li>`;
+    }).join('');
+
+    // quem zera primeiro: colocação média nos jogos que zerou (1º = primeira estatueta na mesa)
+    const pos = {};
+    RS.forEach((R) => R.zerados.forEach((z, k) => (pos[z.quem] ??= []).push(k + 1)));
+    const rank = Object.entries(pos).map(([q, ps]) => ({ q, media: ps.reduce((a, b) => a + b, 0) / ps.length, n: ps.length, ouros: ps.filter((p) => p === 1).length }))
+      .sort((a, b) => a.media - b.media || b.n - a.n);
+    const rapido = rank[0], lanterna = rank.at(-1);
+    const ouros = (n) => (n === 1 ? '1 ouro' : `${n} ouros`);
+    const selo = {
+      // medalha de ouro e lanterninha: selos genéricos em SVG, sem mascote
+      ouro: `<svg class="premio__selo" viewBox="0 0 48 48" aria-hidden="true"><path d="M14 2h8l4 14h-8zM34 2h-8l-4 14h8z" fill="#b3213f"/><circle cx="24" cy="30" r="15" fill="#e3b341" stroke="#0c0609" stroke-width="2.5"/><circle cx="24" cy="30" r="9.5" fill="none" stroke="#fff0b0" stroke-width="1.6"/><path d="M24 23.5l2 4.2 4.5.5-3.4 3 1 4.5-4.1-2.4-4.1 2.4 1-4.5-3.4-3 4.5-.5z" fill="#8a6312"/></svg>`,
+      lanterna: `<svg class="premio__selo" viewBox="0 0 48 48" aria-hidden="true"><path d="M17 8q7-8 14 0" fill="none" stroke="#2a1d17" stroke-width="3"/><path d="M15 9h18v4H15zM15 39h18v5H15z" fill="#4f3d33" stroke="#0c0609" stroke-width="2"/><path d="M17 13h14l2 26H15z" fill="#ffc15e" stroke="#0c0609" stroke-width="2.5"/><path d="M24 20c3 4 3 8 0 11-3-3-3-7 0-11z" fill="#fff0b0"/><path d="M21 13v26M27 13v26" stroke="#0c0609" stroke-width="1.5" opacity="0.5"/></svg>`,
+    };
+    const premio = (p, titulo, s, dado, piada) => `<article class="premio" aria-label="${titulo}: ${quem(p.q)}">${s}
+      <h3 class="premio__titulo">${titulo}</h3>
+      <div class="premio__quem"><span class="premio__foto">${foto(p.q)}</span><span class="premio__nome">${quem(p.q)}</span></div>
+      <p class="premio__dado">${dado}</p><p class="premio__piada">${piada}</p></article>`;
+    $('#premios').innerHTML =
+      premio(rapido, 'Mais rápido', selo.ouro, `média de ${ordinal(rapido.media)} · ${ouros(rapido.ouros)}`, `Zerou ${rapido.n} de ${RS.length} e quase sempre chega antes.`)
+      + premio(lanterna, 'Lanterninha', selo.lanterna, `média de ${ordinal(lanterna.media)} · ${lanterna.n} zeradas`,
+        lanterna.ouros ? `Já levou ${ouros(lanterna.ouros)}, mas na média é quem chega por último.` : 'Chega sempre. Chega por último, mas chega.');
+    $('#ranking').innerHTML = rank.map((p, i) => {
+      const m = METAIS[i % METAIS.length];
+      return `<li><span class="pos" style="--m:${m.m}" aria-hidden="true">${i + 1}º</span><span class="foto" aria-hidden="true">${foto(p.q)}</span>
+        <span><span class="ranking__nome">${quem(p.q)}</span><span class="ranking__sub">${p.n} zeradas · ${ouros(p.ouros)}</span></span>
+        <span class="ranking__media"><span class="sr">média de chegada </span>${ordinal(p.media)}</span></li>`;
+    }).join('');
+
+    // quem mais emplacou jogo (sugeriu o vencedor da rodada)
+    const porSocio = {};
+    RS.forEach((R) => (porSocio[R.jogo.por] ??= []).push(R));
+    const socios = Object.keys(PESSOAS).map((p) => [p, porSocio[p] ?? []]).sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0]));
+    const [rei, doRei] = socios[0], maxS = doRei.length;
+    $('#socio-foto').innerHTML = foto(rei);
+    $('#socio-nome').textContent = rei === 'Yuri' ? 'Você' : rei;
+    $('#socio-txt').innerHTML = `<strong>${maxS}</strong> dos ${RS.length} jogos escolhidos foram sugestão ${rei === 'Yuri' ? 'sua' : `de ${esc(rei)}`}.`;
+    const gensRei = [...new Set(doRei.map((R) => R.jogo.genero))];
+    $('#socio-bilhete').textContent = maxS > 1 && gensRei.length === 1 ? `Os ${maxS} são ${gensRei[0].toLowerCase()}. O clube percebeu.` : `Emplacou ${lista(doRei.map((R) => R.jogo.nome))}.`;
+    $('#barras').innerHTML = socios.map(([p, rs]) => `<li>
+      <span class="barra__foto" aria-hidden="true">${foto(p)}</span><span class="barra__nome">${quem(p)}</span>
+      <span class="barra__trilho" aria-hidden="true"><span class="barra__cheia" style="--p:${(rs.length / maxS) * 100}%"></span></span>
+      <span class="barra__n">${rs.length}<span class="sr"> ${rs.length === 1 ? 'jogo' : 'jogos'}</span></span></li>`).join('');
+
+    // curiosidades
+    const todos = RS.filter((R) => !R.naoZerou.length).map((R) => R.jogo.nome);
+    const maxLargou = Math.max(...RS.map((R) => R.naoZerou.length));
+    const largados = RS.filter((R) => R.naoZerou.length === maxLargou).map((R) => R.jogo.nome);
+    const zeradas = {};
+    RS.forEach((R) => R.zerados.forEach((z) => (zeradas[z.quem] = (zeradas[z.quem] ?? 0) + 1)));
+    const [maratona, nMara] = Object.entries(zeradas).sort((a, b) => b[1] - a[1])[0];
+    const escapou = RS.filter((R) => !R.zerados.some((z) => z.quem === maratona)).map((R) => R.jogo.nome);
+    const fatos = [
+      [`${horas}h`, 'de controle na mão, somando as zeradas de todo mundo.'],
+      [todos.length, `${todos.length === 1 ? 'rodada' : 'rodadas'} em que o clube inteiro zerou: ${lista(todos)}.`],
+      [maxLargou, `gente largou ${lista(largados)}. É o recorde de abandono do clube.`],
+      [nMara, `zeradas de ${maratona === 'Yuri' ? 'você' : maratona} em ${RS.length} rodadas.${escapou.length ? ` Só escapou ${lista(escapou)}.` : ' Zerou tudo.'}`],
+    ];
+    $('#fatos').innerHTML = fatos.map(([n, t]) => `<li class="fato"><span class="fato__n">${n}</span><p class="fato__txt">${esc(t)}</p></li>`).join('');
+
+    // ---------- luz motivada: a TV manda; a luminária do retrato apoia; o letreiro ----------
+    const luz = $('#luz');
+    function placeLights() {
+      const page = document.body.getBoundingClientRect();
+      const at = (el, fy = 0.5) => { const r = el.getBoundingClientRect(); return [r.left - page.left + r.width / 2, r.top - page.top + r.height * fy, r]; };
+      const set = (k, v) => luz.style.setProperty(k, `${Math.round(v)}px`);
+      const [tx, ty, tv] = at($('#tv-vidro')), [lx, ly] = at($('#luz-quadro'), 1), [nx, ny, neon] = at($('#neon'));
+      set('--tv-x', tx); set('--tv-y', ty); set('--tv-r', tv.width * 2.6);
+      set('--lamp-x', lx); set('--lamp-y', ly + 90); set('--lamp-r', 260);
+      set('--neon-x', nx); set('--neon-y', ny); set('--neon-w', neon.width * 0.85); set('--neon-h', neon.height * 0.9);
+    }
+    new ResizeObserver(placeLights).observe(document.body);
+    document.fonts?.ready.then(placeLights);
+    $('#avatar-topo').innerHTML = foto('Yuri');
+  </script>
+</body>
+</html>

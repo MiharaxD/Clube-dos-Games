@@ -1,0 +1,394 @@
+/* ==========================================================================
+   Prateleira 3D (portada de rodada-votando.html / rodada-sugerindo.html):
+   cenário em cima do móvel, chão, móvel, nichos 3D, caixas de 6 faces, post-it,
+   ticket de voto e etiqueta VOTADO. Usada na rodada (sugerindo/votando) e na estante.
+   REGRA: nada de filter, opacity<1, mix-blend-mode, isolation, mask ou clip-path
+   nos ancestrais da cadeia 3D (.rack → .case).
+   ========================================================================== */
+:root {
+  --carpet: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='96' height='96'><rect width='96' height='96' fill='%231c1418'/><path d='M6 14l9-8 9 8 9-8 9 8' fill='none' stroke='%232d6468' stroke-width='4'/><path d='M60 54h18l-9 15z' fill='%23a0702b'/><path d='M12 62h5v5h-5zM21 70h5v5h-5zM30 62h5v5h-5z' fill='%23a3354f'/><circle cx='78' cy='22' r='7' fill='none' stroke='%23a3354f' stroke-width='3'/><path d='M38 84h22v4H38z' fill='%232d6468'/><path d='M86 78h3v3h-3zM4 40h3v3H4zM50 30h3v3h-3zM70 90h3v3h-3z' fill='%23c9b98f'/></svg>");
+  --serra-d: polygon(0 0, calc(100% - 4px) 0, 100% 10%, calc(100% - 4px) 20%, 100% 30%, calc(100% - 4px) 40%, 100% 50%, calc(100% - 4px) 60%, 100% 70%, calc(100% - 4px) 80%, 100% 90%, calc(100% - 4px) 100%, 0 100%);
+  --serra-e: polygon(4px 0, 100% 0, 100% 100%, 4px 100%, 0 90%, 4px 80%, 0 70%, 4px 60%, 0 50%, 4px 40%, 0 30%, 4px 20%, 0 10%);
+}
+
+/* ---------- Estante ---------- */
+.estante { grid-area: estante; position: relative; margin-top: 20px; }
+.estante__titulo { font: 400 clamp(2rem, 6.5vw, 2.6rem)/0.95 var(--f-placa); letter-spacing: 0.04em; }
+.estante__nota { margin-top: 6px; color: var(--muted); max-width: 68ch; }
+
+/* props em cima do móvel (aria-hidden, sem clique) */
+.cenario {
+  position: relative; display: flex; align-items: flex-end; justify-content: space-between; gap: 8px;
+  height: 112px; margin-top: 16px; padding: 0 10px; pointer-events: none;
+}
+.cenario svg { display: block; width: 100%; height: auto; }
+.cenario .so-pc { display: none; }
+.abajur { position: relative; width: 50px; flex: none; }
+.abajur svg { position: relative; display: block; width: 100%; height: auto; }
+/* brilho local do abajur na parede (a poça grande vem da camada de luz) */
+.abajur::before {
+  content: ''; position: absolute; left: -90%; right: -90%; top: -60%; bottom: 10%;
+  background: radial-gradient(closest-side, rgb(255 193 94 / 0.2), rgb(255 193 94 / 0.06) 55%, transparent);
+}
+/* consoles: silhuetas genéricas em SVG, sem logo; LEDs são as únicas luzinhas */
+.console-obj { position: relative; flex: none; }
+.console-obj--switch { width: 80px; }
+.console-obj--x360 { width: 34px; }
+.console-obj--pilha { width: 180px; display: flex; flex-direction: column; align-items: center; }
+.console-obj--pilha .snes { width: 78%; margin-bottom: -1px; }
+.console-obj--ps2 { width: 34px; }
+.console-obj--gb { width: 44px; rotate: -8deg; margin-bottom: 2px; }
+.led { animation: led 5s ease-in-out infinite alternate; }
+@keyframes led { from { opacity: 0.55; } to { opacity: 1; } }
+
+/* capinhas deitadas, lombada pra frente */
+.capas-pilha { width: 118px; flex: none; display: flex; flex-direction: column; }
+.capinha {
+  position: relative; display: flex; align-items: center; gap: 6px; height: 20px; margin-top: 1px; padding: 0 8px 0 0;
+  overflow: hidden; background: var(--c); color: var(--t, var(--ink));
+  box-shadow: inset 0 1px 0 rgb(255 245 230 / 0.16), inset 0 -2px 0 rgb(12 6 9 / 0.35), 0 2px 0 var(--deep);
+  font: 400 0.75rem/1 var(--f-placa); letter-spacing: 0.03em; white-space: nowrap;
+}
+/* faixa de plataforma na ponta da lombada */
+.capinha::before { content: ''; flex: none; align-self: stretch; width: 7px; background: var(--faixa); }
+.capinha--mario { --c: #a8242c; --t: #ffd25a; --faixa: #6f6c69; width: 86%; margin-left: 4%; rotate: -4deg; }
+.capinha--sims { --c: #1c2a54; --faixa: #3a8f4a; width: 92%; margin-left: 7%; rotate: 1.5deg; }
+.capinha--tlou { --c: #1d4b86; --faixa: #e9eef5; width: 96%; margin-left: 1%; }
+.capinha--gta { --c: #151417; --t: #f2c14e; --faixa: #2a4fa0; width: 100%; }
+.capinha__losango { flex: none; width: 8px; height: 11px; background: #59d36a; clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); }
+
+@media (min-width: 760px) {
+  .cenario { height: 150px; gap: 16px; padding: 0 24px; }
+  .cenario .so-pc { display: block; }
+  .cenario .console-obj--pilha.so-pc { display: flex; }
+  .abajur { width: 80px; }
+  .console-obj--switch { width: 130px; }
+  .console-obj--x360 { width: 46px; }
+  .capas-pilha { width: 196px; }
+  .capinha { height: 26px; font-size: 0.95rem; letter-spacing: 0.06em; gap: 8px; padding-right: 10px; }
+  .capinha::before { width: 9px; }
+}
+
+/* ---------- Chão do V2: rodapé + carpete em perspectiva (sem as estantes vizinhas) ---------- */
+.chao {
+  position: absolute; z-index: -1; left: 50%; top: calc(100% - 34px); width: 100vw; height: 170px; translate: -50% 0;
+  perspective: 420px; pointer-events: none;
+  -webkit-mask: linear-gradient(180deg, #000 50%, transparent); mask: linear-gradient(180deg, #000 50%, transparent);
+}
+.chao::before {
+  content: ''; position: absolute; left: 0; right: 0; top: 0; height: 14px; z-index: 1;
+  background: linear-gradient(180deg, #7a5a40 0 1px, var(--wood-2) 1px 4px, var(--wood-1));
+  box-shadow: 0 2px 0 rgb(12 6 9 / 0.5);
+}
+.chao__carpete {
+  position: absolute; inset: 14px 0 -60px; transform-origin: top; transform: rotateX(52deg);
+  background:
+    radial-gradient(ellipse 34% 70% at 16% 0%, rgb(255 193 94 / 0.16), transparent 72%),
+    radial-gradient(ellipse 34% 70% at 84% 0%, rgb(70 195 181 / 0.10), transparent 72%),
+    linear-gradient(180deg, rgb(12 6 9 / 0.55), transparent 45%),
+    var(--carpet) 0 0 / 96px 96px;
+}
+
+/* ---------- Móvel: montantes, coroa, rodapé (herdado do V2, madeira em luz baixa) ---------- */
+.movel { position: relative; padding: 32px 9px 44px; background:
+    var(--grain-v) 0 0 / 160px 640px,
+    linear-gradient(90deg, var(--wood-1), var(--wood-4) 4px, var(--wood-3) 10px, var(--wood-2) 16px,
+      var(--wood-2) calc(100% - 16px), var(--wood-3) calc(100% - 10px), var(--wood-4) calc(100% - 4px), var(--wood-1));
+}
+/* sombra do móvel no carpete (V2) */
+.movel::before {
+  content: ''; position: absolute; z-index: -1; left: -4%; right: -4%; top: calc(100% - 6px); height: 46px; pointer-events: none;
+  background: radial-gradient(ellipse 50% 100% at 50% 0%, rgb(12 6 9 / 0.75), transparent 100%);
+}
+.movel__coroa, .movel__base { position: absolute; left: -4px; right: -4px; z-index: 1; pointer-events: none; }
+.movel__coroa {
+  top: 0; height: 32px; box-shadow: 0 4px 0 rgb(12 6 9 / 0.45);
+  background:
+    linear-gradient(180deg, #a07652 0 1px, var(--wood-5) 1px 3px, var(--wood-4) 3px 7px, var(--wood-1) 7px 9px,
+      var(--wood-2) 9px 12px, transparent 12px calc(100% - 3px), rgb(12 6 9 / 0.4) calc(100% - 3px)),
+    var(--grain-h) -120px -30px / 640px 160px,
+    linear-gradient(180deg, var(--wood-3), var(--wood-2));
+}
+.movel__base {
+  bottom: 0; height: 44px;
+  background:
+    linear-gradient(180deg, var(--wood-5) 0 1px, var(--wood-4) 1px 3px, transparent 3px calc(100% - 14px),
+      var(--wood-1) calc(100% - 14px) calc(100% - 12px), #170d08 calc(100% - 12px)),
+    var(--grain-h) -300px -90px / 640px 160px,
+    linear-gradient(180deg, var(--wood-3), var(--wood-2));
+}
+@media (min-width: 760px) {
+  .movel { padding: 38px 22px 52px; }
+  .movel__coroa, .movel__base { left: -10px; right: -10px; }
+  .movel__coroa { height: 38px; }
+  .movel__base { height: 52px; }
+}
+
+/* ---------- Prateleira 3D (estrutura do V2) ----------
+   REGRA: nada de filter, opacity<1, mix-blend-mode, isolation, mask ou clip-path aqui nem nos ancestrais. */
+.rack {
+  position: relative; z-index: 0; list-style: none; padding: 0; margin: 0;
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  background: var(--deep); box-shadow: 0 0 0 2px var(--wood-1);
+}
+@media (min-width: 760px) { .rack { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+
+/* Cada nicho é uma caixa 3D com ponto de fuga por coluna; --gx/--gy emendam o veio entre nichos. */
+.rack__slot {
+  --vx: 100%; --gx: 0px; --gy: 0px; --shade: 0;
+  /* luz do quarto dentro do nicho: âmbar do abajur (esquerda), teal da TV (direita) */
+  --luz: 255 193 94; --lx: 30%;
+  --seam: linear-gradient(transparent, transparent);
+  --scratch: linear-gradient(transparent, transparent);
+  container-type: inline-size;
+  position: relative; display: flex; flex-direction: column; min-width: 0;
+}
+.rack__slot:nth-child(2n) { --vx: 0%; --gx: -100cqw; --luz: 70 195 181; --lx: 75%; }
+.rack__slot:nth-child(6n + 3), .rack__slot:nth-child(6n + 4) { --gy: -52px; --shade: 0.12; }
+.rack__slot:nth-child(6n + 5), .rack__slot:nth-child(6n + 6) { --gy: -104px; --shade: 0.06; }
+.rack__slot:nth-child(6n + 4) { --seam: linear-gradient(90deg, rgb(12 6 9 / 0.55) 0 1px, rgb(255 220 180 / 0.12) 1px 2px, transparent 2px); }
+@media (min-width: 760px) {
+  .rack__slot:nth-child(n) { --gx: 0px; --gy: 0px; --shade: 0; --seam: linear-gradient(transparent, transparent); }
+  .rack__slot:nth-child(4n + 1) { --vx: 200%; --luz: 255 193 94; --lx: 20%; }
+  .rack__slot:nth-child(4n + 2) { --vx: 100%; --gx: -100cqw; --luz: 255 193 94; --lx: 45%; }
+  .rack__slot:nth-child(4n + 3) { --vx: 0%; --gx: -200cqw; --luz: 70 195 181; --lx: 55%; }
+  .rack__slot:nth-child(4n + 4) { --vx: -100%; --gx: -300cqw; --luz: 70 195 181; --lx: 80%; }
+  .rack__slot:nth-child(8n + 5), .rack__slot:nth-child(8n + 6),
+  .rack__slot:nth-child(8n + 7), .rack__slot:nth-child(8n + 8) { --gy: -52px; --shade: 0.12; }
+  .rack__slot:nth-child(8n + 7) { --seam: linear-gradient(90deg, rgb(12 6 9 / 0.55) 0 1px, rgb(255 220 180 / 0.12) 1px 2px, transparent 2px); }
+}
+.rack__slot:nth-child(5n + 3) { --scratch: linear-gradient(172deg, transparent 0 40%, rgb(255 230 200 / 0.16) 41% 43%, transparent 44%); }
+.rack__slot:hover, .rack__slot:focus-within { z-index: 2; }
+.rack__slot--vazio.so-pc { display: none; }
+@media (min-width: 760px) { .rack__slot--vazio.so-pc { display: flex; } }
+
+.rack__bay { --D: 24cqw; position: relative; perspective: 900px; perspective-origin: var(--vx) 35%; }
+/* sombra de contato da tábua de cima (sem LED: a luz do quarto vem da TV e do abajur) */
+.rack__bay::after {
+  content: ''; position: absolute; z-index: 2; left: 0; right: 0; top: 0; height: 30px; pointer-events: none;
+  background: linear-gradient(180deg, rgb(12 6 9 / 0.65) 0 3px, rgb(12 6 9 / 0.25) 3px, transparent 30px);
+}
+.rack__scene { position: relative; transform-style: preserve-3d; padding: 26px 2% 0 3%; pointer-events: none; }
+.rack__face { position: absolute; display: block; pointer-events: none; }
+.rack__wall {
+  inset: 0; transform: translateZ(calc(var(--D) * -1));
+  background:
+    linear-gradient(180deg, rgb(12 6 9 / 0.6), transparent 18%),
+    radial-gradient(ellipse 95% 70% at var(--lx) 0%, rgb(var(--luz) / 0.2), rgb(var(--luz) / 0.06) 45%, transparent 78%),
+    var(--specks) 0 0 / 180px 180px,
+    linear-gradient(180deg, #2c1a1f, var(--shelf) 50%, #170d12);
+}
+.rack__wall::after { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 36% 38% at 55% 66%, rgb(12 6 9 / 0.62), transparent 100%); }
+.rack__slot--vazio .rack__wall::after { display: none; }
+.rack__ceil {
+  top: 0; left: 0; right: 0; height: var(--D); transform-origin: top; transform: rotateX(-90deg);
+  background: var(--grain-h) var(--gx) var(--gy) / 640px 160px, linear-gradient(180deg, #2e1c12, #1a0f0a);
+}
+.rack__floor {
+  bottom: 0; left: 0; right: 0; height: var(--D); transform-origin: bottom; transform: rotateX(90deg);
+  background:
+    linear-gradient(0deg, var(--wood-5) 0 2px, transparent 2px),
+    radial-gradient(ellipse 50% 40% at 52% 62%, rgb(12 6 9 / 0.4), transparent 100%),
+    var(--specks) 0 0 / 180px 180px,
+    var(--seam),
+    var(--grain-h) var(--gx) var(--gy) / 640px 160px,
+    linear-gradient(rgb(12 6 9 / var(--shade)), rgb(12 6 9 / var(--shade))),
+    linear-gradient(180deg, #3e281a, var(--wood-3) 45%, var(--wood-4) 88%);
+}
+/* sombra dura da caixa na tábua */
+.rack__floor::after { content: ''; position: absolute; left: 12%; right: 9%; bottom: 36%; height: 22%; background: rgb(12 6 9 / 0.72); }
+.rack__slot--vazio .rack__floor::after { display: none; }
+.rack__side { display: none; top: 0; bottom: 0; width: var(--D); background: var(--grain-h) 0 0 / 640px 160px, linear-gradient(90deg, var(--wood-1), var(--wood-2)); }
+.rack__side--l { left: 0; transform-origin: left; transform: rotateY(90deg); }
+.rack__side--r { right: 0; transform-origin: right; transform: rotateY(-90deg); background: var(--grain-h) 0 0 / 640px 160px, linear-gradient(270deg, var(--wood-1), var(--wood-2)); }
+.rack__slot:nth-child(2n + 1) .rack__side--l, .rack__slot:nth-child(2n) .rack__side--r { display: block; }
+@media (min-width: 760px) {
+  .rack__bay { --D: 30cqw; }
+  .rack__scene { padding: 30px 11% 0; }
+  .rack__slot:nth-child(n) .rack__side { display: none; }
+  .rack__slot:nth-child(4n + 1) .rack__side--l, .rack__slot:nth-child(4n) .rack__side--r { display: block; }
+}
+
+/* a caixa entra no nicho como um plano em pé, com o próprio ponto de vista (lombada à mostra) */
+.rack__stage { position: relative; transform: translateZ(calc(var(--D) * -0.3)); perspective: 640px; perspective-origin: -40% -30%; }
+@media (min-width: 760px) { .rack__stage { transform: translateZ(calc(var(--D) * -0.45)); } }
+.rack__spacer { display: block; aspect-ratio: 3 / 4; }
+
+/* beiço: 14 px de tábua + 6 px de borda iluminada */
+.rack__beico {
+  position: relative; z-index: 1; height: 20px;
+  background:
+    linear-gradient(180deg, #a07652 0 1px, var(--wood-5) 1px 3px, var(--wood-4) 3px 6px, rgb(12 6 9 / 0.3) 6px 7px,
+      transparent 7px calc(100% - 2px), rgb(12 6 9 / 0.5) calc(100% - 2px)),
+    var(--scratch), var(--seam),
+    var(--grain-h) var(--gx) calc(var(--gy) - 24px) / 640px 160px,
+    linear-gradient(rgb(12 6 9 / var(--shade)), rgb(12 6 9 / var(--shade))),
+    linear-gradient(180deg, var(--wood-3), var(--wood-2));
+}
+
+/* frente do móvel abaixo do beiço: madeira lisa e sólida, é onde o texto mora */
+.rack__info { flex: 1; display: flex; flex-direction: column; padding: 12px 8px 18px; background: var(--wood); }
+@media (min-width: 760px) { .rack__info { padding: 14px 14px 20px; } }
+
+/* post-it colado na frente do móvel (papel creme do sistema): faixa de cola mais escura em cima e a ponta descolando */
+.postit {
+  position: relative; padding: 14px 10px 14px; rotate: -1.4deg;
+  background: linear-gradient(180deg, rgb(42 29 23 / 0.08) 0 12px, transparent 12px), var(--paper);
+  color: var(--paper-ink); box-shadow: 0 4px 0 var(--deep);
+  transition: rotate 160ms ease-out;
+}
+.rack__slot:nth-child(2n) .postit { rotate: 1.2deg; }
+.postit::after {
+  content: ''; position: absolute; right: 0; bottom: 0; width: 18px; height: 18px;
+  background: linear-gradient(315deg, var(--wood) 0 50%, color-mix(in srgb, var(--paper), var(--paper-ink) 16%) 50%);
+}
+@media (hover: hover) { .rack__slot:hover .postit { rotate: 0deg; } }
+.rack__nome { font: 400 1.15rem/1.2 var(--f-mao); overflow-wrap: anywhere; }
+.rack__meta { margin-top: 2px; font-size: 0.875rem; line-height: 1.3; color: var(--paper-muted); }
+.rack__acoes { margin-top: auto; padding-top: 14px; }
+
+/* ---------- Ticket de voto: canhoto | picote | corpo ----------
+   Votar rasga o corpo no picote e ele cai; o canhoto fica e vira "desfazer". */
+.ticket {
+  --tk: var(--amber);
+  position: relative; display: grid; grid-template-columns: minmax(78px, 34%) minmax(0, 1fr);
+  width: 100%; min-height: 54px; padding: 0; border: 0; background: none; color: var(--deep);
+  cursor: pointer; rotate: 0.6deg; transition: translate 120ms ease-out;
+}
+.rack__slot:nth-child(2n) .ticket { rotate: -0.6deg; }
+.ticket__canhoto, .ticket__corpo {
+  position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  padding: 6px 8px; background: var(--tk); box-shadow: 0 3px 0 var(--deep); text-align: center;
+}
+.ticket__canhoto { z-index: 2; border-right: 2px dashed rgb(12 6 9 / 0.45); font: 400 0.75rem/1.15 var(--f-dati); }
+/* meias-luas do picote, na cor da madeira */
+.ticket__canhoto::before, .ticket__canhoto::after {
+  content: ''; position: absolute; right: -7px; width: 12px; height: 12px; border-radius: 50%; background: var(--wood);
+}
+.ticket__canhoto::before { top: -6px; }
+.ticket__canhoto::after { bottom: -6px; }
+.ticket__corpo { z-index: 1; outline: 2px solid rgb(12 6 9 / 0.3); outline-offset: -6px; transform-origin: 0 100%; }
+.ticket__corpo b { font: 400 min(1.7rem, 12cqw)/1 var(--f-placa); letter-spacing: 0.14em; padding-left: 0.14em; }
+.ticket__corpo small { font: 400 0.75rem/1 var(--f-dati); letter-spacing: 0.08em; text-transform: uppercase; }
+.ticket__feito { display: none; }
+.ticket__feito b { display: block; font: 400 1.05rem/1 var(--f-placa); letter-spacing: 0.08em; }
+.ticket__feito small { display: block; margin-top: 3px; font: 400 0.75rem/1 var(--f-dati); text-decoration: underline; }
+@media (hover: hover) { .ticket:not(:disabled):hover { translate: 0 -2px; } }
+.ticket:not(:disabled):active { translate: 0 1px; }
+
+/* votado: só o canhoto, com a borda serrilhada do rasgo */
+.ticket[aria-pressed="true"] .ticket__corpo { visibility: hidden; }
+.ticket[aria-pressed="true"] .ticket__num { display: none; }
+.ticket[aria-pressed="true"] .ticket__feito { display: block; }
+.ticket[aria-pressed="true"] .ticket__canhoto, .ticket.rasgando .ticket__canhoto { border-right: 0; clip-path: var(--serra-d); }
+.ticket[aria-pressed="true"] .ticket__canhoto::before, .ticket[aria-pressed="true"] .ticket__canhoto::after,
+.ticket.rasgando .ticket__canhoto::before, .ticket.rasgando .ticket__canhoto::after { display: none; }
+.ticket.rasgando .ticket__corpo { clip-path: var(--serra-e); animation: rasga 820ms both; }
+.rack__slot:has(.rasgando) { z-index: 3; }
+/* puxa, puxa, rasga de cima pra baixo (pivô no pé do picote) e cai */
+@keyframes rasga {
+  0% { transform: none; opacity: 1; }
+  14% { transform: translateX(-2px) rotate(-2deg); }
+  28% { transform: translateX(2px) rotate(3deg); }
+  40% { transform: translate(8px, -2px) rotate(10deg); opacity: 1; animation-timing-function: cubic-bezier(0.5, 0, 0.9, 0.6); }
+  100% { transform: translate(40px, 130px) rotate(38deg); opacity: 0; }
+}
+.ticket__corpo.volta { animation: volta 260ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+@keyframes volta { from { transform: translate(14px, -18px) rotate(8deg); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* sua sugestão: ticket anulado */
+.ticket:disabled { --tk: #8d7f74; cursor: not-allowed; grid-template-columns: 56px minmax(0, 1fr); }
+.ticket:disabled .ticket__corpo { outline-style: dashed; }
+.ticket:disabled .ticket__corpo b { font-size: min(1.2rem, 8cqw); letter-spacing: 0.06em; padding-left: 0; line-height: 1.05; }
+
+
+/* ---------- Caixa fechada (6 faces, herdada do V2) ---------- */
+.case {
+  --ry: 11deg; --t: 15cqw;
+  position: relative; display: block; width: 100%; aspect-ratio: 3 / 4;
+  transform-style: preserve-3d; transform-origin: 50% 100%;
+  /* --tilt-x/--tilt-y: inclinação que segue o ponteiro no PC (V2) */
+  transform: translateY(var(--lift, 0px)) translateZ(var(--tz, 0px))
+             rotateX(var(--tilt-x, 0deg)) rotateY(calc(var(--ry) + var(--tilt-y, 0deg)));
+  transition: transform 280ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@media (min-width: 760px) { .case { --ry: 24deg; } }
+/* passar o mouse no card ou focar o botão endireita a caixa */
+@media (hover: hover) { .rack__slot:hover .case { --ry: 0deg; --tz: 34px; --lift: -6px; } }
+/* só foco de teclado endireita a caixa (foco devolvido pelo script depois de um clique não conta) */
+.rack__slot:has(:focus-visible) .case { --ry: 0deg; --tz: 34px; --lift: -6px; }
+
+.case__face { position: absolute; display: block; backface-visibility: hidden; }
+.case__front { inset: 0; }
+.case__spine {
+  top: 0; bottom: 0; right: 100%; width: var(--t); transform-origin: right center; transform: rotateY(-90deg);
+  display: flex; align-items: center; justify-content: center; overflow: hidden;
+  font: calc(var(--t) * 0.62) / 1 var(--f-placa);
+  background: linear-gradient(90deg, hsl(var(--hue) 30% 12%), hsl(var(--hue) 34% 22%) 45%, hsl(var(--hue) 30% 14%));
+}
+.case__spine span { writing-mode: vertical-rl; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-height: 90%; color: var(--ink); letter-spacing: 0.04em; }
+.case__side { top: 0; bottom: 0; left: 100%; width: var(--t); transform-origin: left center; transform: rotateY(90deg); background: hsl(var(--hue) 26% 9%); }
+.case__top { left: 0; right: 0; bottom: 100%; height: var(--t); transform-origin: center bottom; transform: rotateX(90deg); background: linear-gradient(90deg, hsl(var(--hue) 28% 22%), hsl(var(--hue) 24% 15%)); }
+
+
+.etiqueta {
+  position: absolute; z-index: 3; left: 50%; top: 44%; padding: 7px 16px 5px;
+  background: var(--paper); color: var(--stamp);
+  box-shadow: inset 0 0 0 3px var(--paper), inset 0 0 0 5px var(--stamp), 0 3px 0 var(--deep);
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% calc(100% + 4px), 0 calc(100% + 4px));
+  font: 400 min(2rem, 14cqw)/1 var(--f-placa); letter-spacing: 0.12em; white-space: nowrap;
+  transform: translate(-50%, -50%) rotate(-8deg);
+}
+.etiqueta::after {
+  content: ''; position: absolute; right: 0; top: 0; width: 12px; height: 12px;
+  background: linear-gradient(225deg, transparent 50%, #cdbf9c 50%);
+}
+.etiqueta.cola { animation: cola 460ms cubic-bezier(0.16, 1, 0.3, 1); }
+@keyframes cola {
+  0% { transform: translate(-50%, -50%) translateY(-40px) rotate(-26deg) scale(1.5); opacity: 0; }
+  55% { transform: translate(-50%, -50%) rotate(-5deg) scale(0.95); opacity: 1; }
+  100% { transform: translate(-50%, -50%) rotate(-8deg) scale(1); }
+}
+.bilhete {
+  position: absolute; z-index: 3; left: 6%; right: 8%; bottom: 7%; padding: 4px 8px; rotate: -3deg;
+  background: var(--paper); color: var(--paper-ink); font: 400 1rem/1.25 var(--f-mao);
+  box-shadow: 0 3px 6px rgb(12 6 9 / 0.5);
+}
+
+
+/* ---------- Sua vaga: estojo vazio de plástico no nicho ---------- */
+.case--vazio .case__spine, .case--vazio .case__side, .case--vazio .case__top { background: #232027; }
+.capa-vazia, .tampa__vazia {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  background: linear-gradient(115deg, rgb(243 230 216 / 0.12), transparent 38%), #19171c;
+  box-shadow: inset 0 0 0 3px #2c2a31;
+}
+.capa-vazia::before, .tampa__vazia::before { content: ''; position: absolute; inset: 8%; border: 2px dashed rgb(243 230 216 / 0.3); }
+.capa-vazia span, .tampa__vazia span {
+  color: var(--muted); font: 400 11cqw/0.95 var(--f-placa); letter-spacing: 0.06em; text-align: center; text-transform: uppercase;
+}
+@media (min-width: 760px) { .capa-vazia span { font-size: 9cqw; } }
+
+/* ações do seu jogo na prateleira */
+.rack__acoes--meu { display: grid; gap: 8px; }
+.rack__acoes .btn { width: 100%; padding-inline: 8px; }
+/* confirmação dentro da página: papel logo abaixo do botão */
+.postit.cola { animation: postit-cola 380ms cubic-bezier(0.2, 0.8, 0.2, 1.15) both; }
+@keyframes postit-cola { from { transform: translateY(-14px) rotate(-6deg) scale(1.06); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* ---------- Capinha clicável: um botão invisível por cima do nicho (fora da cadeia 3D) ---------- */
+.rack__vitrine { position: relative; }
+.rack__abrir { position: absolute; inset: 0; z-index: 3; padding: 0; border: 0; background: none; cursor: pointer; }
+.rack__abrir:focus-visible { outline-offset: -4px; }
+
+/* ---------- Tela Estante: a mesma prateleira da votação, sem voto ---------- */
+.tela-estante { grid-template-areas: "cabeca" "ficha" "tv" "estante"; }
+@media (min-width: 760px) {
+  .tela-estante { grid-template-areas: "cabeca tv" "ficha tv" "estante estante"; }
+}
+.tela-estante .ficha { align-self: start; }
+.estante__nota-jogo { margin-top: 12px; color: var(--muted); font-size: 0.875rem; }
+.estante__nota-jogo .sticker { margin-right: 6px; }
+
+/* a capa da prateleira usa a mesma capa; só o nome encolhe pro nicho */
+.case .capa__nome { font-size: 11.5cqw; }

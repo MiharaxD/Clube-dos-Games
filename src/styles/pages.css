@@ -1,0 +1,60 @@
+/* ==========================================================================
+   Telas avulsas: Seu perfil (carteirinha), Balcão (admin) e roleta do desempate.
+   ========================================================================== */
+
+.perfil > .cabeca, .tela-balcao > .cabeca { margin-bottom: 28px; }
+
+/* ---------- Seu perfil: a carteirinha de sócio ---------- */
+.carteirinha__socio { display: flex; align-items: center; gap: 12px; margin-top: 12px; min-width: 0; }
+.carteirinha__socio .carteirinha__email { margin: 0; color: var(--paper-muted); overflow-wrap: anywhere; }
+/* sobre papel o avatar troca a borda clara pela tinta da ficha */
+.carteirinha .avatar, .ficha--mini .avatar { border-color: var(--paper-ink); }
+
+/* campos sobre papel: rótulo e digitação em Atkinson (o datilografado é só o corpo da ficha) */
+.carteirinha__campos { margin-top: 20px; font-family: var(--f-texto); caret-color: var(--paper-ink); }
+.carteirinha .field small { color: var(--paper-muted); }
+.carteirinha .actions { margin-top: 4px; }
+
+/* campo claro: o escuro padrão viraria um buraco no papel */
+.carteirinha .input { background: var(--paper); border-color: var(--paper-ink); color: var(--paper-ink); }
+.carteirinha .input:hover { border-color: var(--paper-ink); background: rgb(42 29 23 / 0.06); }
+.carteirinha .input:focus-visible { outline: 3px solid var(--paper-ink); outline-offset: 1px; border-color: var(--paper-ink); }
+
+.carteirinha .check { border-color: var(--paper-muted); }
+.carteirinha .check input { accent-color: var(--paper-ink); }
+.carteirinha .check:has(input:checked) { border-color: var(--paper-ink); background: rgb(42 29 23 / 0.12); }
+.carteirinha .check:has(input:focus-visible) { outline-color: var(--paper-ink); }
+
+/* ---------- Balcão: fichas esperando + sócios ---------- */
+.fichas { list-style: none; padding: 8px 0 0; display: grid; gap: 20px; }
+.fichas > .ficha + * { margin-top: 0; }
+.ficha--mini:nth-child(even) { transform: rotate(0.6deg); }
+.ficha__quem { display: flex; align-items: center; gap: 10px; min-width: 0; padding-right: 132px; }
+.ficha--mini .ficha__title { padding-right: 0; overflow-wrap: anywhere; min-width: 0; }
+@media (min-width: 760px) {
+  .fichas { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; }
+}
+
+/* ---------- Roleta do desempate: grade de capas sobre deep ---------- */
+/* roleta do desempate */
+.roulette {
+  list-style: none; margin: 12px 0 0; padding: 16px 12px; background: var(--deep); border-radius: var(--r);
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 132px), 1fr)); gap: 16px 12px;
+}
+.roulette__item {
+  position: relative; display: grid; align-content: start; gap: 8px; padding: 8px 8px 10px;
+  border-radius: var(--r); outline: none; transition: transform 60ms linear;
+}
+/* contorno âmbar num pseudo-elemento: acende só por opacidade */
+.roulette__item::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  border: 3px solid var(--amber); border-radius: var(--r); opacity: 0; transition: opacity 60ms linear;
+}
+.roulette__item.is-lit { transform: translateY(-4px); }
+.roulette__item.is-lit::after { opacity: 1; }
+.roulette__item.is-winner { background: rgb(255 193 94 / 0.14); }
+.roulette__art { position: relative; }
+.roulette__name { font: 700 1rem/1.25 var(--f-texto); overflow-wrap: anywhere; }
+@media (min-width: 760px) {
+  .roulette { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); padding: 20px 16px; }
+}

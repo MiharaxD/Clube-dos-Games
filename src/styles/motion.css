@@ -1,0 +1,26 @@
+/* ==========================================================================
+   Movimento e efeitos desligáveis (sempre o último arquivo).
+   reduced-motion e contraste alto desligam: movimento, grão, scanlines e aberração.
+   ========================================================================== */
+
+/* parallax por rolagem no celular: a parede anda bem mais devagar que o conteúdo */
+@supports (animation-timeline: scroll()) {
+  @media (max-width: 759px) and (prefers-reduced-motion: no-preference) and (not (prefers-contrast: more)) {
+    .cena-parede { animation: par-parede linear both; animation-timeline: scroll(root); }
+  }
+}
+@keyframes par-parede { from { transform: translateY(0); } to { transform: translateY(-120px); } }
+
+@media (prefers-reduced-motion: reduce), (prefers-contrast: more) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  .cena-grao, .poeira, .tv__rolo { display: none; }
+  .tv__vidro::after { display: none; }
+  .tv__fase { text-shadow: none; }
+  .neon__l.apaga { opacity: 1; }
+  .btn:active { transform: none; }
+  .roulette__item.is-lit { transform: none; }
+}
+@media (prefers-contrast: more) {
+  .cena-vinheta { background: radial-gradient(ellipse 85% 80% at 50% 42%, transparent 55%, rgb(12 6 9 / 0.3) 100%); }
+  .cena-luz { display: none; }
+}

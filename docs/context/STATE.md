@@ -2,24 +2,27 @@
 
 ## Entregue
 - Os 7 marcos do pedido original: as 12 regras de negócio implementadas, README de setup,
-  testes das rules passando no emulador, revisão visual final do impeccable ("ship"), `DESIGN.md`.
-- Fluxo completo testado no emulador com usuários falsos (login, aprovação, sugestão, voto,
-  empate/roleta, jogando, datas, notas/spoiler, perguntas, encerrar, estante, stats, voltar status).
+  testes das rules passando no emulador, `DESIGN.md`.
+- **Visual "Sexta no quarto" em todas as telas** (login, espera, rodada nas 4 fases, estante, stats, perfil,
+  Balcão, roleta), portado dos mocks sem mudar modelo, rules nem `api.js`. Fluxo completo testado no emulador
+  (sugestão pela caixinha, voto pelo ticket, empate/roleta, calendário, resenha no quadro, encerrar, finalizar).
 
 ## Pendências (prioridade)
 1. Usuário criar o projeto Firebase real e fazer o primeiro deploy (README §2–9, §13).
-2. Em exploração (nada implementado no app): visual imersivo em todas as telas de jogos (prateleira
-   de madeira 3D, caixa que abre com CD + encarte, voto dentro da caixa com post-it "votado", mesa com
-   console na fase jogando). Mock ativa: `.impeccable/mocks/prateleira-3d.html` (só prateleira fechada;
-   faltam caixa aberta, luz/sala, objetos de cenário e molde de capa). Abertas: onde vem a capa vertical
-   (RAWG dá arte horizontal), qual console aparece, descrição do RAWG sob demanda. Muda `DESIGN.md`.
-3. Decidir: consolidar os tamanhos de fonte do `styles.css` numa escala menor OU ampliar a escala
-   no `DESIGN.md` (detector acusa ~19 tamanhos e a cor de placeholder `#a8998a` fora do DESIGN.md).
+2. **Campos novos que os mocks pedem (perguntar antes; mudam modelo + rules + testes):** comentários por jogo na
+   votação (post-its da caixinha e balões na capa), "zerou" (botão ZEREI, tempo, recado, ordem → estatuetas, placar,
+   vitrine, "quem zera primeiro"/lanterninha nas stats), descrição do jogo ("Do que se trata" no manual), capa enviada
+   do aparelho. Hoje omitidos; as resenhas do quadro usam o comentário das notas.
+3. Estante: o mock faz a capinha voar até a mesa da rodada na própria página; no app a caixinha abre e o botão
+   "Ver a mesa da rodada" leva a `#/rodada/:id` (mesa só leitura). Decidir se vale portar o voo.
+4. O detector só dá avisos (advisory): cores de material dos objetos 3D e alguns tamanhos/raios fora do YAML do
+   `DESIGN.md`; registrar no YAML se quiser zerar.
 
 ## Não verificado
-- Login Google real (popup e redirect) e as rules no projeto real.
-- Busca RAWG com chave válida (só o caso de falha foi testado).
-- Capas com imagem real; roleta com 3+ empatados; `prefers-reduced-motion`.
+- Login Google real (popup e redirect) e as rules no projeto real. No painel de preview do Claude o popup é
+  bloqueado e o redirect do emulador não voltou logado (teste feito com credencial do emulador).
+- Busca RAWG com chave válida (só o modo manual foi testado) e capas com imagem real.
+- `prefers-reduced-motion`/`prefers-contrast` só por código (CSS + `calma`), sem emulação no navegador.
 
 ## Limitações conhecidas
 - Chaves `VITE_*` (incl. RAWG) ficam visíveis no bundle; sem Cloud Functions não há como esconder.

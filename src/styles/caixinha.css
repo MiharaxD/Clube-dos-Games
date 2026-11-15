@@ -1,0 +1,201 @@
+/* ==========================================================================
+   Caixinha (estojo de plástico que abre): modal com a capa na tampa, o manual no
+   verso e o CD na bandeja. Formulário da sugestão (passo capa → manual) e leitura.
+   Movimento por WAAPI (src/lib/motion.js); aqui só o estado de repouso.
+   ========================================================================== */
+/* ---------- Modal do estojo ----------
+   Ordem de cena: fundo escuro → estojo 3D → textos e botões. O estojo é a própria UI:
+   frente = capa (nome + imagem), verso da tampa = manual (o resto), base = bandeja com o CD.
+   Movimento: tudo por WAAPI no JS; aqui só o estado de repouso. */
+html.trava { overflow: hidden; }
+html { scrollbar-gutter: stable; }
+.modal { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 16px; overflow: hidden; }
+.modal[hidden] { display: none; }
+.modal__fundo { position: absolute; inset: 0; background: radial-gradient(ellipse 70% 60% at 50% 45%, rgb(20 11 16 / 0.9), rgb(12 6 9 / 0.97)); }
+.modal__palco { position: relative; display: flex; flex-direction: column; align-items: center; gap: 10px; width: 100%; perspective: 1800px; }
+.modal__titulo { font: 400 clamp(1.9rem, 6vw, 2.4rem)/1 var(--f-placa); letter-spacing: 0.05em; text-align: center; }
+.modal__dica { max-width: 46ch; color: var(--muted); text-align: center; }
+.modal__form { display: flex; flex-direction: column; align-items: center; gap: 10px; width: 100%; }
+.modal__erro { min-height: 1.5em; color: var(--pink); font-weight: 700; text-align: center; }
+.modal__acoes { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.modal__acoes [hidden] { display: none; }
+
+.estojo {
+  position: relative; width: var(--w); aspect-ratio: 3 / 4; margin-top: 8px; perspective: 1600px;
+}
+.modal--form .estojo {
+  --w: min(360px, 42vw, calc((100dvh - 260px) * 0.75));
+  position: relative; width: var(--w); aspect-ratio: 3 / 4; margin-top: 8px; perspective: 1600px;
+}
+@media (max-width: 759px) { .modal--form .estojo { --w: min(84vw, calc((100dvh - 260px) * 0.75)); } }
+.estojo__sombra {
+  position: absolute; left: 4%; right: 4%; bottom: -20px; height: 24px; border-radius: 50%;
+  background: radial-gradient(closest-side, rgb(12 6 9 / 0.75), transparent);
+}
+.estojo__corpo { position: absolute; inset: 0; transform-style: preserve-3d; }
+.estojo__base {
+  position: absolute; inset: 0; border-radius: 3px 8px 8px 3px; transform: translateZ(-2px);
+  background:
+    radial-gradient(circle at 50% 50%, #34313a 0 7%, #16151a 7.5% 10%, transparent 10.5%),
+    linear-gradient(160deg, #26232b, #141317);
+  box-shadow: inset 0 0 0 3px #322f37, inset 0 0 0 7px #1a181d;
+}
+.estojo__tampa { position: absolute; inset: 0; transform-origin: 0 50%; transform: translateZ(2px); transform-style: preserve-3d; }
+/* caixinha fechada e parada (passo da capa): 3D achatado, senão o Chrome erra o clique nos campos da capa */
+.estojo.plano .estojo__corpo, .estojo.plano .estojo__tampa { transform-style: flat; }
+.tampa__frente, .tampa__verso {
+  position: absolute; inset: 0; overflow: hidden; border-radius: 3px 8px 8px 3px;
+  backface-visibility: hidden; -webkit-backface-visibility: hidden;
+}
+.tampa__frente { background: #19171c; box-shadow: inset 0 0 0 3px #2c2a31; }
+.tampa__frente .capa { inset: 4px; }
+/* dentro do 3D o clique ignora z-index: só os controles recebem ponteiro */
+.tampa__frente > :not(.capa-escolha, .placa) { pointer-events: none; }
+.tampa__frente .capa__nome { font-size: calc(var(--w) * 0.09); }
+.tampa__frente:not(.vestida) .capa__nome { visibility: hidden; }
+.tampa__vazia { z-index: 2; pointer-events: none; }
+.tampa__vazia span { font-size: calc(var(--w) * 0.12); }
+/* lustro do plástico por cima da arte, abaixo dos controles */
+.tampa__frente::after {
+  content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background: linear-gradient(115deg, rgb(243 230 216 / 0.12), transparent 32% 70%, rgb(243 230 216 / 0.05));
+}
+.tampa__frente .tarja, .tampa__frente .preco { z-index: 2; }
+.tampa__frente .preco { right: 8px; top: 8px; }
+.tampa__frente .carimbo { font-size: calc(var(--w) * 0.06); }
+
+
+/* controles da capa: faixas sólidas (texto nunca sobre a arte) */
+.capa-escolha { position: absolute; z-index: 3; left: 0; right: 0; top: 0; margin: 0; padding: 8px 10px 10px; border: 0; background: var(--deep); }
+.capa-escolha legend { float: left; width: 100%; margin-bottom: 6px; padding: 0; color: var(--muted); font: 700 0.8125rem/1.2 var(--f-texto); }
+.capa-escolha__opcoes { clear: both; display: flex; flex-wrap: wrap; gap: 6px; }
+.amostra { position: relative; flex: none; width: 44px; height: 44px; }
+.amostra input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; }
+.amostra > span {
+  display: grid; place-items: center; width: 100%; height: 100%; border: 2px solid var(--edge); border-radius: 4px;
+  background: #2a2630 center / cover; color: var(--ink); font: 700 0.75rem/1 var(--f-texto);
+}
+.amostra input:checked + span { border-color: var(--amber); box-shadow: 0 0 0 2px var(--amber); }
+.amostra input:focus-visible + span { outline: 3px solid var(--amber); outline-offset: 3px; }
+.campo-link, .placa__input {
+  width: 100%; min-height: var(--toque); border: 2px solid var(--edge); border-radius: 4px; background: #0c0609; color: var(--ink);
+}
+.campo-link { margin-top: 8px; padding: 8px 10px; font: 400 0.95rem/1.3 var(--f-texto); }
+.campo-link[hidden] { display: none; }
+.campo-link:focus-visible, .placa__input:focus-visible { outline: 3px solid var(--amber); outline-offset: 1px; }
+.placa { position: absolute; z-index: 3; left: 6%; right: 6%; bottom: 6%; padding: 8px 10px 10px; background: var(--deep); box-shadow: 0 3px 0 rgb(12 6 9 / 0.6); }
+.placa__rotulo { display: block; margin-bottom: 4px; color: var(--muted); font: 700 0.8125rem/1.2 var(--f-texto); }
+.placa__input { padding: 4px 8px; font: 400 calc(var(--w) * 0.085)/1.1 var(--f-placa); letter-spacing: 0.04em; }
+.placa__input::placeholder { color: rgb(201 181 168 / 0.6); }
+.busca {
+  position: absolute; left: 0; right: 0; bottom: calc(100% + 6px); margin: 0; padding: 4px; list-style: none;
+  max-height: calc(var(--w) * 0.62); overflow-y: auto; background: var(--deep); border: 2px solid var(--edge); border-radius: 4px;
+}
+.busca[hidden] { display: none; }
+.busca__item {
+  display: flex; align-items: center; gap: 10px; width: 100%; min-height: 48px; padding: 4px 6px; border: 0; border-radius: 4px;
+  background: none; color: var(--ink); text-align: left; font: 600 0.95rem/1.2 var(--f-texto); cursor: pointer;
+}
+.busca__item:hover, .busca__item:focus-visible { background: var(--shelf); outline-offset: -3px; }
+.busca__capa { flex: none; width: 30px; aspect-ratio: 3 / 4; background: center / cover; }
+.busca__item small { display: block; color: var(--muted); font-size: 0.8125rem; font-weight: 400; }
+.busca__vazio { padding: 8px; color: var(--muted); font-size: 0.875rem; }
+
+
+/* bandeja: CD com rótulo impresso nas cores da capa e reflexo girando (camada ambiente) */
+.cd {
+  position: absolute; left: 50%; top: 50%; width: 86%; aspect-ratio: 1; margin: -43% 0 0 -43%; border-radius: 50%;
+  background: conic-gradient(from 20deg, #c9c6cf, #e8e6ee, #a9c7d6, #d6c2e0, #f0e2b8, #c9c6cf 50%, #e8e6ee, #b9d6cf, #d9c8e8, #c9c6cf);
+  box-shadow: 0 3px 0 var(--deep), inset 0 0 0 2px rgb(255 255 255 / 0.35);
+}
+.cd::after {
+  content: ''; position: absolute; inset: 0; border-radius: 50%; pointer-events: none;
+  background: conic-gradient(transparent 0 20%, rgb(255 255 255 / 0.25) 25%, transparent 30% 70%, rgb(255 255 255 / 0.18) 75%, transparent 80%);
+  animation: brilho-cd 7s linear infinite;
+}
+@keyframes brilho-cd { to { rotate: 360deg; } }
+.cd__rotulo {
+  position: absolute; inset: 7%; display: grid; place-items: end center; padding: 0 18% 17%; overflow: hidden; border-radius: 50%;
+  background:
+    radial-gradient(circle, transparent 0 21%, rgb(255 255 255 / 0.55) 21% 22.5%, transparent 23%),
+    var(--rotulo-img, linear-gradient(transparent, transparent)) center / cover,
+    var(--rotulo, #3a2848);
+  color: var(--ink); font: 400 calc(var(--w) * 0.065)/1 var(--f-placa); letter-spacing: 0.06em; text-align: center;
+}
+/* com imagem impressa, o nome ganha uma faixa sólida (texto nunca direto sobre a arte) */
+.cd__rotulo.com-img { padding-bottom: 14%; }
+.cd__rotulo.com-img span { padding: 2px 6px; background: var(--deep); }
+.cd__furo { position: absolute; left: 50%; top: 50%; width: 13%; aspect-ratio: 1; translate: -50% -50%; border-radius: 50%; background: #16151a; box-shadow: 0 0 0 3px #2b2930; }
+
+/* verso da tampa: manual preso por duas presilhas */
+.tampa__verso { transform: rotateY(180deg); padding: 6% 6%; background: linear-gradient(200deg, #222026, #141317); box-shadow: inset 0 0 0 3px #322f37; }
+.presilha { position: absolute; z-index: 2; left: 50%; width: 22%; height: 10px; translate: -50% 0; border-radius: 3px; background: #2f2c35; }
+.presilha--cima { top: 3.4%; }
+.presilha--baixo { bottom: 3.4%; }
+.manual {
+  position: relative; height: 100%; overflow-y: auto; overscroll-behavior: contain; padding: 14px 14px 18px;
+  background: var(--paper); color: var(--paper-ink); rotate: -0.6deg; box-shadow: 0 4px 0 var(--deep);
+  scrollbar-width: thin; scrollbar-color: var(--paper-muted) transparent;
+}
+.manual :focus-visible { outline-color: var(--paper-ink); }
+.manual__cabeca {
+  display: flex; justify-content: space-between; align-items: baseline; padding-bottom: 6px; border-bottom: 2px solid var(--paper-ink);
+  font: 400 1.05rem/1 var(--f-placa); letter-spacing: 0.1em; text-transform: uppercase;
+}
+.manual__pag { font: 400 0.75rem/1 var(--f-dati); letter-spacing: 0; text-transform: none; }
+.manual__jogo { margin-top: 8px; font: 400 1.6rem/1 var(--f-placa); letter-spacing: 0.04em; overflow-wrap: anywhere; }
+
+.mcampo { display: grid; gap: 4px; min-width: 0; margin: 12px 0 0; padding: 0; border: 0; }
+.mcampo > span, .mcampo > legend { padding: 0; font: 700 0.875rem/1.25 var(--f-texto); }
+.mcampo > legend { float: left; width: 100%; margin-bottom: 4px; }
+.mcampo > legend + * { clear: both; }
+.mcampo input, .mcampo textarea {
+  width: 100%; min-height: var(--toque); padding: 8px 10px; border: 2px solid var(--paper-ink); border-radius: 4px;
+  background: #fffaf0; color: var(--paper-ink); font: 400 1rem/1.35 var(--f-texto);
+}
+.mcampo textarea { min-height: 72px; resize: vertical; }
+.mcampo textarea[name="pitch"] { min-height: 96px; }
+.mcampo small { color: var(--paper-muted); font-size: 0.8125rem; }
+.mcampo__cont { justify-self: end; color: var(--paper-muted); font: 600 0.8125rem/1 var(--f-texto); font-variant-numeric: tabular-nums; }
+.mcampo__cont.estourou { color: var(--stamp); }
+.mdupla { display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: 0 10px; }
+.mchips { display: flex; flex-wrap: wrap; gap: 6px; }
+.mchip { position: relative; }
+.mcampo .mchip input { position: absolute; inset: 0; width: 100%; min-height: 0; margin: 0; padding: 0; opacity: 0; cursor: pointer; }
+.mchip span {
+  display: flex; align-items: center; gap: 6px; min-height: var(--toque); padding: 6px 10px;
+  border: 2px solid rgb(42 29 23 / 0.45); border-radius: 4px; font: 600 0.9rem/1 var(--f-texto);
+}
+.mchip span::before { content: ''; width: 12px; height: 12px; border: 2px solid currentColor; border-radius: 2px; }
+.mchip--radio span::before { border-radius: 50%; }
+.mchip input:checked + span { border-color: var(--paper-ink); background: var(--paper-ink); color: var(--paper); }
+.mchip input:checked + span::before { border-color: var(--amber); background: var(--amber); }
+.mchip input:focus-visible + span { outline: 3px solid var(--paper-ink); outline-offset: 2px; }
+
+/* ---------- Modal de leitura: estojo à esquerda (abre pra esquerda), comentários à direita ---------- */
+.modal--leitura { overflow-x: hidden; overflow-y: auto; place-items: start center; }
+.modal--leitura .modal__fundo { position: fixed; }
+.modal--leitura .modal__palco { --w: min(80vw, calc((100dvh - 240px) * 0.75)); padding: 8px 0 24px; }
+.leitura { display: flex; flex-direction: column; align-items: center; gap: 28px; width: 100%; }
+.leitura__caixa { width: 100%; display: flex; justify-content: center; padding-bottom: 12px; }
+.modal__titulo:focus { outline: none; }
+@media (min-width: 760px) {
+  .modal--leitura { place-items: safe center; }
+  .modal--leitura .modal__palco { --w: min(300px, 26vw, calc((100dvh - 200px) * 0.75)); }
+  .leitura { flex-direction: row; justify-content: center; align-items: flex-start; }
+  /* a coluna tem 2 capas de largura: a caixa fica na metade direita e a tampa abre pra esquerda */
+  .leitura__caixa { width: calc(var(--w) * 2); justify-content: flex-end; }
+}
+
+
+/* manual só de leitura: ficha técnica no papel */
+.manual__por { margin-top: 4px; color: var(--paper-muted); font: 400 0.85rem/1.3 var(--f-dati); }
+.manual__sec { margin-top: 14px; font: 400 1.05rem/1 var(--f-placa); letter-spacing: 0.08em; text-transform: uppercase; }
+.manual__txt { margin-top: 4px; font-size: 0.95rem; line-height: 1.4; }
+.manual__pitch { margin-top: 4px; font: 400 1.05rem/1.3 var(--f-mao); }
+.manual__fatos { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; margin: 14px 0 0; padding-top: 10px; border-top: 2px dashed rgb(42 29 23 / 0.35); }
+.manual__fatos dt { font: 700 0.8125rem/1.2 var(--f-texto); color: var(--paper-muted); }
+.manual__fatos dd { margin: 0; font: 400 1.35rem/1.1 var(--f-placa); letter-spacing: 0.03em; }
+.manual__plats { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; padding: 0; list-style: none; }
+.manual__plats li { padding: 3px 8px; border: 2px solid var(--paper-ink); border-radius: 4px; font: 600 0.85rem/1.2 var(--f-texto); }
+
