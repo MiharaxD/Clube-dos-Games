@@ -10,7 +10,8 @@
   `/* ---------- Nome ---------- */`. JS visual: `src/views/parts.js` (`neonSign`, `tv`, `cover`/`genericCover`/
   `coverPalette`, `priceTag`, `stamp`, `sticker`, `stateChip`, `phaseSteps`, avatar), `src/views/rack.js`
   (prateleira 3D: `rackHtml`, `nicho`, `caseHtml`, `postit`, `vitrine`, `bindTilt`), `src/views/caixinha.js`
-  (`Estojo`, `openReading`), `src/views/mesa.js` (`caixa()`, layouts PC/celular por fase, inclusive `login`; `mountMesa`),
+  (`Estojo`, `openReading` com mural de recados em sugerindo/votando), `src/views/tema.js` (flâmula do tema da
+  rodada acima da prateleira; admin clica e edita), `src/views/mesa.js` (`caixa()`, layouts PC/celular por fase, inclusive `login`; `mountMesa`),
   `src/lib/motion.js` (motor WAAPI + `rolaNaMao`), `src/lib/rickroll.js` (easter egg de toda TV: clique →
   pulo, chiado em canvas + ruído WebAudio, vídeo `public/rickroll.webm` (AV1/Opus); TV comum liga por `[data-tv-liga]`), `src/lib/scene.js` (luz nasce de `data-luz="tv|abajur|neon"`;
   `placeLights` após cada render), `src/lib/icons.js`. Fontes em `public/fonts/` (licenças em `LICENSE.md`).
@@ -31,7 +32,7 @@
   Mudou regra visual → atualizar `DESIGN.md` (e `Estetica/DOSSIE.md` se for direção) e regenerar `.impeccable/design.json`.
 - **Mocks (referência, já portados):** `.impeccable/mocks/rodada-{sugerindo,votando,jogando,encerrada}.html`,
   `estante.html`, `stats.html`. Arquivos grandes: grep nas seções, nunca ler inteiros. Elementos sem campo no
-  modelo (comentários da votação, ZEREI/estatuetas/placar, descrição do jogo, capa enviada do aparelho) ficaram fora.
+  modelo (ZEREI/estatuetas/placar, descrição do jogo, capa enviada do aparelho) ficaram fora.
 - **Não precisa ler:** `Estetica/arquivo/`, o resto de `.impeccable/mocks/` (obsoletos, inclusive
   `prateleira-3d-v3.html`, Y2K rejeitado), `.impeccable/review/`.
 

@@ -1,7 +1,8 @@
 # Decisões ativas
 
 - **Modelo de dados:** `config/admins{uids}`, `members/{uid}`, `rounds/{id}` com subcoleções
-  `games/{uidDoAutor}/votes/{uidEleitor}`, `dateVotes/{uid}`, `ratings/{uid}`, `questions/{auto}`.
+  `games/{uidDoAutor}/votes/{uidEleitor}` e `games/{uid}/comments/{auto}` (recados, criados só em
+  sugerindo/votando; apagar o jogo apaga os recados), `rounds.theme` (tema da rodada, ≤ 60, só admin), `dateVotes/{uid}`, `ratings/{uid}`, `questions/{auto}`.
   Por quê: ID = uid deixa as rules garantirem "1 por pessoa". Exige: não mudar sem perguntar.
 - **Status anda 1 passo para frente ou para trás** (só admin). Voltar de votando apaga votos; voltar
   de jogando apaga vencedor. Exige: rules com `validStatusStep`; vencedor obrigatório a partir de jogando.

@@ -16,6 +16,47 @@
 .estante__titulo { font: 400 clamp(2rem, 6.5vw, 2.6rem)/0.95 var(--f-placa); letter-spacing: 0.04em; }
 .estante__nota { margin-top: 6px; color: var(--muted); max-width: 68ch; }
 
+/* flâmula do tema: pano teal pendurado por cordinhas acima do móvel (cordas/tachinhas = .varal__corda) */
+.flamula {
+  position: relative; width: fit-content; max-width: min(100%, 560px); margin: 18px auto 0; padding-top: 30px;
+  transform-origin: 50% 0; animation: balanca 8s ease-in-out infinite alternate;
+}
+.flamula__sombra, .flamula__pano {
+  clip-path: polygon(0 0, 100% 0, calc(100% - 20px) 50%, 100% 100%, 0 100%, 20px 50%);
+}
+.flamula__sombra { position: absolute; left: 0; right: 0; top: 36px; bottom: -6px; background: var(--deep); }
+.flamula__pano {
+  position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px;
+  width: 100%; margin: 0; padding: 8px 42px 10px; border: 0; color: var(--paper); text-align: center;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 60px, rgb(12 6 9 / 0.14) 85px, transparent 110px),
+    linear-gradient(180deg, #2a8f85, #1d6a63 50%, #134843);
+  box-shadow: inset 0 0 0 2px rgb(12 6 9 / 0.25);
+}
+.flamula__rotulo { font: 400 0.8rem/1 var(--f-dati); letter-spacing: 0.12em; text-transform: uppercase; color: var(--amber); }
+.flamula__texto {
+  display: block; padding: 4px 4px 2px; font: 400 clamp(1.6rem, 6vw, 2.4rem)/1 var(--f-placa); letter-spacing: 0.06em;
+  border-top: 2px dashed rgb(244 236 210 / 0.45); border-bottom: 2px dashed rgb(244 236 210 / 0.45); text-wrap: balance;
+}
+.flamula__pano--vazia .flamula__texto { color: rgb(244 236 210 / 0.75); }
+/* versão do admin: o pano inteiro é o botão */
+button.flamula__pano { cursor: pointer; min-height: var(--toque); font: inherit; }
+button.flamula__pano:hover .flamula__texto { color: var(--amber); }
+button.flamula__pano:focus-visible { outline: none; }
+.flamula:has(button.flamula__pano:focus-visible) { outline: 3px solid var(--amber); outline-offset: 4px; }
+.flamula__lapis {
+  position: absolute; right: 26px; top: 6px; display: grid; place-items: center; width: 22px; height: 22px;
+  color: var(--amber);
+}
+.flamula__lapis svg { width: 14px; height: 14px; }
+.flamula__form {
+  display: grid; gap: 12px; width: min(100vw - 32px, 360px); margin: 14px auto 0; padding: 14px 16px;
+  background: var(--paper); color: var(--paper-ink); box-shadow: var(--sh-papel); rotate: -0.6deg; text-align: left;
+}
+.flamula__form .input { background: #fffaf0; color: var(--paper-ink); border-color: var(--paper-muted); }
+.flamula__form .field small { color: var(--paper-muted); }
+.flamula__form .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
 /* props em cima do móvel (aria-hidden, sem clique) */
 .cenario {
   position: relative; display: flex; align-items: flex-end; justify-content: space-between; gap: 8px;

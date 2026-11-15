@@ -269,6 +269,60 @@ describe('(e) só admin altera status da rodada', () => {
 });
 
 // ---------------------------------------------------------------------------
+describe('tema da rodada', () => {
+  it('controle: admin define o tema', async () => {
+    await assertSucceeds(updateDoc(doc(as('admin'), 'rounds/r-sug'), { theme: 'Jogos indies' }));
+  });
+
+  it('membro aprovado não muda o tema', async () => {
+    await assertFails(updateDoc(doc(as('alice'), 'rounds/r-sug'), { theme: 'Só Mario' }));
+  });
+
+  it('tema acima de 60 caracteres é negado', async () => {
+    await assertFails(updateDoc(doc(as('admin'), 'rounds/r-sug'), { theme: 'x'.repeat(61) }));
+  });
+});
+
+describe('recados no jogo', () => {
+  const recado = (uid, extra = {}) => ({ text: 'Esse eu topo!', createdBy: uid, createdAt: serverTimestamp(), ...extra });
+
+  it('controle: bob comenta no jogo da alice em "sugerindo"', async () => {
+    await assertSucceeds(addDoc(collection(as('bob'), 'rounds/r-sug/games/alice/comments'), recado('bob')));
+  });
+
+  it('controle: alice comenta em "votando"', async () => {
+    await assertSucceeds(addDoc(collection(as('alice'), 'rounds/r-vot/games/bob/comments'), recado('alice')));
+  });
+
+  it('recado em "jogando" é negado', async () => {
+    await assertFails(addDoc(collection(as('alice'), 'rounds/r-jog/games/bob/comments'), recado('alice')));
+  });
+
+  it('pendente não comenta', async () => {
+    await assertFails(addDoc(collection(as('pendente'), 'rounds/r-sug/games/alice/comments'), recado('pendente')));
+  });
+
+  it('ninguém comenta em nome de outra pessoa', async () => {
+    await assertFails(addDoc(collection(as('bob'), 'rounds/r-sug/games/alice/comments'), recado('alice')));
+  });
+
+  it('recado em jogo inexistente é negado', async () => {
+    await assertFails(addDoc(collection(as('bob'), 'rounds/r-sug/games/fantasma/comments'), recado('bob')));
+  });
+
+  it('recado acima de 300 caracteres é negado', async () => {
+    await assertFails(addDoc(collection(as('bob'), 'rounds/r-sug/games/alice/comments'), recado('bob', { text: 'x'.repeat(301) })));
+  });
+
+  it('só o autor, o admin ou o dono do jogo apagam o recado', async () => {
+    await testEnv.withSecurityRulesDisabled((ctx) =>
+      setDoc(doc(ctx.firestore(), 'rounds/r-vot/games/bob/comments/c1'), { text: 'oi', createdBy: 'admin', createdAt: Timestamp.now() }),
+    );
+    await assertFails(deleteDoc(doc(as('alice'), 'rounds/r-vot/games/bob/comments/c1')));
+    await assertSucceeds(deleteDoc(doc(as('bob'), 'rounds/r-vot/games/bob/comments/c1')));
+  });
+});
+
 describe('(f) segunda sugestão do mesmo usuário na mesma rodada é negada', () => {
   it('controle: primeira sugestão do bob é aceita', async () => {
     await assertSucceeds(setDoc(doc(as('bob'), 'rounds/r-sug/games/bob'), game('bob')));

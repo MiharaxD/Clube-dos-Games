@@ -10,10 +10,11 @@ import { memberName, stamp } from '../parts.js';
 import { openReading } from '../caixinha.js';
 import { bindTilt, caseHtml, nicho, postit, rackHtml, vitrine } from '../rack.js';
 import { spinRoulette } from '../roulette.js';
+import { bindTema, temaHtml } from '../tema.js';
 
 const ETIQUETA = '<span class="etiqueta" data-etiqueta hidden>Votado</span>';
 
-export function renderVote(container, data) {
+export function renderVote(container, data, ctx) {
   const { games, members, uid, myVotes } = data;
   const meta = (g) => [g.year, g.genre].filter(Boolean).map(esc).join(' · ');
 
@@ -50,10 +51,12 @@ export function renderVote(container, data) {
   container.innerHTML = `
     <h2 class="estante__titulo" id="shelf-title">Na prateleira</h2>
     <p class="estante__nota">Marca todos que você toparia jogar. O mais votado vira o jogo da rodada. Toca na capinha pra ler o manual.</p>
+    ${temaHtml(data.round, ctx.session.isAdmin)}
     ${rackHtml(slots, 'Jogos sugeridos nesta rodada')}`;
   container.setAttribute('aria-labelledby', 'shelf-title');
   const rack = container.querySelector('.rack');
   bindTilt(rack);
+  bindTema(container, data.round, ctx);
 
   const countVotes = () => {
     const count = document.getElementById('vote-count');
@@ -121,7 +124,8 @@ export function renderVote(container, data) {
       const game = games.find((g) => g.id === slot.dataset.game);
       const fonte = slot.querySelector('.case');
       const votar = game.id === uid ? null : { voted: () => myVotes.has(game.id), toggle: () => alterna(slot.querySelector('[data-vote]')) };
-      openReading({ game, members, uid, fonte, gatilho: abrir, front: slot.querySelector('.case__front').innerHTML, votar });
+      openReading({ game, members, uid, fonte, gatilho: abrir, front: slot.querySelector('.case__front').innerHTML, votar,
+        recados: { roundId: data.round.id, isAdmin: ctx.session.isAdmin } });
       return;
     }
     alterna(event.target.closest('[data-vote]'));

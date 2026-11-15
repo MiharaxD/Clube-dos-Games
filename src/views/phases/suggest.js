@@ -8,8 +8,9 @@ import { rawgEnabled, searchGames } from '../../lib/rawg.js';
 import { SAI, anim, calma, entrar, espera, sumir } from '../../lib/motion.js';
 import { DURATION_LABEL, MODE_LABEL, confirmInline, esc, fmtPrice, fotoParaCapa, safeImgData, safeUrl, toast, withBusy } from '../../lib/util.js';
 import { genericCover, memberName, stamp } from '../parts.js';
-import { Estojo } from '../caixinha.js';
-import { bindTilt, caseHtml, emptyCase, nicho, postit, rackHtml } from '../rack.js';
+import { Estojo, openReading } from '../caixinha.js';
+import { bindTilt, caseHtml, emptyCase, nicho, postit, rackHtml, vitrine } from '../rack.js';
+import { bindTema, temaHtml } from '../tema.js';
 
 const PITCH_MAX = 200;
 
@@ -20,7 +21,7 @@ export function renderSuggest(container, data, ctx) {
   const meta = (g) => [g.year, g.genre].filter(Boolean).map(esc).join(' · ');
 
   const slotMine = mine
-    ? `<li class="rack__slot" id="slot-meu">${nicho(caseHtml(mine, stamp('Seu', { tone: 'pink' })))}
+    ? `<li class="rack__slot" id="slot-meu" data-game="${esc(mine.id)}">${vitrine(nicho(caseHtml(mine, stamp('Seu', { tone: 'pink' }))), `Abrir a caixinha de ${esc(mine.name)}: manual e recados`)}
         <div class="rack__info">${postit(esc(mine.name), [meta(mine), 'sugestão sua'])}
           <div class="rack__acoes rack__acoes--meu">
             <button class="btn" type="button" data-edit>${icon('pencil')} Editar</button>
@@ -34,14 +35,30 @@ export function renderSuggest(container, data, ctx) {
         </div>
       </li>`;
   const slotOther = (g) =>
-    `<li class="rack__slot">${nicho(caseHtml(g))}<div class="rack__info">${postit(esc(g.name), [meta(g), `sugestão de ${esc(memberName(members, g.suggestedBy))}`])}</div></li>`;
+    `<li class="rack__slot" data-game="${esc(g.id)}">${vitrine(nicho(caseHtml(g)), `Abrir a caixinha de ${esc(g.name)}: manual e recados`)}<div class="rack__info">${postit(esc(g.name), [meta(g), `sugestão de ${esc(memberName(members, g.suggestedBy))}`])}</div></li>`;
 
   container.innerHTML = `
     <h2 class="estante__titulo" id="shelf-title">Na prateleira</h2>
     <p class="estante__nota">${others.length || mine ? 'Um jogo por pessoa. Bota o seu e espia o dos outros.' : 'Ninguém sugeriu ainda. Abre os trabalhos!'}</p>
+    ${temaHtml(data.round, ctx.session.isAdmin)}
     ${rackHtml([slotMine, ...others.map(slotOther)], 'Jogos sugeridos nesta rodada')}`;
   container.setAttribute('aria-labelledby', 'shelf-title');
   bindTilt(container.querySelector('.rack'));
+  bindTema(container, data.round, ctx);
+
+  // capinha: abre a caixinha em modo leitura (manual + recados), igual à votação
+  container.querySelector('.rack').addEventListener('click', (event) => {
+    const abrir = event.target.closest('[data-abrir]');
+    if (!abrir) return;
+    const slotEl = abrir.closest('.rack__slot');
+    const game = games.find((g) => g.id === slotEl.dataset.game);
+    if (!game) return;
+    openReading({
+      game, members, uid, fonte: slotEl.querySelector('.case'), gatilho: abrir,
+      front: slotEl.querySelector('.case__front').innerHTML,
+      recados: { roundId: data.round.id, isAdmin: ctx.session.isAdmin },
+    });
+  });
 
   const slot = container.querySelector('#slot-meu');
   const open = (button) => openForm(slot.querySelector('.case'), button, mine, data, ctx);

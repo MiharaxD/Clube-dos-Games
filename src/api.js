@@ -80,6 +80,11 @@ export function updateRound(roundId, data) {
   return updateDoc(doc(db, 'rounds', roundId), data);
 }
 
+// Tema da rodada (faixa em cima da prateleira). Vazio = sem tema.
+export function updateRoundTheme(roundId, theme) {
+  return updateDoc(doc(db, 'rounds', roundId), { theme: theme || deleteField() });
+}
+
 // Enquete de datas: opções propostas pelo admin e a data confirmada (null = nenhuma).
 export function updateRoundDates(roundId, dateOptions, meetingDate) {
   return updateDoc(doc(db, 'rounds', roundId), {
@@ -133,8 +138,32 @@ export function updateGame(roundId, uid, data) {
   return updateDoc(doc(db, 'rounds', roundId, 'games', uid), data);
 }
 
-export function deleteGame(roundId, uid) {
-  return deleteDoc(doc(db, 'rounds', roundId, 'games', uid));
+// Apaga o jogo junto com os recados dele (senão voltariam se a pessoa sugerisse de novo).
+export async function deleteGame(roundId, uid) {
+  const batch = writeBatch(db);
+  const comments = await getDocs(collection(db, 'rounds', roundId, 'games', uid, 'comments'));
+  comments.forEach((c) => batch.delete(c.ref));
+  batch.delete(doc(db, 'rounds', roundId, 'games', uid));
+  await batch.commit();
+}
+
+// ---------------------------------------------------------------- recados no jogo (sugerindo/votando)
+
+export async function listComments(roundId, gameId) {
+  const snap = await getDocs(query(collection(db, 'rounds', roundId, 'games', gameId, 'comments'), orderBy('createdAt')));
+  return snap.docs.map(withId);
+}
+
+export function addComment(roundId, gameId, uid, text) {
+  return addDoc(collection(db, 'rounds', roundId, 'games', gameId, 'comments'), {
+    text,
+    createdBy: uid,
+    createdAt: serverTimestamp(),
+  });
+}
+
+export function deleteComment(roundId, gameId, commentId) {
+  return deleteDoc(doc(db, 'rounds', roundId, 'games', gameId, 'comments', commentId));
 }
 
 // ---------------------------------------------------------------- votos

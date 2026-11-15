@@ -9,6 +9,7 @@ rules_version = '2';
 //   rounds/{roundId}                   rodada (status, vencedor, prazo, datas...)
 //     games/{uid}                      sugestão: o ID do doc É o uid do autor
 //       votes/{uid}                    voto por aprovação: o ID do doc É o uid do eleitor
+//       comments/{autoId}              recados no jogo (sugerindo/votando)
 //     dateVotes/{uid}                  datas que o membro pode pra reunião
 //     ratings/{uid}                    nota pós-jogo
 //     questions/{autoId}               perguntas pra discussão
@@ -123,7 +124,7 @@ service cloud.firestore {
         return d.keys().hasOnly([
             'number', 'status', 'createdAt',
             'winnerGameId', 'winner', 'tiebreak',
-            'deadline', 'callLink', 'dateOptions', 'meetingDate'
+            'deadline', 'callLink', 'dateOptions', 'meetingDate', 'theme'
           ])
           // De "jogando" em diante precisa ter vencedor, e ele precisa existir.
           // Antes disso não pode ter (ao voltar pra "votando" o vencedor é limpo).
@@ -133,7 +134,9 @@ service cloud.firestore {
             : d.get('winnerGameId', null) == null)
           && d.get('dateOptions', []) is list
           && d.get('dateOptions', []).size() <= 20
-          && isText(d.get('callLink', ''), 0, 500);
+          && isText(d.get('callLink', ''), 0, 500)
+          // tema da rodada (faixa em cima da prateleira)
+          && isText(d.get('theme', ''), 0, 60);
       }
 
       allow read: if isApproved();
@@ -203,6 +206,28 @@ service cloud.firestore {
         allow delete: if isApproved()
           && resource.data.suggestedBy == me()
           && roundStatus(roundId) == 'sugerindo';
+
+        // ---------------------------------------------------------------------
+        // rounds/{roundId}/games/{gameId}/comments/{commentId}: recados no jogo
+        // (sugerindo e votando; continuam legíveis depois)
+        // ---------------------------------------------------------------------
+        match /comments/{commentId} {
+          allow read: if isApproved();
+
+          allow create: if isApproved()
+            && request.resource.data.keys().hasOnly(['text', 'createdBy', 'createdAt'])
+            && request.resource.data.createdBy == me()
+            && request.resource.data.createdAt == request.time
+            && isText(request.resource.data.text, 1, 300)
+            && roundStatus(roundId) in ['sugerindo', 'votando']
+            && exists(/databases/$(database)/documents/rounds/$(roundId)/games/$(gameId));
+
+          allow update: if false;
+
+          // Quem escreveu apaga; o admin também; o dono do jogo pode (ao tirar o jogo da prateleira).
+          allow delete: if isApproved()
+            && (resource.data.createdBy == me() || isAdmin() || gameId == me());
+        }
 
         // ---------------------------------------------------------------------
         // rounds/{roundId}/games/{gameId}/votes/{voterId}: voto por aprovação

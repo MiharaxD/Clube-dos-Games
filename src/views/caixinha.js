@@ -1,8 +1,9 @@
 // Caixinha (estojo de plástico) em modal: sai da prateleira num arco, a tampa abre na dobradiça,
 // o manual fica no verso da tampa e o CD gira na bandeja. Portado de rodada-votando.html e
 // rodada-sugerindo.html. Dois usos: leitura (manual do jogo) e formulário (sugestão).
+import { addComment, deleteComment, listComments } from '../api.js';
 import { icon } from '../lib/icons.js';
-import { DURATION_LABEL, MODE_LABEL, esc, fmtPrice, imgSrc, coverSrc } from '../lib/util.js';
+import { DURATION_LABEL, MODE_LABEL, esc, fmtPrice, imgSrc, coverSrc, toast, withBusy } from '../lib/util.js';
 import { ENTRA_RAPIDO, NA_TELA, SAI, anim, calma, entrar, espera, rolaNaMao, sumir } from '../lib/motion.js';
 import { coverPalette, memberName } from './parts.js';
 
@@ -211,7 +212,8 @@ const botaoVotar = (votado) => (votado
   ? `<button class="btn" type="button" data-votar>${icon('check')} Votado · desfazer</button>`
   : '<button class="btn btn--primary" type="button" data-votar>Votar nesse</button>');
 
-export async function openReading({ game, members, uid, fonte, gatilho, front, coroa = '', extraActions = '', votar = null }) {
+// recados = { roundId, isAdmin } (sugerindo/votando): mural de recados do jogo embaixo da caixinha.
+export async function openReading({ game, members, uid, fonte, gatilho, front, coroa = '', extraActions = '', votar = null, recados = null }) {
   const cx = new Estojo({
     title: esc(game.name),
     front,
@@ -221,6 +223,7 @@ export async function openReading({ game, members, uid, fonte, gatilho, front, c
   });
   cx.setDisc(game.name, coverSrc(game));
   cx.verso.inert = true;
+  if (recados) montaRecados(cx, game, members, uid, recados);
   const pecas = [...cx.manual.children];
   pecas.forEach((el) => (el.style.opacity = '0'));
   cx.ocupado = true;
@@ -259,6 +262,61 @@ export async function openReading({ game, members, uid, fonte, gatilho, front, c
   });
   cx.el.addEventListener('keydown', (e) => e.key === 'Escape' && fecha());
   return cx;
+}
+
+// ------------------------------------------------------------ mural de recados
+
+const RECADO_MAX = 300;
+
+function montaRecados(cx, game, members, uid, { roundId, isAdmin }) {
+  cx.el.querySelector('.modal__palco').insertAdjacentHTML('beforeend', `
+    <section class="papel recados" aria-label="Recados sobre ${esc(game.name)}">
+      <h3 class="recados__titulo">Recados</h3>
+      <ul class="recados__lista" aria-live="polite"><li class="recados__vazio">Carregando…</li></ul>
+      <form class="recados__form">
+        <label class="sr-only" for="recado-${esc(game.id)}">Seu recado</label>
+        <textarea class="input" id="recado-${esc(game.id)}" name="text" maxlength="${RECADO_MAX}" rows="2" placeholder="Fala aí o que achou dessa sugestão…" required></textarea>
+        <div class="actions"><button class="btn btn--primary" type="submit">Deixar recado</button></div>
+      </form>
+    </section>`);
+  const sec = cx.el.querySelector('.recados');
+  const lista = sec.querySelector('.recados__lista');
+  const form = sec.querySelector('form');
+
+  const desenha = (itens) => {
+    lista.innerHTML = itens.length
+      ? itens.map((c) => `<li class="recados__item">
+          <p class="recados__quem">${c.createdBy === uid ? 'Você' : esc(memberName(members, c.createdBy))}</p>
+          <p class="recados__txt">${esc(c.text)}</p>
+          ${c.createdBy === uid || isAdmin || game.id === uid
+            ? `<button class="btn btn--sm" type="button" data-apagar="${esc(c.id)}">Apagar</button>` : ''}
+        </li>`).join('')
+      : '<li class="recados__vazio">Ninguém falou nada ainda. Começa aí.</li>';
+  };
+  const carrega = () => listComments(roundId, game.id).then(desenha).catch(() => {
+    lista.innerHTML = '<li class="recados__vazio">Não deu pra carregar os recados.</li>';
+  });
+  carrega();
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const text = form.text.value.trim().slice(0, RECADO_MAX);
+    if (!text) return;
+    const ok = await withBusy(form.querySelector('[type=submit]'), () => addComment(roundId, game.id, uid, text).then(() => true));
+    if (ok) {
+      form.reset();
+      await carrega();
+    }
+  });
+  lista.addEventListener('click', async (e) => {
+    const botao = e.target.closest('[data-apagar]');
+    if (!botao) return;
+    const ok = await withBusy(botao, () => deleteComment(roundId, game.id, botao.dataset.apagar).then(() => true));
+    if (ok) {
+      toast('Recado apagado.');
+      await carrega();
+    }
+  });
 }
 
 export { ENTRA_RAPIDO };

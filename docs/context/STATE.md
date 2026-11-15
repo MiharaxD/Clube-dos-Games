@@ -9,8 +9,8 @@
 
 ## Pendências (prioridade)
 1. Usuário criar o projeto Firebase real e fazer o primeiro deploy (README §2–9, §13).
-2. **Campos novos que os mocks pedem (perguntar antes; mudam modelo + rules + testes):** comentários por jogo na
-   votação (post-its da caixinha e balões na capa), "zerou" (botão ZEREI, tempo, recado, ordem → estatuetas, placar,
+2. **Campos novos que os mocks pedem (perguntar antes; mudam modelo + rules + testes):** balões de
+   recado na capa (os recados já existem, só no mural da caixinha), "zerou" (botão ZEREI, tempo, recado, ordem → estatuetas, placar,
    vitrine, "quem zera primeiro"/lanterninha nas stats), descrição do jogo ("Do que se trata" no manual). Hoje
    omitidos; as resenhas do quadro usam o comentário das notas.
 3. Estante: o mock faz a capinha voar até a mesa da rodada na própria página; no app a caixinha abre e o botão
