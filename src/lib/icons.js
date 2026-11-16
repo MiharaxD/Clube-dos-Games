@@ -12,6 +12,13 @@ const PATHS = {
   logout: 'M3 3h11v5h-3V6H6v12h5v-2h3v5H3zm13 4h3v3h2v4h-2v3h-3v-3h-5v-4h5z',
   close: 'M2 2h4v2h-4zM18 2h4v2h-4zM2 4h6v2h-6zM16 4h6v2h-6zM4 6h6v2h-6zM14 6h6v2h-6zM6 8h12v2h-12zM8 10h8v2h-8zM8 12h8v2h-8zM6 14h12v2h-12zM4 16h6v2h-6zM14 16h6v2h-6zM2 18h6v2h-6zM16 18h6v2h-6zM2 20h4v2h-4zM18 20h4v2h-4z',
   plus: 'M10 2h4v2h-4zM10 4h4v2h-4zM10 6h4v2h-4zM10 8h4v2h-4zM2 10h20v2h-20zM2 12h20v2h-20zM10 14h4v2h-4zM10 16h4v2h-4zM10 18h4v2h-4zM10 20h4v2h-4z',
+  // ferramentas do quadro livre (barra estilo editor de imagem)
+  move: 'M11 2h2v20h-2zM2 11h20v2H2zM9 4h6v2H9zM8 6h8v1H8zM9 18h6v2H9zM8 17h8v1H8zM4 9h2v6H4zM6 8h1v8H6zM18 9h2v6h-2zM17 8h1v8h-1z',
+  eraser: 'M2 8h20v10H2zm10 3v4h7v-4zM2 20h20v2H2z',
+  image: 'M2 4h20v16H2zm3 3v10h14V7zM6 15h2v-2h2v-2h2v2h2v2h3v1H6zM14 8h3v3h-3z',
+  undo: 'M8 4h3v3h7v2h2v2h2v9h-3v-9h-1V9h-7v3H8v-2H6V8H4V6h2V5h2z',
+  zoomIn: 'M6 2h8v2h2v2h2v8h-2v2h-2v2H6v-2H4v-2H2V6h2V4h2zM5 6v8h10V6zM9 7h2v2h2v2h-2v2H9v-2H7V9h2zM16 16h3v3h-3zM19 19h3v3h-3z',
+  zoomOut: 'M6 2h8v2h2v2h2v8h-2v2h-2v2H6v-2H4v-2H2V6h2V4h2zM5 6v8h10V6zM7 9h6v2H7zM16 16h3v3h-3zM19 19h3v3h-3z',
   // selos genéricos: estrela (ZERADO) e chama (MAIS VOTADO)
   star: 'M10 0h4v2h-4zM10 2h4v2h-4zM8 4h8v2h-8zM0 6h24v2h-24zM2 8h20v2h-20zM4 10h16v2h-16zM6 12h12v2h-12zM6 14h12v2h-12zM4 16h6v2h-6zM14 16h6v2h-6zM4 18h4v2h-4zM16 18h4v2h-4zM2 20h4v2h-4zM18 20h4v2h-4z',
   flame: 'M10 0h2v2h-2zM8 2h4v2h-4zM8 4h6v2h-6zM6 6h8v2h-8zM18 6h2v2h-2zM6 8h10v2h-10zM18 8h4v2h-4zM4 10h18v2h-18zM4 12h8v2h-8zM14 12h8v2h-8zM2 14h8v2h-8zM16 14h6v2h-6zM2 16h6v2h-6zM18 16h4v2h-4zM2 18h6v2h-6zM18 18h4v2h-4zM4 20h6v2h-6zM16 20h4v2h-4zM6 22h12v2h-12z',

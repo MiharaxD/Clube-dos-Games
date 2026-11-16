@@ -44,6 +44,26 @@ export async function fotoParaCapa(file) {
   throw new Error('grande-demais');
 }
 
+// Foto pro quadro livre: sem corte, lado maior até 360px, mesmo limite da capa.
+export async function fotoParaQuadro(file) {
+  if (!file?.type?.startsWith('image/')) throw new Error('nao-imagem');
+  const bmp = await createImageBitmap(file);
+  const escala = Math.min(1, 360 / Math.max(bmp.width, bmp.height));
+  const tela = document.createElement('canvas');
+  tela.width = Math.max(1, Math.round(bmp.width * escala));
+  tela.height = Math.max(1, Math.round(bmp.height * escala));
+  const g = tela.getContext('2d');
+  g.fillStyle = '#fff'; // PNG transparente vira fundo branco no JPEG
+  g.fillRect(0, 0, tela.width, tela.height);
+  g.drawImage(bmp, 0, 0, tela.width, tela.height);
+  bmp.close?.();
+  for (const q of [0.8, 0.65, 0.5, 0.35]) {
+    const url = tela.toDataURL('image/jpeg', q);
+    if (url.length <= CAPA_DATA_MAX) return url;
+  }
+  throw new Error('grande-demais');
+}
+
 export function safeUrl(value) {
   try {
     const url = new URL(String(value ?? ''));

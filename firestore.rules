@@ -13,6 +13,7 @@ rules_version = '2';
 //     dateVotes/{uid}                  datas que o membro pode pra reunião
 //     ratings/{uid}                    nota pós-jogo
 //     questions/{autoId}               perguntas pra discussão
+//     board/{uid}                      quadro livre da encerrada (notas, rabiscos, fotos)
 //
 // Tudo que não está liberado aqui é negado por padrão.
 // =============================================================================
@@ -297,6 +298,46 @@ service cloud.firestore {
           && raterId == me()
           && roundStatus(roundId) in ['jogando', 'encerrada']
           && validRating(request.resource.data);
+        allow delete: if false;
+      }
+
+      // -----------------------------------------------------------------------
+      // rounds/{roundId}/board/{ownerId}: o que cada um pregou/rabiscou no quadro
+      // livre da encerrada. ID = uid: cada um só mexe no que é seu.
+      // -----------------------------------------------------------------------
+      match /board/{ownerId} {
+        function validImg(m) {
+          return m is map
+            && m.keys().hasOnly(['data', 'x', 'y', 'w'])
+            && m.keys().hasAll(['data', 'x', 'y', 'w'])
+            && isText(m.data, 30, 100000)
+            && m.data.matches('^data:image/jpeg;base64,[A-Za-z0-9+/=]+$')
+            && m.x is int && m.y is int && m.w is int
+            && m.w >= 60 && m.w <= 500;
+        }
+
+        function validNote(n) {
+          return n == null
+            || (n is map && n.keys().hasOnly(['x', 'y']) && n.keys().hasAll(['x', 'y']) && n.x is int && n.y is int);
+        }
+
+        function validBoard(d) {
+          return d.keys().hasOnly(['note', 'strokes', 'images', 'updatedAt'])
+            && d.keys().hasAll(['strokes', 'images', 'updatedAt'])
+            && validNote(d.get('note', null))
+            && d.strokes is list && d.strokes.size() <= 150
+            && d.images is list && d.images.size() <= 3
+            && (d.images.size() < 1 || validImg(d.images[0]))
+            && (d.images.size() < 2 || validImg(d.images[1]))
+            && (d.images.size() < 3 || validImg(d.images[2]))
+            && d.updatedAt == request.time;
+        }
+
+        allow read: if isApproved();
+        allow create, update: if isApproved()
+          && ownerId == me()
+          && roundStatus(roundId) == 'encerrada'
+          && validBoard(request.resource.data);
         allow delete: if false;
       }
 

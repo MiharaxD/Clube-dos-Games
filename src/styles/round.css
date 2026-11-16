@@ -309,6 +309,8 @@
 
 /* ---------- Modais ---------- */
 .modal--quadro, .modal--folha { overflow-y: auto; perspective: 1400px; }
+/* perspective vira bloco de contenção do fundo fixo e ele rolava junto; o voo do quadro é 2D */
+.modal--quadro { perspective: none; }
 .mesa .abajur::before { display: none; }
 .modal[hidden] { display: none; }
 .modal__fundo { position: fixed; inset: 0; background: radial-gradient(ellipse 70% 60% at 50% 45%, rgb(20 11 16 / 0.82), rgb(12 6 9 / 0.95)); }
@@ -544,3 +546,76 @@ textarea.campo-papel { display: block; width: 100%; min-height: 96px; margin-top
 .m-estojo > .l { background: linear-gradient(90deg, hsl(var(--hue, 28) 30% 12%), hsl(var(--hue, 28) 34% 22%) 45%, hsl(var(--hue, 28) 30% 14%)); }
 .m-estojo > .r { background: hsl(var(--hue, 28) 26% 9%); }
 .m-estojo > .u { background: linear-gradient(90deg, hsl(var(--hue, 28) 28% 22%), hsl(var(--hue, 28) 24% 15%)); }
+
+/* ---------- Quadro livre (encerrada): cortiça fixa 1000x700 escalada; notas e fotos soltas; tinta por cima ---------- */
+.quadro-palco--livre { width: min(100%, 1240px); }
+/* PC: a página da nota fica no cantinho de baixo do quadro, ocupando espaço (empurra o quadro, não cobre) */
+@media (min-width: 900px) {
+  .quadro-palco--livre { display: grid; grid-template-columns: minmax(0, 1fr) 250px; column-gap: 14px; align-items: end; }
+  .quadro-palco--livre > .ql-form { width: auto; margin-bottom: 10px; rotate: 1.5deg; }
+  .quadro-palco--livre > .modal__acoes { grid-column: 1 / -1; justify-self: center; }
+}
+.ql { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; width: 100%; min-width: 0; }
+.ql-barra { background: var(--paper); box-shadow: 2px 4px 0 rgb(12 6 9 / 0.45); display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; justify-content: center; padding: 8px 10px; color: var(--paper-ink); }
+.ql-grupo { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.ql-btn {
+  min-height: 44px; padding: 0 12px; border: 2px solid var(--paper-ink); border-radius: 4px; background: transparent;
+  color: var(--paper-ink); font: 700 0.9rem/1 var(--f-texto); cursor: pointer; display: inline-flex; align-items: center;
+}
+.ql-btn[aria-pressed='true'] { background: var(--paper-ink); color: var(--paper); }
+.ql-btn:focus-within, .ql-btn:focus-visible { outline: 2px solid var(--paper-ink); outline-offset: 2px; }
+.ql-cor, .ql-larg { width: 44px; height: 44px; border: 2px solid transparent; border-radius: 50%; background: transparent; cursor: pointer; display: grid; place-items: center; }
+.ql-cor::after { content: ''; width: 24px; height: 24px; border-radius: 50%; background: var(--c); box-shadow: 0 0 0 2px var(--paper-ink); }
+.ql-larg i { width: 24px; height: var(--w); border-radius: 99px; background: var(--paper-ink); }
+.ql-cor[aria-pressed='true'], .ql-larg[aria-pressed='true'] { border-color: var(--paper-ink); }
+.ql-moldura { padding: 10px; min-width: 0; }
+.ql-janela { position: relative; width: 100%; overflow: auto; overscroll-behavior: contain; touch-action: none; }
+.ql-tamanho { pointer-events: none; }
+.ql-btn--q, .ql-btn--ico { width: 44px; padding: 0; justify-content: center; }
+.ql-btn--ico svg, .ql-btn--q svg { width: 22px; height: 22px; }
+/* notas menores no quadro livre (dá pra dar zoom) */
+.ql-nota { padding: 18px 10px 10px 24px; }
+.ql-nota::before { left: 16px; }
+.ql-nota .pagina__topo { gap: 6px; }
+.ql-nota .pagina__quem { font-size: 0.95rem; }
+.ql-nota .pagina__txt { font-size: 0.85rem; }
+.ql-palco { position: absolute; top: 0; left: 0; padding: 0; transform-origin: 0 0; user-select: none; }
+.ql-titulo { position: absolute; top: 18px; left: 50%; translate: -50% 0; margin: 0; }
+.ql-notas { list-style: none; margin: 0; padding: 0; }
+.ql-nota { position: absolute; }
+.ql-nota--minha, .ql-foto--minha { cursor: grab; touch-action: none; }
+.ql-palco:not([data-ferr='mover']) .ql-nota, .ql-palco:not([data-ferr='mover']) .ql-foto { cursor: default; }
+.ql--arrastando { cursor: grabbing; z-index: 5; filter: drop-shadow(4px 8px 0 rgb(12 6 9 / 0.35)); }
+.ql-foto { position: absolute; padding: 8px 8px 22px; background: var(--paper); box-shadow: 3px 5px 0 rgb(12 6 9 / 0.45); rotate: -1.5deg; }
+.ql-foto:nth-child(even) { rotate: 2deg; }
+.ql-foto img { display: block; width: 100%; height: auto; pointer-events: none; }
+.ql-foto > .tacha { top: -6px; width: 16px; height: 16px; --tacha: var(--pink); }
+.ql-foto__x { position: absolute; top: -12px; right: -12px; width: 32px; height: 32px; border: 0; border-radius: 50%; background: var(--paper-ink); color: var(--paper); font: 700 1.1rem/1 var(--f-texto); cursor: pointer; }
+.ql-foto__alca { position: absolute; right: -6px; bottom: -6px; width: 22px; height: 22px; border: 3px solid var(--paper-ink); border-left: 0; border-top: 0; cursor: nwse-resize; }
+.ql-palco:not([data-ferr='mover']) .ql-foto__x, .ql-palco:not([data-ferr='mover']) .ql-foto__alca { display: none; }
+.ql-tinta { position: absolute; inset: 0; z-index: 10; pointer-events: none; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.ql-palco[data-ferr='caneta'] .ql-tinta { pointer-events: auto; cursor: crosshair; touch-action: none; }
+.ql-palco[data-ferr='borracha'] .ql-tinta { pointer-events: auto; cursor: cell; touch-action: none; }
+.ql-form { list-style: none; margin: 0; padding: 0; width: min(100%, 320px); }
+.pagina--nova textarea { resize: none; }
+
+/* nota em estrelas (5, com meia): a camada cheia é recortada em --p */
+.estrelas { position: relative; display: inline-flex; color: rgb(42 29 23 / 0.25); line-height: 0; }
+.estrelas svg { width: 1em; height: 1em; flex: none; }
+.estrelas__vazia, .estrelas__cheia { display: inline-flex; gap: 0.12em; }
+.estrelas__cheia { position: absolute; inset: 0; color: var(--amber); clip-path: inset(0 calc(100% - var(--p)) 0 0); filter: drop-shadow(1px 1px 0 var(--paper-ink)); }
+.estrelas--pagina { margin-left: auto; font-size: 12px; }
+.estrelas--media { font-size: 18px; margin-right: 6px; vertical-align: -3px; }
+.estrelas--grande { font-size: 30px; }
+.estrelas-in { position: relative; display: inline-flex; }
+/* o range invisível por cima das estrelas: clique, arrasto e teclado de graça */
+.estrelas-in input[type='range'] { position: absolute; inset: -8px 0; width: 100%; height: auto; margin: 0; opacity: 0; cursor: pointer; }
+.estrelas-in:has(input:focus-visible) { outline: 2px solid var(--paper-ink); outline-offset: 4px; border-radius: 2px; }
+.score-picker--estrelas { justify-content: space-between; }
+.score-picker--estrelas .score-out { font-size: 2rem; min-width: 2.4ch; }
+/* nota pequena no quadro livre: estrelas descem pra linha de baixo e o spoiler cabe numa linha */
+.ql-nota .pagina__topo { flex-wrap: wrap; row-gap: 4px; }
+.ql-nota .pagina__quem { min-width: 0; overflow-wrap: anywhere; }
+.ql-nota .estrelas--pagina { flex-basis: 100%; margin-left: 0; font-size: 13px; }
+.ql-nota .spoiler summary { display: flex; align-items: center; gap: 4px; padding: 4px 6px; font-size: 0.75rem; line-height: 1.25; max-width: 100%; }
+.ql-nota .spoiler summary svg { width: 14px; height: 14px; flex: none; }

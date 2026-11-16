@@ -27,7 +27,7 @@
   na cadeia 3D (prateleira, estojo, mesa, TV); parallax da parede/TV é laço rAF suavizado em `scene.js`,
   sem transição CSS (reiniciar transição por pointermove fazia o fundo piscar); rolagem dentro de `preserve-3d` usa `rolaNaMao`; cliques na mesa 3D
   são botões `.alvo` reposicionados por `mountMesa`; modais (caixinha, calendário, quadro) ficam fora do `#app`
-  (que fica `inert`) e o roteador os remove ao trocar de tela; a tampa da caixinha NÃO confia em `backface-visibility` (falha no WebKit/iPhone: filhos com transform vazam espelhados): `Estojo.trocaFaces` alterna `visibility` frente/verso durante o giro; `.app` tem `overflow-x: clip` (carpete e mesa em perspectiva alargavam a página no celular); o modal do formulário rola em tela baixa; botão sobre papel precisa de ancestral
+  (que fica `inert`) e o roteador os remove ao trocar de tela; a tampa da caixinha NÃO confia em `backface-visibility` (falha no WebKit/iPhone: filhos com transform vazam espelhados): `Estojo.trocaFaces` alterna `visibility` frente/verso durante o giro; `.app` tem `overflow-x: clip` (carpete e mesa em perspectiva alargavam a página no celular); o modal do formulário rola em tela baixa; `perspective` num modal que rola prende o `.modal__fundo` fixo ao conteúdo (por isso `.modal--quadro` não tem); botão sobre papel precisa de ancestral
   `.ficha`/`.confirm`/`.papel`; classes de mesa 3D com nome genérico (`.abajur`, `.capa`) vão escopadas.
   Mudou regra visual → atualizar `DESIGN.md` (e `Estetica/DOSSIE.md` se for direção) e regenerar `.impeccable/design.json`.
 - **Mocks (referência, já portados):** `.impeccable/mocks/rodada-{sugerindo,votando,jogando,encerrada}.html`,
@@ -46,7 +46,7 @@
 - **Ir direto para:** `src/main.js` (array `ROUTES`, hash routing, casca/nav, telas soltas `solo()`: espera,
   carregando, erro; login é `src/views/login.js`) → a tela em `src/views/`: `round.js` (carrega a rodada, cabeçalho/ficha/TV de
   sugerindo/votando, balcão do admin) que delega para `phases/suggest.js` | `phases/vote.js` |
-  `phases/play.js` (jogando/encerrada: monta a página inteira com a mesa); `shelf.js`, `stats.js`,
+  `phases/play.js` (jogando/encerrada: monta a página inteira com a mesa; o quadro aberto da encerrada é o quadro livre de `src/views/quadro.js`: palco fixo 1000x700 escalado + zoom até 3x (botões, ctrl+roda, pinça; janela rola), mover/caneta/borracha/foto com ícones pixel de `icons.js` e atalhos V/B/E/Ctrl+Z; no PC (≥ 900px) o formulário da nota fica em linha no canto de baixo, à direita do quadro; salva com debounce e no fechar; CSS `.ql-*` em `round.css`); `shelf.js`, `stats.js`,
   `profile.js`, `admin.js`; `sorteio.js` (overlay de fechar a votação, chamado por `closeVoting` em `phases/vote.js`:
   vencedor único ou empate com clone da TV, glitch, roda de `roulette.js` e explosão; voa até `#caso-obj`).
 - **Cuidados:** telas recriam `<main>` a cada navegação (a casca aparece antes de `listMembers()` voltar; `rotaAtual` descarta navegação velha); listeners ficam no container da tela. A espera de aprovação reconfere `getMember` ao voltar pra aba. O `toast()` fala por `#toast-status`/`#toast-alert` (balão `aria-hidden`).

@@ -4,6 +4,7 @@
 // Sem o botão ZEREI e as estatuetas dos mocks: "zerou" não existe no modelo de dados.
 import {
   addQuestion,
+  listBoard,
   deleteQuestion,
   saveDateVote,
   saveRating,
@@ -14,13 +15,22 @@ import {
 import { icon } from '../../lib/icons.js';
 import { ENTRA_RAPIDO, NA_TELA, SAI, anim, calma, entrar } from '../../lib/motion.js';
 import { average } from '../../lib/tally.js';
-import { confirmInline, esc, fmtDateTime, fmtDay, fmtPrice, fmtScore, listJoin, safeUrl, toast, withBusy, DURATION_LABEL, MODE_LABEL } from '../../lib/util.js';
-import { avatar, empty, memberName, sticker, stamp } from '../parts.js';
+import { confirmInline, esc, fmtDateTime, fmtDay, fmtPrice, listJoin, safeUrl, toast, withBusy, DURATION_LABEL, MODE_LABEL } from '../../lib/util.js';
+import { avatar, empty, memberName, stamp } from '../parts.js';
 import { openReading } from '../caixinha.js';
 import { caseFront } from '../rack.js';
 import { coroaSvg, mesaSection, mountMesa } from '../mesa.js';
+import { montaQuadro } from '../quadro.js';
 
 const QUESTION_MAX = 300;
+
+// Nota em estrelas: 5 estrelas com meia; no banco continua 0–10 (1 ponto = meia estrela).
+const fmtEstrelas = (score) => String(Math.round(score) / 2).replace('.', ',');
+const rotEstrelas = (score) => `${fmtEstrelas(score)} de 5 estrelas`;
+function estrelas(score, extra = '') {
+  const linha = icon('star').repeat(5);
+  return `<span class="estrelas ${extra}" style="--p:${Math.round(score) * 10}%" role="img" aria-label="${rotEstrelas(score)}"><span class="estrelas__vazia" aria-hidden="true">${linha}</span><span class="estrelas__cheia" aria-hidden="true">${linha}</span></span>`;
+}
 const COMMENT_MAX = 1000;
 const MESES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 
@@ -233,6 +243,9 @@ async function openCalendar(gatilho, mesa, data, ctx) {
   modal.innerHTML = `<div class="modal__fundo" data-fechar></div><div class="folha papel">${folhaHtml(data, picked)}</div>`;
   modal.querySelector('[data-titulo]').id = 'cal-titulo';
   modal.setAttribute('aria-labelledby', 'cal-titulo');
+  let board = [];
+  try { board = await listBoard(data.round.id); } catch (err) { console.error(err); }
+  const livre = montaQuadro(modal.querySelector('.ql'), { roundId: data.round.id, uid: data.uid, pages, board, pagina: pageHtml });
   document.body.append(modal);
   const fundo = modal.querySelector('.modal__fundo');
   const folha = modal.querySelector('.folha');
@@ -322,7 +335,7 @@ function pageHtml(p, i) {
   return `<li class="pagina" style="--r:${ROTQ[i % ROTQ.length]};--tacha:${TACHAS[i % TACHAS.length]}">
     <span class="tacha" aria-hidden="true"></span>
     <div class="pagina__topo">${avatar(p.member, 'sm')}<p class="pagina__quem">${p.voce ? 'Você' : esc(p.member.name)}</p>
-      ${sticker(fmtScore(p.score), { num: true, srSuffix: ' de 10' })}</div>
+      ${estrelas(p.score, 'estrelas--pagina')}</div>
     ${comment}
   </li>`;
 }
@@ -335,31 +348,46 @@ function boardHtml(data, pages) {
   return `
     <div class="quadro"><div class="quadro__cortica">
       <h2 class="quadro__titulo" id="quadro-titulo" tabindex="-1"><span class="tacha" aria-hidden="true"></span><span class="tacha" aria-hidden="true"></span>Resenha</h2>
-      <p class="quadro__media">${avg === null ? 'Ninguém deu nota ainda. Estreia o quadro!' : `${sticker(fmtScore(avg), { num: true })} média de ${ratings.length} ${ratings.length === 1 ? 'nota' : 'notas'}`}</p>
+      <p class="quadro__media">${avg === null ? 'Ninguém deu nota ainda. Estreia o quadro!' : `${estrelas(avg, 'estrelas--media')} média de ${ratings.length} ${ratings.length === 1 ? 'nota' : 'notas'}`}</p>
       <ul class="quadro__grade">
         ${pages.map(pageHtml).join('')}
+        ${formHtml(mine, score)}
+      </ul>
+    </div></div>`;
+}
+
+function formHtml(mine, score) {
+  return `
         <li class="pagina pagina--nova papel">
           <form data-rating-form novalidate>
-            <label class="pagina__rotulo" for="score">${mine ? 'Sua página (dá pra mudar)' : 'Sua página'}</label>
-            <div class="score-picker">
-              <input type="range" id="score" name="score" min="0" max="10" step="0.5" value="${score}" aria-describedby="score-out">
-              <output id="score-out" class="score-out" for="score">${fmtScore(score)}</output>
+            <label class="pagina__rotulo" for="score">Sua nota</label>
+            <div class="score-picker score-picker--estrelas">
+              <div class="estrelas-in">
+                ${estrelas(score, 'estrelas--grande')}
+                <input type="range" id="score" name="score" min="0" max="10" step="1" value="${Math.round(score)}" aria-valuetext="${rotEstrelas(score)}" aria-describedby="score-out">
+              </div>
+              <output id="score-out" class="score-out" for="score">${fmtEstrelas(score)}</output>
             </div>
             <label class="sr-only" for="rating-comment">Sua resenha</label>
             <textarea class="campo-papel" id="rating-comment" name="comment" maxlength="${COMMENT_MAX}" placeholder="Opcional. O que achou?">${esc(mine?.comment ?? '')}</textarea>
             <label class="check check--papel"><input type="checkbox" name="spoiler" ${mine?.spoiler ? 'checked' : ''}> Tem spoiler (fica escondido até clicar)</label>
             <button class="btn btn--primary" type="submit">${mine ? 'Atualizar minha página' : 'Pregar no quadro'}</button>
           </form>
-        </li>
-      </ul>
-    </div></div>`;
+        </li>`;
 }
 
 function bindRating(root, data, ctx, after) {
   const form = root.querySelector('[data-rating-form]');
   const range = form.elements.score;
   const out = form.querySelector('#score-out');
-  range.addEventListener('input', () => (out.textContent = fmtScore(Number(range.value))));
+  const vis = form.querySelector('.estrelas--grande');
+  const mostra = () => {
+    const v = Number(range.value);
+    out.textContent = fmtEstrelas(v);
+    vis.style.setProperty('--p', `${v * 10}%`);
+    range.setAttribute('aria-valuetext', rotEstrelas(v));
+  };
+  range.addEventListener('input', mostra);
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
     const score = Number(range.value);
@@ -367,8 +395,9 @@ function bindRating(root, data, ctx, after) {
     const spoiler = form.elements.spoiler.checked;
     const ok = await withBusy(event.submitter, () => saveRating(data.round.id, data.uid, { score, comment, spoiler }).then(() => true));
     if (ok) {
-      toast(`Nota ${fmtScore(score)} pregada no quadro.`);
-      if (after) await after();
+      toast(`Nota de ${rotEstrelas(score)} pregada no quadro.`);
+      // after devolve true quando já resolveu a tela (quadro livre fica aberto)
+      if (after && (await after({ score, comment, spoiler }))) return;
       await ctx.refresh();
     }
   });
@@ -381,8 +410,13 @@ async function openBoard(gatilho, mesa, data, ctx, pages) {
   modal.setAttribute('role', 'dialog');
   modal.setAttribute('aria-modal', 'true');
   modal.setAttribute('aria-labelledby', 'quadro-titulo');
-  modal.innerHTML = `<div class="modal__fundo"></div><div class="quadro-palco">${boardHtml(data, pages)}
+  const mine = data.ratings.find((r) => r.id === data.uid);
+  modal.innerHTML = `<div class="modal__fundo"></div><div class="quadro-palco quadro-palco--livre"><div class="ql"></div>
+    <ul class="ql-form">${formHtml(mine, mine?.score ?? 5)}</ul>
     <div class="modal__acoes"><button class="btn" type="button" data-fechar>Fechar o quadro</button></div></div>`;
+  let board = [];
+  try { board = await listBoard(data.round.id); } catch (err) { console.error(err); }
+  const livre = montaQuadro(modal.querySelector('.ql'), { roundId: data.round.id, uid: data.uid, pages, board, pagina: pageHtml });
   document.body.append(modal);
   const fundo = modal.querySelector('.modal__fundo');
   const quadro = modal.querySelector('.quadro');
@@ -398,7 +432,7 @@ async function openBoard(gatilho, mesa, data, ctx, pages) {
   const longe = deQuadro();
   quadroObj.style.visibility = 'hidden';
   anim(fundo, [{ opacity: 0 }, { opacity: 1 }], { duration: 300, easing: SAI });
-  const pags = [...modal.querySelectorAll('.pagina')];
+  const pags = [...modal.querySelectorAll('.ql-nota, .ql-form .pagina')];
   pags.forEach((p) => (p.style.opacity = calma.matches ? '' : '0'));
   await anim(quadro, [{ transform: longe }, { transform: 'none' }], { duration: 600, easing: NA_TELA });
   entrar(pags, 0, 50);
@@ -409,18 +443,25 @@ async function openBoard(gatilho, mesa, data, ctx, pages) {
   const fecha = async () => {
     if (fechando) return;
     fechando = true;
+    livre.fecha();
     anim(fundo, [{ opacity: 1 }, { opacity: 0 }], { duration: 300, easing: ENTRA_RAPIDO });
     await anim(quadro, [{ transform: 'none' }, { transform: deQuadro() }], { duration: 460, easing: NA_TELA });
     quadroObj.style.visibility = '';
     modal.remove();
     document.getElementById('app').inert = false;
     document.documentElement.classList.remove('trava');
-    if (gatilho.isConnected) gatilho.focus({ preventScroll: true });
+    if (sujo) await ctx.refresh();
+    else if (gatilho.isConnected) gatilho.focus({ preventScroll: true });
   };
-  bindRating(modal, data, ctx, async () => {
-    modal.remove();
-    document.getElementById('app').inert = false;
-    document.documentElement.classList.remove('trava');
+  // salvar a nota não fecha o quadro: troca a página ali mesmo; a tela de trás atualiza ao fechar
+  let sujo = false;
+  bindRating(modal, data, ctx, async (nota) => {
+    sujo = true;
+    const resto = data.ratings.filter((r) => r.id !== data.uid);
+    data.ratings = [...resto, { id: data.uid, ...nota }];
+    livre.trocaNotas(ratingPages(data));
+    modal.querySelector('[data-rating-form] [type="submit"]').textContent = 'Atualizar minha página';
+    return true;
   });
   modal.addEventListener('click', (e) => {
     if (e.target.closest('[data-fechar]') || e.target === fundo || e.target === modal) fecha();

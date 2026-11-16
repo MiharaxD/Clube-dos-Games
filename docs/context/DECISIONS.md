@@ -2,7 +2,8 @@
 
 - **Modelo de dados:** `config/admins{uids}`, `members/{uid}`, `rounds/{id}` com subcoleções
   `games/{uidDoAutor}/votes/{uidEleitor}` e `games/{uid}/comments/{auto}` (recados, criados só em
-  sugerindo/votando; apagar o jogo apaga os recados), `rounds.theme` (tema da rodada, ≤ 60, só admin), `dateVotes/{uid}`, `ratings/{uid}`, `questions/{auto}`.
+  sugerindo/votando; apagar o jogo apaga os recados), `rounds.theme` (tema da rodada, ≤ 60, só admin), `dateVotes/{uid}`, `ratings/{uid}`, `questions/{auto}`, `board/{uid}` (quadro livre da encerrada: `note{x,y}`|null,
+  `strokes` ≤ 150 strings `cor|largura|x,y x,y…`, `images` ≤ 3 `{data JPEG ≤ 100 mil, x, y, w 60–500}`; cada um só grava o seu).
   Por quê: ID = uid deixa as rules garantirem "1 por pessoa". Exige: não mudar sem perguntar.
 - **Status anda 1 passo para frente ou para trás** (só admin). Voltar de votando apaga votos; voltar
   de jogando apaga vencedor. Exige: rules com `validStatusStep`; vencedor obrigatório a partir de jogando.
@@ -11,7 +12,7 @@
 - **Contagem no cliente** (sem Functions); vencedor copiado na rodada (`winner{name,cover,suggestedBy}`)
   para estante/anúncio não lerem jogos. Empate: sorteio com `crypto` no cliente do admin, gravado em
   `tiebreak.candidates`.
-- **Notas:** 0–10 em meio ponto; notas e perguntas valem em "jogando" e "encerrada". Pergunta: autor
+- **Notas:** 0–10 em meio ponto nas rules; a UI mostra 5 estrelas com meia (grava inteiro 0–10, 1 = meia estrela); notas e perguntas valem em "jogando" e "encerrada". Pergunta: autor
   edita/apaga, admin apaga.
 - **Enquete de datas:** multi-seleção; admin confirma `meetingDate`; voto só em datas de `dateOptions`.
 - **Plataformas em famílias** (PC, PlayStation, Xbox, Nintendo, Mobile, Mac, Linux) — lista repetida

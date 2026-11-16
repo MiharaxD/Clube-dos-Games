@@ -89,6 +89,8 @@ beforeEach(async () => {
       dateOptions: ['2026-12-05T20:00', '2026-12-06T15:00'],
     });
     await setDoc(doc(db, 'rounds/r-jog/games/bob'), seedGame('bob'));
+
+    await setDoc(doc(db, 'rounds/r-enc'), { number: 0, status: 'encerrada', createdAt: old, winnerGameId: 'bob' });
   });
 });
 
@@ -429,5 +431,35 @@ describe('pós-jogo', () => {
     await assertSucceeds(updateDoc(doc(as('alice'), path), { text: 'Qual chefe foi o mais difícil?', updatedAt: serverTimestamp() }));
     await assertFails(updateDoc(doc(as('bob'), path), { text: 'Mudei', updatedAt: serverTimestamp() }));
     await assertSucceeds(deleteDoc(doc(as('admin'), path)));
+  });
+});
+
+// ---------------------------------------------------------------------------
+describe('quadro livre (encerrada)', () => {
+  const img = (extra = {}) => ({ data: 'data:image/jpeg;base64,' + 'A'.repeat(40), x: 10, y: 20, w: 200, ...extra });
+  const board = (extra = {}) => ({ note: { x: 30, y: 90 }, strokes: ['0|6|1,2 3,4'], images: [img()], updatedAt: serverTimestamp(), ...extra });
+
+  it('cada um grava o próprio quadro na encerrada', async () => {
+    await assertSucceeds(setDoc(doc(as('alice'), 'rounds/r-enc/board/alice'), board()));
+  });
+
+  it('ninguém grava o quadro dos outros', async () => {
+    await assertFails(setDoc(doc(as('alice'), 'rounds/r-enc/board/bob'), board()));
+  });
+
+  it('fora da encerrada é negado', async () => {
+    await assertFails(setDoc(doc(as('alice'), 'rounds/r-jog/board/alice'), board()));
+  });
+
+  it('mais de 3 imagens é negado', async () => {
+    await assertFails(setDoc(doc(as('alice'), 'rounds/r-enc/board/alice'), board({ images: [img(), img(), img(), img()] })));
+  });
+
+  it('imagem que não é JPEG em data URL é negada', async () => {
+    await assertFails(setDoc(doc(as('alice'), 'rounds/r-enc/board/alice'), board({ images: [img({ data: 'https://x.com/a.jpg' + 'a'.repeat(30) })] })));
+  });
+
+  it('pendente não grava', async () => {
+    await assertFails(setDoc(doc(as('pendente'), 'rounds/r-enc/board/pendente'), board()));
   });
 });

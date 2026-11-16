@@ -225,6 +225,23 @@ export function saveRating(roundId, uid, { score, comment, spoiler }) {
   });
 }
 
+// ---------------------------------------------------------------- quadro livre (encerrada)
+
+// Um doc por pessoa: { note: {x,y}|null, strokes: ['cor|largura|x,y x,y ...'], images: [{data,x,y,w}] }
+export async function listBoard(roundId) {
+  const snap = await getDocs(collection(db, 'rounds', roundId, 'board'));
+  return snap.docs.map(withId);
+}
+
+export function saveBoard(roundId, uid, { note, strokes, images }) {
+  return setDoc(doc(db, 'rounds', roundId, 'board', uid), {
+    note: note ?? null,
+    strokes,
+    images,
+    updatedAt: serverTimestamp(),
+  });
+}
+
 // ---------------------------------------------------------------- perguntas
 
 export async function listQuestions(roundId) {
