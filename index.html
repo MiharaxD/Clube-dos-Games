@@ -32,7 +32,10 @@
     <div class="cena-vinheta" aria-hidden="true"></div>
 
     <div id="app" class="app"></div>
-    <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+    <!-- aviso: o balão visual é aria-hidden; os leitores de tela ouvem as duas regiões abaixo, sempre no DOM -->
+    <div id="toast" class="toast" aria-hidden="true" hidden></div>
+    <div id="toast-status" class="sr-only" role="status"></div>
+    <div id="toast-alert" class="sr-only" role="alert"></div>
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>

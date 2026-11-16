@@ -6,7 +6,7 @@
   carimbo, adesivo, casca, telas soltas), `rack.css` (prateleira 3D, estojo, post-it, ticket, etiqueta VOTADO,
   tela Estante), `caixinha.css` (modal do estojo, manual, CD, formulário da sugestão), `round.css` (grade da
   rodada, faixa de pano, mesa 3D, calendário, quadro de cortiça, balcão), `stats.css`, `pages.css` (perfil,
-  Balcão/admin, roleta), `login.css` (cena do login: TV/prancheta/videogame na mesa), `motion.css` (reduced-motion/contraste, sempre por último). Seções por comentário
+  Balcão/admin, roleta), `login.css` (cena do login: TV/prancheta/videogame na mesa), `motion.css` (reduced-motion desliga movimento; contraste alto só tira grão/brilho; sempre por último; `calma` em `src/lib/motion.js` = só reduced-motion). Seções por comentário
   `/* ---------- Nome ---------- */`. JS visual: `src/views/parts.js` (`neonSign`, `tv`, `cover`/`genericCover`/
   `coverPalette`, `priceTag`, `stamp`, `sticker`, `stateChip`, `phaseSteps`, avatar), `src/views/rack.js`
   (prateleira 3D: `rackHtml`, `nicho`, `caseHtml`, `postit`, `vitrine`, `bindTilt`), `src/views/caixinha.js`
@@ -48,7 +48,7 @@
   sugerindo/votando, balcão do admin) que delega para `phases/suggest.js` | `phases/vote.js` |
   `phases/play.js` (jogando/encerrada: monta a página inteira com a mesa); `shelf.js`, `stats.js`,
   `profile.js`, `admin.js`; `roulette.js` (sorteio de empate).
-- **Cuidados:** telas recriam `<main>` a cada navegação; listeners ficam no container da tela.
+- **Cuidados:** telas recriam `<main>` a cada navegação (a casca aparece antes de `listMembers()` voltar; `rotaAtual` descarta navegação velha); listeners ficam no container da tela. A espera de aprovação reconfere `getMember` ao voltar pra aba. O `toast()` fala por `#toast-status`/`#toast-alert` (balão `aria-hidden`).
   Ações chamam `ctx.refresh()` depois de gravar. O `route()` põe `document.title` (campo `title` em `ROUTES`),
   foca o `<main>` e a casca traz o link `.pular`; `href="#main"` cairia no roteador, então o clique é interceptado.
   `.fatos`/`.fato` existem em `round.css` (escopo `.info`) e em `stats.css`: não remover o escopo.

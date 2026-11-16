@@ -95,7 +95,8 @@ export function fmtScore(score) {
   return score.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 }
 
-// Aviso rápido no rodapé da tela (lido por leitores de tela via aria-live).
+// Aviso rápido no rodapé da tela. O balão é só visual (aria-hidden); quem usa leitor de tela ouve
+// uma região sempre presente (status; erro vai no alert). Erro fica mais tempo e some ao toque.
 let toastTimer;
 export function toast(message, kind = 'ok') {
   const el = document.getElementById('toast');
@@ -103,8 +104,15 @@ export function toast(message, kind = 'ok') {
   el.textContent = message;
   el.dataset.kind = kind;
   el.hidden = false;
+  el.onclick = () => (el.hidden = true);
+  // limpa e escreve depois: região que já tinha o mesmo texto não anunciaria de novo
+  const voz = document.getElementById(kind === 'error' ? 'toast-alert' : 'toast-status');
+  if (voz) {
+    voz.textContent = '';
+    setTimeout(() => (voz.textContent = message), 50);
+  }
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => (el.hidden = true), 4000);
+  toastTimer = setTimeout(() => (el.hidden = true), kind === 'error' ? 8000 : 4000);
 }
 
 // Roda uma ação assíncrona com o botão travado e mostra erro amigável se falhar.

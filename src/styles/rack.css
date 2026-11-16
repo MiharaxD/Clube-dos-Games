@@ -415,9 +415,6 @@ button.flamula__pano:focus-visible { outline: none; }
 /* ações do seu jogo na prateleira */
 .rack__acoes--meu { display: grid; gap: 8px; }
 .rack__acoes .btn { width: 100%; padding-inline: 8px; }
-/* confirmação dentro da página: papel logo abaixo do botão */
-.postit.cola { animation: postit-cola 380ms cubic-bezier(0.2, 0.8, 0.2, 1.15) both; }
-@keyframes postit-cola { from { transform: translateY(-14px) rotate(-6deg) scale(1.06); opacity: 0; } to { transform: none; opacity: 1; } }
 
 /* ---------- Capinha clicável: um botão invisível por cima do nicho (fora da cadeia 3D) ---------- */
 .rack__vitrine { position: relative; }

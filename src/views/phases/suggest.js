@@ -5,7 +5,7 @@ import { createGame, deleteGame, updateGame } from '../../api.js';
 import { icon } from '../../lib/icons.js';
 import { PLATFORMS } from '../../lib/platforms.js';
 import { rawgEnabled, searchGames } from '../../lib/rawg.js';
-import { SAI, anim, calma, entrar, espera, sumir } from '../../lib/motion.js';
+import { SAI, anim, entrar, espera, sumir } from '../../lib/motion.js';
 import { DURATION_LABEL, MODE_LABEL, confirmInline, esc, fmtPrice, fotoParaCapa, safeImgData, safeUrl, toast, withBusy } from '../../lib/util.js';
 import { genericCover, memberName, stamp } from '../parts.js';
 import { Estojo, openReading } from '../caixinha.js';
@@ -325,10 +325,10 @@ async function openForm(fonte, gatilho, mine, data, ctx) {
       // squash do fechamento: o plástico bate e assenta
       anim(cx.corpo, [{ transform: 'none' }, { transform: 'scale(1.025, 0.985)', offset: 0.35 }, { transform: 'none' }], { duration: 220, easing: 'ease-out' }),
       anim(tarja, [{ transform: 'translateX(-24px)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 240, easing: SAI }),
-      anim(preco, [{ transform: 'translateY(-18px) rotate(-14deg)', opacity: 0 }, { transform: 'rotate(5deg)', opacity: 1 }], { duration: 280, delay: 80, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1.2)' }),
+      anim(preco, [{ transform: 'translateY(-18px) rotate(-14deg)', opacity: 0 }, { transform: 'rotate(5deg)', opacity: 1 }], { duration: 280, delay: 80, easing: SAI }),
       espera(120).then(() => {
         carimbo.hidden = false;
-        if (!calma.matches) carimbo.classList.add('bate');
+        carimbo.classList.add('bate'); // em reduced-motion o CSS troca a batida por um fade curto
       }),
     ]);
     await espera(300);

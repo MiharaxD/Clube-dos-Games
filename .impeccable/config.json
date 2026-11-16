@@ -209,6 +209,43 @@
         ],
         "createdAt": "2026-11-14T20:19:45.814Z",
         "reason": "Claude: os h2 visíveis da tela são só para leitor de tela (.sr) ou ficam em modais fechados; o h1 renderizado é a faixa em Bebas a 41.6px+ contra corpo 16px"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "*",
+        "files": [
+          "src/styles/caixinha.css",
+          "src/styles/login.css",
+          "src/styles/round.css",
+          "src/styles/scene.css",
+          "src/styles/stats.css",
+          "src/styles/rack.css"
+        ],
+        "createdAt": "2026-11-16T00:00:00.000Z",
+        "reason": "Claude: cores de material dos objetos da cena (TV, console, controle, CD, cortiça, plástico, grafite). DESIGN.md: 'Materiais da cena não são tokens de interface'; nunca viram texto, botão ou estado"
+      },
+      {
+        "rule": "design-system-radius",
+        "value": "*",
+        "files": [
+          "src/styles/caixinha.css",
+          "src/styles/login.css",
+          "src/styles/round.css",
+          "src/styles/scene.css"
+        ],
+        "createdAt": "2026-11-16T00:00:00.000Z",
+        "reason": "Claude: cantos dos props 3D desenhados em CSS (console, TV, CD, tampa); o raio de interface continua 4px"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "*",
+        "files": [
+          "src/styles/caixinha.css",
+          "src/styles/login.css",
+          "src/styles/stats.css"
+        ],
+        "createdAt": "2026-11-16T00:00:00.000Z",
+        "reason": "Claude: textos de objeto (manual do estojo, contrato, lombada) com tamanho ajustado à peça para caber sem rolar; todos ≥ 0.75rem"
       }
     ]
   }

@@ -237,7 +237,8 @@ fieldset { border: 0; padding: 0; min-width: 0; }
   max-width: calc(100% - 32px); padding: 10px 16px; border-radius: var(--r);
   background: var(--ink); color: var(--deep); font-weight: 700; box-shadow: var(--sh-aviso);
 }
-.toast[data-kind='error'] { background: var(--pink); }
+.toast[data-kind='error'] { background: var(--pink); cursor: pointer; }
+.toast[hidden] { display: none; }
 
 /* ---------- Capa 3:4 ---------- */
 .cover {

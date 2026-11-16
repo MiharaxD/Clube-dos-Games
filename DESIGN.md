@@ -388,7 +388,7 @@ Camadas irmãs da interface, `position: fixed/absolute; inset: 0; pointer-events
 
 **The Sem Filtro no 3D Rule.** Luz, glow, grão e vinheta nunca são pai nem o próprio elemento da prateleira 3D (nem da TV 3D): `opacity < 1`, `filter`, `mix-blend-mode`, `isolation`, `mask` e `clip-path` numa cadeia `preserve-3d` achatam o 3D.
 
-**The Movimento Opcional Rule.** Respiração da TV, poeira, lava e parallax são lentos e sutis (flicker nunca acima de 3 vezes por segundo, ciclo ≥ 5 s) e desligam com `prefers-reduced-motion`; `prefers-contrast: more` remove grão, scanlines e aberração. Carimbo batendo e roleta também desligam.
+**The Movimento Opcional Rule.** Respiração da TV, poeira, lava e parallax são lentos e sutis (flicker nunca acima de 3 vezes por segundo, ciclo ≥ 5 s) e desligam com `prefers-reduced-motion`; `prefers-contrast: more` só remove grão, scanlines, aberração e brilho (não mexe no movimento). Carimbo e etiqueta VOTADO deixam de "bater" em reduced-motion e surgem num fade de 160 ms; a roleta desliga.
 
 ## Shapes
 
@@ -468,7 +468,7 @@ Capa 3:4 com sombra de estojo apoiada no beiço de madeira (rack escuro, tábuas
 
 ### Carimbo
 Texto em Stamp dentro de borda de 3px em currentColor, fundo ground a 85%, girado -12deg sobre a capa. Âmbar para VENCEDOR e SORTEADO; rosa para SEU. O voto não é carimbo: vira a **etiqueta VOTADO** (papel com filete vermelho, Bebas
-em stamp, ponta descolando) que cola na capa quando o ticket rasga. Ao aparecer, o carimbo "bate" (420ms, cubic-bezier(0.16, 1, 0.3, 1), escala 1.9 para 1); desliga em reduced-motion.
+em stamp, ponta descolando) que cola na capa quando o ticket rasga. Ao aparecer, o carimbo "bate" (420ms, cubic-bezier(0.16, 1, 0.3, 1), escala 1.9 para 1); em reduced-motion vira um fade de 160 ms.
 
 ### Bilhete e adesivo
 O bilhete é papel creme à mão colado na base da capa (-3deg, sombra macia). O adesivo é a etiqueta âmbar fora da capa: frase em marcador, número sozinho em Bebas; o adesivo teal destaca a prova numérica de uma stat. Selos genéricos (estrela ZERADO, chama MAIS VOTADO): SVG inline, formas sem mascote.
@@ -480,7 +480,7 @@ Ficha de papel inserida logo abaixo do botão que a disparou (-0.4deg, sombra de
 Grade de capas sobre deep; o item aceso ganha contorno âmbar de 3px e sobe 4px (60ms linear); o vencedor fica com fundo âmbar a 14% e recebe o carimbo SORTEADO. Desliga em reduced-motion.
 
 ### Toast
-Bloco ink com texto deep em Atkinson 700, centralizado a 16px da base, com sombra de aviso; em erro vira rosa.
+Bloco ink com texto deep em Atkinson 700, centralizado a 16px da base, com sombra de aviso; em erro vira rosa, dura 8 s (4 s os outros) e some ao toque. O balão é `aria-hidden`: o leitor de tela ouve as regiões `#toast-status` e `#toast-alert` (erro), sempre no DOM.
 
 ## Do's and Don'ts
 

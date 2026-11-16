@@ -107,10 +107,8 @@ export function renderVote(container, data, ctx) {
     ticket.setAttribute('aria-pressed', 'true');
     label.hidden = false;
     label.classList.remove('cola');
-    if (!calma.matches) {
-      void label.offsetWidth;
-      label.classList.add('cola');
-    }
+    void label.offsetWidth;
+    label.classList.add('cola'); // em reduced-motion o CSS troca a colada por um fade curto
     countVotes();
     ticket.focus();
     return true;

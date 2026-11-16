@@ -87,7 +87,7 @@ function renderPending() {
       <h2 class="ficha__title" id="solo-title">Aguardando aprovação</h2>
       <p class="ficha__socio">Sócio: ${esc(session.member?.name ?? '')}</p>
       <p class="ficha__todo">Sua ficha de sócio tá na mesa do admin.</p>
-      <p>Assim que alguém liberar, é só recarregar a página. Enquanto isso, vai escolhendo o que sugerir.</p>
+      <p>Assim que alguém te liberar, é só voltar pra esta aba que a gente abre a porta. Enquanto isso, vai pensando em qual jogo sugerir.</p>
       <p>Entrou como ${esc(session.user.email)}.</p>
       <div class="actions">
         <button class="btn btn--primary" id="reload">Já me aprovaram</button>
@@ -96,6 +96,18 @@ function renderPending() {
     </section>`);
   root.querySelector('#reload').addEventListener('click', () => location.reload());
   root.querySelector('#logout').addEventListener('click', () => signOut(auth));
+
+  // ao voltar pra aba, confere sozinho se já foi liberado (1 leitura do próprio doc) e recarrega
+  const aoVoltar = async () => {
+    if (!root.querySelector('#reload')) return document.removeEventListener('visibilitychange', aoVoltar);
+    if (document.visibilityState !== 'visible') return;
+    try {
+      if ((await getMember(session.user.uid))?.approved) location.reload();
+    } catch {
+      // sem rede: o botão "Já me aprovaram" continua valendo
+    }
+  };
+  document.addEventListener('visibilitychange', aoVoltar);
 }
 
 function renderLoading(message = 'Rebobinando a fita…') {
@@ -125,8 +137,13 @@ const ROUTES = [
   { pattern: /^#\/admin$/, view: renderAdmin, nav: 'admin', title: 'Balcão do admin', adminOnly: true },
 ];
 
-function renderShell(active, title) {
+// Texto do link Admin com o contador de pendentes (usa a lista de membros que já temos).
+function adminLabel() {
   const pending = session.members.filter((m) => !m.approved).length;
+  return `Admin${pending ? ` <span class="count">${pending}<span class="sr-only"> pendentes</span></span>` : ''}`;
+}
+
+function renderShell(active, title) {
   const link = (href, key, label) =>
     `<li><a href="${href}" ${active === key ? 'aria-current="page"' : ''}>${label}</a></li>`;
   root.innerHTML = `
@@ -137,7 +154,7 @@ function renderShell(active, title) {
         ${link('#/', 'rodada', 'Rodada')}
         ${link('#/estante', 'estante', 'Estante')}
         ${link('#/stats', 'stats', 'Stats')}
-        ${session.isAdmin ? link('#/admin', 'admin', `Admin${pending ? ` <span class="count">${pending}<span class="sr-only"> pendentes</span></span>` : ''}`) : ''}
+        ${session.isAdmin ? link('#/admin', 'admin', adminLabel()) : ''}
       </ul></nav>
       <div class="topo__eu">
         <a class="avatar-link" href="#/perfil" title="Seu perfil">${avatar(session.member)}<span class="sr-only">Seu perfil</span></a>
@@ -154,6 +171,8 @@ function renderShell(active, title) {
   return root.querySelector('#main');
 }
 
+let rotaAtual = 0; // numera cada navegação: se outra começar enquanto os membros carregam, a velha desiste
+
 async function route() {
   const hash = location.hash || '#/';
   const match = ROUTES.find((r) => r.pattern.test(hash) && (!r.adminOnly || session.isAdmin));
@@ -161,20 +180,30 @@ async function route() {
     location.hash = '#/';
     return;
   }
-  // Recarrega membros a cada navegação (lista pequena) pra badges e nomes ficarem em dia.
-  session.members = await listMembers();
-  session.member = session.members.find((m) => m.id === session.user.uid) ?? session.member;
+  const numero = ++rotaAtual;
 
   // modal aberto (caixinha, calendário, quadro) não sobrevive à troca de tela
   document.querySelectorAll('body > .modal').forEach((el) => el.remove());
   document.documentElement.classList.remove('trava');
   root.inert = false;
 
-  // a casca é refeita a cada rota: título da aba por tela e o foco vai pro conteúdo (senão cairia no body)
+  // a casca aparece na hora (com os membros que já temos), e o foco vai pro conteúdo (senão cairia no body)
   document.title = `${match.title} · ${TITULO_BASE}`;
   const main = renderShell(match.nav, match.title);
   main.focus({ preventScroll: true });
   main.innerHTML = '<p class="loading" role="status">Rebobinando a fita…</p>';
+
+  // Recarrega membros a cada navegação (lista pequena) pra badges e nomes ficarem em dia.
+  try {
+    session.members = await listMembers();
+  } catch (error) {
+    console.error(error);
+  }
+  if (numero !== rotaAtual) return;
+  session.member = session.members.find((m) => m.id === session.user.uid) ?? session.member;
+  const linkAdmin = root.querySelector('a[href="#/admin"]');
+  if (linkAdmin) linkAdmin.innerHTML = adminLabel();
+
   const params = hash.match(match.pattern).slice(1);
   try {
     await match.view(main, { session, params, refresh: route });

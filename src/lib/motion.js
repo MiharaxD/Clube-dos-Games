@@ -2,8 +2,9 @@
 // quase sem overshoot. Só anima transform e opacity.
 // Durações: rápida 140–260ms (controles), padrão 560–760ms (tampa, voo), camada secundária ~1300ms.
 
-// Reduced-motion ou contraste alto: tudo pula direto para o quadro final.
-export const calma = window.matchMedia('(prefers-reduced-motion: reduce), (prefers-contrast: more)');
+// Reduced-motion: tudo pula direto para o quadro final. (Contraste alto não mexe no movimento:
+// só tira grão, scanlines e brilho, em motion.css.)
+export const calma = window.matchMedia('(prefers-reduced-motion: reduce)');
 
 // Curvas: assinatura (entradas e voo), na tela, saída rápida e queda.
 export const SAI = 'cubic-bezier(0.2, 0.8, 0.2, 1)';
