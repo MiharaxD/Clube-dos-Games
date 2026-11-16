@@ -9,6 +9,8 @@ export const LARG = 1730;
 export const ALT = 1210;
 const NOTA_L = 240;
 const ZOOM_MAX = 5;
+const ESC_NOTA = 1.25; // mesmo valor do scale de .ql-nota no CSS
+const FOLGA = 28; // espaço mínimo entre notas (cobre a inclinação das páginas)
 const MAX_TRACOS = 150;
 const MAX_PONTOS = 300;
 const MAX_FOTOS = 3;
@@ -192,6 +194,39 @@ export function montaQuadro(raiz, { roundId, uid, pages, board, pagina }) {
   desenhaTinta();
   desenhaFotos();
 
+  // ---------- "física" das notas: ocupam espaço, uma não fica em cima da outra
+  const caixa = (el) => ({ x: parseFloat(el.style.left), y: parseFloat(el.style.top), w: el.offsetWidth * ESC_NOTA + FOLGA, h: el.offsetHeight * ESC_NOTA + FOLGA });
+  // empurra (x, y) de el pra fora das outras pelo lado que entrou menos
+  const separa = (el, x, y, outras) => {
+    const { w, h } = caixa(el);
+    for (let volta = 0; volta < 8; volta++) {
+      let mexeu = false;
+      for (const o of outras) {
+        const b = caixa(o);
+        const ox = Math.min(x + w, b.x + b.w) - Math.max(x, b.x);
+        const oy = Math.min(y + h, b.y + b.h) - Math.max(y, b.y);
+        if (ox <= 0 || oy <= 0) continue;
+        if (ox < oy) x += x + w / 2 < b.x + b.w / 2 ? -ox : ox;
+        else y += y + h / 2 < b.y + b.h / 2 ? -oy : oy;
+        x = prende(x, 0, LARG - w);
+        y = prende(y, 0, ALT - h);
+        mexeu = true;
+      }
+      if (!mexeu) break;
+    }
+    return { x, y };
+  };
+  // ao abrir: cada nota desvia das que vieram antes (só na tela; ninguém grava a nota dos outros)
+  const arruma = () => {
+    const notas = [...raiz.querySelectorAll('.ql-nota')];
+    notas.forEach((el, i) => {
+      const { x, y } = separa(el, parseFloat(el.style.left), parseFloat(el.style.top), notas.slice(0, i));
+      el.style.left = `${x}px`;
+      el.style.top = `${y}px`;
+    });
+  };
+  requestAnimationFrame(arruma);
+
   // ---------- salvar (debounce; flush ao fechar)
   let timer = null;
   let pendente = false;
@@ -347,8 +382,11 @@ export function montaQuadro(raiz, { roundId, uid, pages, board, pagina }) {
       const p = ponto(ev);
       if (alca) el.style.width = `${prende(w0 + p.x - ini.x, 60, 500)}px`;
       else {
-        el.style.left = `${prende(x0 + p.x - ini.x, -50, LARG - 60)}px`;
-        el.style.top = `${prende(y0 + p.y - ini.y, -20, ALT - 60)}px`;
+        let x = prende(x0 + p.x - ini.x, -50, LARG - 60);
+        let y = prende(y0 + p.y - ini.y, -20, ALT - 60);
+        if (nota) ({ x, y } = separa(el, x, y, [...raiz.querySelectorAll('.ql-nota')].filter((o) => o !== el)));
+        el.style.left = `${x}px`;
+        el.style.top = `${y}px`;
       }
     };
     const solta = () => {
@@ -393,6 +431,7 @@ export function montaQuadro(raiz, { roundId, uid, pages, board, pagina }) {
   // nota salva com o quadro aberto: só as páginas são redesenhadas (posições continuam)
   const trocaNotas = (novas) => {
     raiz.querySelector('.ql-notas').innerHTML = notasHtml(novas);
+    arruma();
   };
   return { salvaJa, trocaNotas, fecha: () => { obs.disconnect(); document.removeEventListener('keydown', atalhos); return salvaJa(); } };
 }
