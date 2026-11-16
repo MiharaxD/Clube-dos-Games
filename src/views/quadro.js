@@ -7,7 +7,7 @@ import { CAPA_DATA_MAX, esc, fotoParaQuadro, safeImgData, toast } from '../lib/u
 
 export const LARG = 1730;
 export const ALT = 1210;
-const NOTA_L = 170;
+const NOTA_L = 240;
 const ZOOM_MAX = 5;
 const MAX_TRACOS = 150;
 const MAX_PONTOS = 300;
@@ -19,7 +19,7 @@ const LARGURAS = [3, 6, 12];
 const TRACO = /^([0-5])\|(3|6|12)\|(-?\d{1,4},-?\d{1,4}(?: -?\d{1,4},-?\d{1,4})*)$/;
 
 const prende = (v, min, max) => Math.min(max, Math.max(min, Math.round(v)));
-const posPadrao = (i) => ({ x: 30 + (i % 5) * 192, y: 100 + Math.floor(i / 5) * 200 });
+const posPadrao = (i) => ({ x: 40 + (i % 5) * 335, y: 130 + Math.floor(i / 5) * 340 });
 
 function linhaSvg(traco, dono, i) {
   const m = TRACO.exec(traco);
