@@ -103,7 +103,7 @@
   transform: rotateX(calc(var(--cam) + var(--pitch, 0deg))) rotateY(var(--yaw, 0deg));
 }
 .mesa, .obj, .mola, .bx, .braco, .est__corpo, .cupula, .cal3d, .controle3d { position: absolute; left: 0; top: 0; transform-style: preserve-3d; }
-.obj { transform: translate3d(var(--x), 0, var(--z)) rotateY(var(--ry, 0deg)) scale3d(var(--s, 1), var(--s, 1), var(--s, 1)); }
+.obj { transform: translate3d(var(--x), calc(var(--y, 0px) * -1), var(--z)) rotateY(var(--ry, 0deg)) scale3d(var(--s, 1), var(--s, 1), var(--s, 1)); }
 .mola { transition: translate 180ms cubic-bezier(0.2, 0.8, 0.2, 1); }
 .obj.ativo > .mola { translate: 0 -8px 0; }
 /* chão: o pé da mesa some no escuro do quarto (camada 2D por cima, decorativa) */
@@ -619,3 +619,108 @@ textarea.campo-papel { display: block; width: 100%; min-height: 96px; margin-top
 .ql-nota .estrelas--pagina { flex-basis: 100%; margin-left: 0; font-size: 17px; }
 .ql-nota .spoiler summary { display: flex; align-items: center; gap: 4px; padding: 4px 6px; font-size: 0.75rem; line-height: 1.25; max-width: 100%; }
 .ql-nota .spoiler summary svg { width: 14px; height: 14px; flex: none; }
+
+/* ---------- Jogando: botão ZEREI e estatuetas de quem zerou (portados de rodada-jogando.html) ---------- */
+/* botão: base com plaquinha de papel e cúpula de fliperama feita de discos empilhados */
+.m-base > .f { background: linear-gradient(180deg, #3a2a22 0 3px, #2a1d17 3px, #1d1410); }
+.m-base > .u { background: radial-gradient(circle, #0c0609 0 40px, #4a3a2c 41px 44px, #2f231c 45px); }
+.m-base > .l { background: #3d2c22; }
+.m-base > .r { background: #140d0a; }
+.placa-zerei {
+  position: absolute; left: 50%; top: 50%; translate: -50% -50%; padding: 3px 10px 1px; white-space: nowrap;
+  background: var(--paper); color: var(--paper-ink); font: 400 21px/1 var(--f-placa); letter-spacing: 0.08em;
+  box-shadow: 0 2px 0 var(--deep);
+}
+.cupula { transform: translateY(-34px); }
+.disco {
+  position: absolute; left: -38px; top: -38px; width: 76px; height: 76px; border-radius: 50%;
+  transform: translateY(calc(var(--dy) * -1)) rotateX(90deg); background: #b77b26;
+}
+.disco--topo { background: radial-gradient(circle at 38% 34%, #fff0c8, #ffc15e 32%, #e39a2e 70%, #b77b26); }
+.decal--nota-z { rotate: 5deg; }
+/* estatueta: pedestal de pedra + boneco de metal (--m/--m2/--m3 = metal da posição) */
+.m-pedra > .f { background: linear-gradient(180deg, #3a2c32, #231a1e); }
+.m-pedra > .u { background: #44343b; }
+.m-pedra > .l { background: #3a2c32; }
+.m-pedra > .r { background: #160f12; }
+.m-metal > .f { background: linear-gradient(90deg, var(--m3), var(--m) 28%, var(--m2) 46%, var(--m) 64%, var(--m3)); }
+.m-metal > .u { background: var(--m2); }
+.m-metal > .l { background: linear-gradient(90deg, var(--m), var(--m2)); }
+.m-metal > .r { background: var(--m3); }
+.est__pernas > .f { background: linear-gradient(90deg, transparent 47%, var(--m3) 47% 53%, transparent 53%), linear-gradient(90deg, var(--m3), var(--m) 28%, var(--m2) 46%, var(--m) 64%, var(--m3)); }
+.est__placa {
+  position: absolute; left: 50%; top: 50%; translate: -50% -50%; padding: 1px 6px 0;
+  background: var(--m); color: var(--deep); font: 400 15px/1 var(--f-placa); letter-spacing: 0.04em;
+  box-shadow: inset 0 0 0 1px var(--m2);
+}
+.braco { transform: translate3d(var(--ax), calc(var(--ay) * -1), 0) rotateZ(var(--a)); }
+/* cabeça = foto de quem zerou, sempre virada pra câmera (billboard) */
+.cabeca3d {
+  position: absolute; left: -21px; top: -21px; width: 42px; height: 42px; border-radius: 50%; overflow: hidden;
+  border: 3px solid var(--m); background: var(--m3);
+  transform: translate3d(0, calc(var(--hy) * -1), 0) rotateY(calc(-1 * (var(--ry) + var(--yaw, 0deg)))) rotateX(calc(-1 * (var(--cam) + var(--pitch, 0deg))));
+}
+.cabeca3d img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.cabeca3d b { display: grid; place-items: center; width: 100%; height: 100%; background: var(--pink); color: var(--deep); font: 800 18px/1 var(--f-texto); }
+.cabeca3d::after {
+  content: ''; position: absolute; inset: 0; border-radius: 50%;
+  background: radial-gradient(circle at 32% 28%, rgb(255 236 200 / 0.38), transparent 34%), radial-gradient(circle at 50% 50%, transparent 52%, rgb(12 6 9 / 0.55) 100%);
+}
+/* texto de verdade das estatuetas (a mesa é aria-hidden) */
+.zerados { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px 14px; margin-top: 10px; color: var(--muted); text-align: center; }
+.zerados ol { display: inline; margin: 0; padding: 0; list-style: none; }
+.zerados li { display: inline; }
+.zerados li + li::before { content: ' · '; }
+.zerados b { color: var(--ink); font-weight: 700; }
+
+/* ---------- Quadro de jogando (diário): miniatura na mesa e o quadro aberto com 3 páginas ---------- */
+.qn {
+  position: absolute; width: 46px; height: 46px; padding: 14px 6px 0; rotate: var(--r);
+  background: var(--papel); box-shadow: 2px 3px 0 rgb(12 6 9 / 0.45);
+}
+.qn .qm__rabisco { margin-top: 5px; }
+/* notinha: post-it pequeno com o comentário, quem pregou embaixo */
+.ql-notinha {
+  position: absolute; min-height: 150px; padding: 26px 18px 14px; rotate: var(--r); color: var(--paper-ink);
+  background: var(--papel); box-shadow: 3px 5px 0 rgb(12 6 9 / 0.45); list-style: none;
+}
+.ql-notinha > .tacha { top: -6px; width: 16px; height: 16px; --tacha: var(--stamp); }
+.ql-notinha__txt { margin: 0; font: 400 1.75rem/1.3 var(--f-mao); overflow-wrap: anywhere; }
+.ql-notinha__quem { display: block; margin-top: 10px; color: var(--paper-muted); font: 400 1.25rem/1.2 var(--f-dati); text-align: right; }
+.ql-notinha__quem::before { content: '— '; }
+.ql-notinha--minha { cursor: grab; touch-action: none; }
+.ql-palco:not([data-ferr='mover']) .ql-notinha { cursor: default; }
+.ql-palco:not([data-ferr='mover']) .ql-notinha__x { display: none; }
+.ql-notinha__x { position: absolute; top: -12px; right: -12px; width: 32px; height: 32px; border: 0; border-radius: 50%; background: var(--paper-ink); color: var(--paper); font: 700 1.1rem/1 var(--f-texto); cursor: pointer; }
+/* folhear: setas dos lados do quadro + qual página é */
+.diario__folhas { display: flex; align-items: center; justify-content: center; gap: 12px; }
+/* setas: plaquinha de papel em forma de flecha, com setinha de pixel e "Vira"/"Volta" à mão.
+   A forma fica nos pseudo-elementos (clip-path no botão cortaria a sombra). */
+.diario__seta {
+  --forma: polygon(0 0, calc(100% - 18px) 0, 100% 50%, calc(100% - 18px) 100%, 0 100%);
+  position: relative; isolation: isolate; display: inline-flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 28px 0 16px;
+  border: 0; background: none; cursor: pointer; rotate: 2deg; color: var(--paper-ink); font: 400 1.15rem/1 var(--f-mao);
+  transition: translate 140ms ease-out;
+}
+.diario__seta::before, .diario__seta::after { content: ''; position: absolute; inset: 0; clip-path: var(--forma); }
+.diario__seta::before { z-index: -1; background: var(--paper); transition: background-color 140ms; }
+.diario__seta::after { z-index: -2; translate: 2px 4px; background: rgb(12 6 9 / 0.5); }
+.diario__seta--volta { --forma: polygon(18px 0, 100% 0, 100% 100%, 18px 100%, 0 50%); padding: 0 16px 0 28px; rotate: -2deg; }
+.diario__seta svg { width: 18px; height: 18px; fill: var(--stamp); flex: none; }
+.diario__seta--volta svg { scale: -1 1; }
+.diario__seta:hover { translate: 3px 0; }
+.diario__seta--volta:hover { translate: -3px 0; }
+.diario__seta:hover::before, .diario__seta:focus-visible::before { background: var(--amber); }
+.diario__seta:active { translate: 0 2px; }
+.diario__seta:focus-visible { outline: none; }
+.diario__seta:focus-visible span { text-decoration: underline 2px; text-underline-offset: 4px; }
+.diario__pag { min-width: 9ch; padding: 4px 12px 2px; background: var(--paper); color: var(--paper-ink); text-align: center; font: 400 1.35rem/1 var(--f-placa); letter-spacing: 0.06em; box-shadow: 2px 3px 0 rgb(12 6 9 / 0.45); }
+.diario__aviso { margin: 0; padding: 6px 12px; background: var(--paper); color: var(--paper-ink); font: 400 0.95rem/1.35 var(--f-dati); rotate: -0.6deg; box-shadow: 2px 3px 0 rgb(12 6 9 / 0.45); }
+.diario .ql-moldura { transform-origin: 50% 50%; backface-visibility: hidden; }
+.ql-form--notinha .pagina--nova { padding: 16px; }
+.ql-form--notinha .pagina__conta { display: block; margin-top: 4px; color: var(--paper-muted); font: 400 0.85rem/1.2 var(--f-dati); text-align: right; }
+.diario__folhas, .diario__aviso { justify-self: center; }
+@media (min-width: 900px) {
+  .quadro-palco--livre > .diario__folhas, .quadro-palco--livre > .diario__aviso { grid-column: 1 / -1; margin-top: 12px; }
+  .quadro-palco--livre.diario--leitura { grid-template-columns: minmax(0, 1fr); }
+}

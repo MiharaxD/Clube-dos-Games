@@ -2,7 +2,7 @@
 // CSS 3D puro: palco (perspectiva + escala) → mundo (câmera) → mesa → objetos (.obj → .mola → caixas).
 // Os cliques ficam em botões reais (.alvo) por cima da projeção dos objetos, fora da cadeia 3D.
 // Sem filtro, blend, opacidade, máscara ou clip-path em quem tem filhos 3D.
-import { calma } from '../lib/motion.js';
+import { GRAVIDADE, SAI, anim, calma } from '../lib/motion.js';
 import { esc, safeUrl } from '../lib/util.js';
 import { placeLights } from '../lib/scene.js';
 import { coverPalette } from './parts.js';
@@ -12,19 +12,26 @@ export function caixa({ w, h, t, x = 0, y = 0, z = 0, cls = '', faces = 'fulr', 
   const face = (k, c) => (faces.includes(k) ? `<i class="${k}">${c}</i>` : '');
   return `<div class="bx ${cls}" style="--w:${w}px;--h:${h}px;--t:${t}px;--bx:${x}px;--by:${y}px;--bz:${z}px;${s}">${face('f', f)}${face('u', u)}${face('l', l)}${face('r', r)}${face('b', '')}</div>`;
 }
-const obj = (id, [x, z, ry = 0], s, inner) =>
-  `<div class="obj" id="${id}" style="--x:${x}px;--z:${z}px;--ry:${ry}deg;--s:${s}"><div class="mola">${inner}</div></div>`;
+// y (opcional) sobe o objeto: a capinha em pé em cima do videogame
+const obj = (id, [x, z, ry = 0], s, inner, y = 0, extra = '') =>
+  `<div class="obj" id="${id}" style="--x:${x}px;--z:${z}px;--y:${y}px;--ry:${ry}deg;--s:${s};${extra}"><div class="mola">${inner}</div></div>`;
 
-// Duas composições da mesma mesa: PC (larga) e celular (mais funda). Sem o botão ZEREI e as
-// estatuetas dos mocks: "zerou" não existe no modelo de dados.
+// Duas composições da mesma mesa: PC (larga) e celular (mais funda).
+// Jogando: videogame no meio com a capinha em pé em cima; estatuetas de quem zerou à direita
+// (grade: est), botão ZEREI na ponta e o quadro de jogando (diario) no fundo.
+// Encerrada: quadro de resenha + o quadro de jogando guardado no fundo.
 const LAYOUTS = {
   jogando: {
-    pc: { W: 1040, H: 540, cy: 280, cam: -26, mesa: [1000, 440], lamp: [-440, -170, 0], cal: [-300, -10, 20], caso: [-40, 30, -8], console: [260, 10, -12], controle: [200, 150, 14], esc: { cal: 1, caso: 1, console: 1 }, nota: [400, 150] },
-    cel: { W: 600, H: 620, cy: 318, cam: -30, mesa: [580, 560], lamp: [-248, -238, 0], cal: [-150, -96, 18], caso: [-40, 120, -6], console: [150, -60, -18], controle: [170, 110, 22], esc: { cal: 0.95, caso: 0.9, console: 0.8 }, nota: [150, 240] },
+    pc: { W: 1040, H: 600, cy: 340, cam: -26, mesa: [1000, 440], lamp: [-440, -170, 0], cal: [-315, -10, 20], console: [-70, 40, -8], controle: [105, 172, 14],
+      est: { x0: 140, dx: 62, z0: -46, dz: 62, cols: 4, s: 0.9 }, botao: [432, 110, -12], diario: [175, -168, -6],
+      esc: { cal: 1, caso: 1, console: 1, botao: 0.95, diario: 0.78 }, nota: [-300, 160], notaZ: [330, 196] },
+    cel: { W: 600, H: 700, cy: 390, cam: -30, mesa: [580, 560], lamp: [-248, -238, 0], cal: [-178, -112, 18], console: [-8, 118, -6], controle: [62, 238, 18],
+      est: { x0: 92, dx: 56, z0: -104, dz: 56, cols: 3, s: 0.78 }, botao: [205, 196, -12], diario: [70, -212, -4],
+      esc: { cal: 0.95, caso: 0.85, console: 0.8, botao: 0.85, diario: 0.6 }, nota: [-205, 70], notaZ: [180, 272] },
   },
   encerrada: {
-    pc: { W: 1040, H: 560, cy: 300, cam: -26, mesa: [1000, 440], lamp: [-150, -185, 0], quadro: [-305, -40, 16], caso: [40, 40, -4], console: [300, 0, -12], esc: { quadro: 1, caso: 1, console: 1 }, nota: [130, 175], marca: [-130, 165] },
-    cel: { W: 600, H: 640, cy: 330, cam: -30, mesa: [580, 560], lamp: [40, -250, 0], quadro: [-150, -150, 14], caso: [-60, 150, -4], console: [160, 60, -18], esc: { quadro: 0.78, caso: 0.85, console: 0.8 }, nota: [60, 250], marca: [-240, 240] },
+    pc: { W: 1040, H: 560, cy: 300, cam: -26, mesa: [1000, 440], lamp: [-150, -185, 0], quadro: [-305, -40, 16], caso: [40, 40, -4], console: [300, 0, -12], diario: [205, -168, -8], esc: { quadro: 1, caso: 1, console: 1, diario: 0.72 }, nota: [130, 175], marca: [-130, 165] },
+    cel: { W: 600, H: 640, cy: 330, cam: -30, mesa: [580, 560], lamp: [40, -250, 0], quadro: [-150, -150, 14], caso: [-60, 150, -4], console: [160, 60, -18], diario: [178, -196, -10], esc: { quadro: 0.78, caso: 0.85, console: 0.8, diario: 0.52 }, nota: [60, 250], marca: [-240, 240] },
   },
   // Login: mesa vazia; caem o videogame (esquerda), a TV (direita) e a prancheta do contrato (meio).
   login: {
@@ -35,7 +42,14 @@ const LAYOUTS = {
 
 // ------------------------------------------------------------ peças
 
-function mesaHtml(L, nota) {
+// lugar da estatueta i na grade (fileiras alternadas meio passo pro lado)
+const slot = (L, i) => {
+  const { x0, dx, z0, dz, cols } = L.est;
+  const row = Math.floor(i / cols);
+  return [x0 + (i % cols) * dx + (row % 2) * dx * 0.5, z0 + row * dz];
+};
+
+function mesaHtml(L, nota, notaZ, nEst = 0) {
   const [W, D] = L.mesa;
   const ponto = (x, z) => `left:${x + W / 2}px;top:${z + D / 2}px`;
   const sombra = ([x, z], w, d, de) => `<span class="decal decal--sombra" data-de="${de}" style="${ponto(x, z)};width:${w}px;height:${d}px"></span>`;
@@ -46,6 +60,10 @@ function mesaHtml(L, nota) {
     L.cal ? sombra(L.cal, 200 * L.esc.cal, 110 * L.esc.cal, 'cal-obj') : '',
     L.quadro ? sombra(L.quadro, 360 * L.esc.quadro, 110 * L.esc.quadro, 'quadro-obj') : '',
     L.caso ? sombra(L.caso, 190 * L.esc.caso, 60 * L.esc.caso, 'caso-obj') : '',
+    L.diario ? sombra(L.diario, 360 * L.esc.diario, 110 * L.esc.diario, 'diario-obj') : '',
+    L.botao ? sombra(L.botao, 140 * L.esc.botao, 130 * L.esc.botao, 'botao-obj') : '',
+    ...(L.est ? Array.from({ length: nEst }, (_, i) => sombra(slot(L, i), 80 * L.est.s, 80 * L.est.s, `est-${i}`)) : []),
+    ...(L.est ? Array.from({ length: nEst }, (_, i) => `<span class="decal decal--poeira" data-poeira="${i}" style="${ponto(...slot(L, i))}"></span>`) : []),
     L.console ? sombra(L.console, 280 * L.esc.console, 220 * L.esc.console, 'console-obj') : '',
     L.controle ? sombra(L.controle, 150 * L.esc.console, 90 * L.esc.console, 'controle-obj') : '',
     L.tv ? sombra(L.tv, 340 * L.esc.tv, 250 * L.esc.tv, 'tv-obj') : '',
@@ -53,6 +71,7 @@ function mesaHtml(L, nota) {
     L.lamp ? sombra(L.lamp, 90, 40, 'abajur-obj') : '',
     L.lamp ? `<span class="decal decal--marca" style="${ponto(...(L.marca ?? [lx + 70, lz + 70]))};width:58px;height:58px"></span>` : '',
     nota ? `<span class="decal decal--nota" style="${ponto(...L.nota)}">${esc(nota)}</span>` : '',
+    notaZ && L.notaZ ? `<span class="decal decal--nota decal--nota-z" style="${ponto(...L.notaZ)}">${esc(notaZ)}</span>` : '',
   ].join('');
   const pernas = [[-1, -1], [1, -1], [-1, 1], [1, 1]].map(([a, b]) =>
     caixa({ w: 44, h: 320, t: 44, x: a * (W / 2 - 56), z: b * (D / 2 - 56), y: -348, cls: 'm-perna', faces: 'flr' })).join('');
@@ -124,7 +143,7 @@ function calHtml(mini) {
 const ROTQ = ['-2.4deg', '1.8deg', '-1deg', '2.6deg', '-1.8deg', '0.8deg', '-2.8deg', '1.2deg'];
 const TACHAS = ['var(--amber)', 'var(--teal)', 'var(--pink)', 'var(--paper)'];
 function quadroHtml(pages) {
-  const minis = pages.slice(0, 8).map((p, i) => {
+  return cavalete('Resenha', pages.slice(0, 8).map((p, i) => {
     const c = i % 4;
     const r = Math.floor(i / 4);
     const w = ['82%', '64%', '74%', '56%'];
@@ -133,10 +152,75 @@ function quadroHtml(pages) {
     const foto = photo ? `<img src="${esc(photo)}" alt="" referrerpolicy="no-referrer">` : `<b>${esc(p.initial)}</b>`;
     return `<span class="qm" style="left:${26 + c * 70}px;top:${48 + r * 92}px;--r:${ROTQ[i % ROTQ.length]};--tacha:${TACHAS[i % TACHAS.length]}">
       <span class="qm__foto">${foto}</span>${rabiscos}<span class="tacha"></span></span>`;
+  }).join(''));
+}
+// Quadro de jogando: post-its miniatura das notinhas (de todas as páginas), sem texto.
+const PAPEIS = ['#ffd77a', '#9fe0d4', '#ffb3c6', '#d6ef9f', '#fbf6e6'];
+function diarioHtml(qtd) {
+  const minis = Array.from({ length: Math.min(qtd, 10) }, (_, i) => {
+    const c = i % 5;
+    const r = Math.floor(i / 5);
+    return `<span class="qn" style="left:${28 + c * 56}px;top:${58 + r * 80}px;--r:${ROTQ[(i + 3) % ROTQ.length]};--papel:${PAPEIS[i % PAPEIS.length]};--tacha:${TACHAS[i % TACHAS.length]}">
+      <span class="qm__rabisco" style="--w:80%"></span><span class="qm__rabisco" style="--w:56%"></span><span class="tacha"></span></span>`;
   }).join('');
-  const face = `<span class="qm-faixa">Resenha</span>${minis}`;
+  return cavalete('Jogando', minis);
+}
+function cavalete(titulo, minis) {
+  const face = `<span class="qm-faixa">${titulo}</span>${minis}`;
   return caixa({ w: 40, h: 30, t: 74, x: -112, cls: 'm-perna' }) + caixa({ w: 40, h: 30, t: 74, x: 112, cls: 'm-perna' })
     + `<div class="quadro3d">${caixa({ w: 320, h: 244, t: 16, y: 24, cls: 'm-quadro', f: face })}</div>`;
+}
+
+// ------------------------------------------------------------ zerei: botão e estatuetas
+
+// material por posição: ouro, prata, bronze e depois metais próprios (até 12 pessoas)
+export const METAIS = [
+  { nome: 'ouro', m: '#e3b341', m2: '#fff0b0', m3: '#8a6312' },
+  { nome: 'prata', m: '#c4c9d1', m2: '#f4f6fa', m3: '#6e737c' },
+  { nome: 'bronze', m: '#c27a43', m2: '#f2c08e', m3: '#6d3f1c' },
+  { nome: 'pátina', m: '#8fa36b', m2: '#d8e6b4', m3: '#4c5a32' },
+  { nome: 'ametista', m: '#a585c4', m2: '#e2d2f2', m3: '#55406e' },
+  { nome: 'cobre rosé', m: '#d68a7c', m2: '#f6cdc4', m3: '#7a3f36' },
+  { nome: 'jade', m: '#5fae98', m2: '#bfe7da', m3: '#2c5c4f' },
+  { nome: 'ferro', m: '#9a8e88', m2: '#d6ccc6', m3: '#4a403c' },
+  { nome: 'âmbar', m: '#d79a4a', m2: '#f6d6a2', m3: '#6e4a1c' },
+  { nome: 'cobalto', m: '#7d93c9', m2: '#d0dbf3', m3: '#3a4a74' },
+  { nome: 'latão', m: '#b8a960', m2: '#ece2ad', m3: '#5e5428' },
+  { nome: 'granada', m: '#b9636f', m2: '#ecbcc3', m3: '#5f2b33' },
+];
+const PEDESTAL = [36, 30, 26];
+const metalVars = (i) => {
+  const m = METAIS[i % METAIS.length];
+  return `--m:${m.m};--m2:${m.m2};--m3:${m.m3}`;
+};
+
+// botão de fliperama: base com plaquinha + cúpula de discos empilhados
+function botaoHtml(placa) {
+  const discos = Array.from({ length: 8 }, (_, i) => `<span class="disco${i === 7 ? ' disco--topo' : ''}" style="--dy:${i * 2}px;${i < 7 ? `background:${i < 3 ? '#8f5e1b' : '#b77b26'}` : ''}"></span>`).join('');
+  return caixa({ w: 112, h: 34, t: 112, cls: 'm-base', f: `<span class="placa-zerei">${esc(placa)}</span>` })
+    + `<div class="cupula">${discos}</div>`;
+}
+
+// estatueta: pedestal de pedra + boneco de metal; a cabeça é a foto (ou inicial) de quem zerou
+function estatuetaCorpo(membro, i) {
+  const ph = PEDESTAL[i] ?? 22;
+  const y0 = ph + 6;
+  const photo = safeUrl(membro?.photoURL);
+  const rosto = photo
+    ? `<img src="${esc(photo)}" alt="" referrerpolicy="no-referrer">`
+    : `<b>${esc((membro?.name ?? '?').trim().charAt(0).toUpperCase())}</b>`;
+  return caixa({ w: 58, h: ph, t: 58, cls: 'm-pedra', f: `<span class="est__placa">${i + 1}º</span>` })
+    + caixa({ w: 62, h: 6, t: 62, y: ph, cls: 'm-metal' })
+    + caixa({ w: 24, h: 34, t: 14, y: y0, cls: 'm-metal est__pernas', faces: 'flr' })
+    + caixa({ w: 34, h: 36, t: 18, y: y0 + 34, cls: 'm-metal' })
+    + `<div class="braco" style="--ax:-15px;--ay:${y0 + 64}px;--a:-34deg">${caixa({ w: 8, h: 30, t: 8, cls: 'm-metal' })}</div>`
+    + `<div class="braco" style="--ax:15px;--ay:${y0 + 64}px;--a:34deg">${caixa({ w: 8, h: 30, t: 8, cls: 'm-metal' })}</div>`
+    + caixa({ w: 12, h: 6, t: 10, y: y0 + 70, cls: 'm-metal', faces: 'flr' })
+    + `<div class="cabeca3d" style="--hy:${y0 + 97}px">${rosto}</div>`;
+}
+function estatuetaHtml(L, membro, i) {
+  const [x, z] = slot(L, i);
+  return obj(`est-${i}`, [x, z, -6 + (i % 5) * 3], L.est.s, `<div class="est__corpo">${estatuetaCorpo(membro, i)}</div>`, 0, metalVars(i));
 }
 
 // TV de tubo da mesa do login: carcaça + tubo atrás; o vidro repete o texto da tela (aria-hidden,
@@ -176,7 +260,9 @@ function videogameHtml() {
 
 // ------------------------------------------------------------ montagem
 
-// opts: { fase: 'jogando'|'encerrada', game, front, mini, pages, nota, alvos: [{ obj, label, attr }] }
+// opts: { fase: 'jogando'|'encerrada', game, front, mini, pages, nota, alvos: [{ obj, label, attr }],
+//         zerados: [membro] em ordem de chegada, placa (texto do botão), notaZ (bilhete do botão),
+//         notinhas: quantas notinhas tem o quadro de jogando }
 export function mesaSection(opts) {
   const alvos = opts.alvos.map((a) =>
     `<button class="alvo" type="button" data-obj="${a.obj}" ${a.attr ?? ''} ${a.popup === false ? '' : 'aria-haspopup="dialog"'}><span class="sr-only">${a.label}</span></button>`).join('');
@@ -187,6 +273,7 @@ export function mesaSection(opts) {
       <span class="palco-chao" aria-hidden="true"></span>
       ${alvos}
     </div>
+    ${opts.depois ?? ''}
   </section>`;
 }
 
@@ -205,11 +292,17 @@ export function mountMesa(section, opts) {
     palco.style.height = `${L.H}px`;
     mundo.style.top = `${L.cy}px`;
     mundo.style.setProperty('--cam', `${L.cam}deg`);
-    let html = mesaHtml(L, opts.nota) + (L.lamp ? obj('abajur-obj', L.lamp, 1, abajurHtml()) : '');
+    const zerados = L.est ? (opts.zerados ?? []) : [];
+    let html = mesaHtml(L, opts.nota, opts.notaZ, zerados.length) + (L.lamp ? obj('abajur-obj', L.lamp, 1, abajurHtml()) : '');
     if (L.cal) html += obj('cal-obj', L.cal, L.esc.cal, calHtml(opts.mini));
     if (L.quadro) html += obj('quadro-obj', L.quadro, L.esc.quadro, quadroHtml(opts.pages ?? []));
+    if (L.diario) html += obj('diario-obj', L.diario, L.esc.diario, diarioHtml(opts.notinhas ?? 0));
     if (L.caso) html += obj('caso-obj', L.caso, L.esc.caso, casoHtml(opts.game.name, opts.front));
+    // sem lugar próprio (jogando): a capinha fica em pé em cima do videogame
+    else if (opts.game && L.console) html += obj('caso-obj', L.console, L.esc.caso, casoHtml(opts.game.name, opts.front), 60 * L.esc.console);
     if (L.console) html += obj('console-obj', L.console, L.esc.console, L.tv ? videogameHtml() : consoleHtml());
+    if (L.botao) html += obj('botao-obj', L.botao, L.esc.botao, botaoHtml(opts.placa ?? 'Zerei!'));
+    html += zerados.map((m, i) => estatuetaHtml(L, m, i)).join('');
     if (L.tv) html += obj('tv-obj', L.tv, L.esc.tv, tvHtml(opts.tvTitulo, opts.tvTexto));
     if (L.prancheta) html += obj('prancheta-obj', L.prancheta, L.esc.prancheta, pranchetaHtml());
     if (L.controle) html += obj('controle-obj', L.controle, L.esc.console, controleHtml());
@@ -231,6 +324,8 @@ export function mountMesa(section, opts) {
     'cal-obj': ['[data-cal-frente]'],
     'caso-obj': ['.m-estojo > .f', '.coroa'],
     'quadro-obj': ['.m-quadro > .f'],
+    'diario-obj': ['.m-quadro > .f'],
+    'botao-obj': ['.m-base > .f', '.disco--topo'],
     'console-obj': ['.m-console', '.controle3d .camada'],
     'tv-obj': ['.m-tv > .f', '.m-tv > .u'],
     'prancheta-obj': ['.prancheta3d__frente'],
@@ -299,8 +394,82 @@ export function mountMesa(section, opts) {
   largo.addEventListener('change', () => section.isConnected && monta());
   document.fonts?.ready.then(() => section.isConnected && escala());
 
+  // ---------- a queda da estatueta: gravidade → impacto (squash) → quique → mesa pula
+  function pulinho(mola, alto, atraso, giro = 0) {
+    if (!mola) return Promise.resolve();
+    return anim(mola, [
+      { transform: 'none' },
+      { transform: `translateY(${-alto}px) rotateZ(${giro}deg)`, offset: 0.35, easing: GRAVIDADE },
+      { transform: `translateY(0) rotateZ(${-giro * 0.5}deg)`, offset: 0.7, easing: SAI },
+      { transform: `translateY(${-alto * 0.18}px)`, offset: 0.85 },
+      { transform: 'none' },
+    ], { duration: 520, delay: atraso, easing: SAI });
+  }
+  function impacto(i, est) {
+    anim(mesa, [
+      { transform: 'none', easing: 'cubic-bezier(0.2, 0.8, 0.3, 1)' },
+      { transform: 'translateY(9px)', offset: 0.12, easing: 'cubic-bezier(0.2, 0.8, 0.3, 1)' },
+      { transform: 'translateY(-15px)', offset: 0.42, easing: GRAVIDADE },
+      { transform: 'translateY(3px)', offset: 0.68, easing: SAI },
+      { transform: 'translateY(-3px)', offset: 0.84 },
+      { transform: 'none' },
+    ], { duration: 640 });
+    anim(palco, [{ translate: '0 0' }, { translate: '0 5px' }, { translate: '0 -3px' }, { translate: '0 1px' }, { translate: '0 0' }], { duration: 260, easing: 'ease-out' });
+    // onda: quem está mais perto pula antes e mais alto
+    const [ix, iz] = slot(L, i);
+    mesa.querySelectorAll(':scope > .obj').forEach((o) => {
+      if (o === est) return;
+      const x = parseFloat(o.style.getPropertyValue('--x'));
+      const z = parseFloat(o.style.getPropertyValue('--z'));
+      const d = Math.hypot(x - ix, z - iz);
+      const forca = 1 / (1 + d / 260);
+      const giro = o.id.startsWith('est-') ? (Math.random() < 0.5 ? -5 : 5) * forca : 0;
+      pulinho(o.querySelector('.mola'), 6 + 22 * forca, 60 + d * 0.12, giro);
+    });
+    const poeira = mesa.querySelector(`[data-poeira="${i}"]`);
+    if (poeira) anim(poeira, [{ transform: 'scale(0.3)', opacity: 0.7 }, { transform: 'scale(1.9)', opacity: 0 }], { duration: 620, easing: SAI });
+  }
+  // a estatueta i cai do céu na mesa (sem movimento: só aparece)
+  async function solta(i) {
+    const est = mesa.querySelector(`#est-${i}`);
+    const corpo = est?.querySelector('.est__corpo');
+    if (!corpo || calma.matches) return;
+    // parte de logo acima da borda de cima da tela, pra queda inteira ser vista
+    const cabeca = corpo.querySelector('.cabeca3d').getBoundingClientRect();
+    const k = (parseFloat(palco.style.scale) || 1) * L.est.s * Math.cos((L.cam * Math.PI) / 180);
+    const tela = Math.max(260, cabeca.bottom + 40);
+    const alto = tela / k;
+    const sombra = mesa.querySelector(`[data-de="est-${i}"]`);
+    const QUEDA = Math.round(Math.min(760, Math.max(480, 360 + tela * 0.45)));
+    if (sombra) anim(sombra, [{ transform: 'scale(0.2)', opacity: 0 }, { transform: 'scale(1)', opacity: 1 }], { duration: QUEDA, easing: GRAVIDADE });
+    await anim(corpo, [
+      { transform: `translateY(${-alto}px) rotateZ(-12deg) scale(0.97, 1.03)` },
+      { transform: `translateY(${-alto * 0.18}px) rotateZ(-4deg) scale(0.93, 1.1)`, offset: 0.8 },
+      { transform: 'translateY(0) rotateZ(0deg) scale(0.92, 1.12)' },
+    ], { duration: QUEDA, easing: GRAVIDADE });
+    impacto(i, est);
+    await anim(corpo, [
+      { transform: 'translateY(0) scale(0.92, 1.12)', easing: 'cubic-bezier(0.2, 0, 0.4, 1)' },
+      { transform: 'translateY(0) scale(1.18, 0.78)', offset: 0.1, easing: 'cubic-bezier(0.2, 0.8, 0.3, 1)' },
+      { transform: 'translateY(-52px) rotateZ(3deg) scale(0.97, 1.05)', offset: 0.4, easing: GRAVIDADE },
+      { transform: 'translateY(0) rotateZ(0deg) scale(1.08, 0.9)', offset: 0.64, easing: 'cubic-bezier(0.2, 0.8, 0.3, 1)' },
+      { transform: 'translateY(-11px) scale(0.99, 1.02)', offset: 0.78, easing: GRAVIDADE },
+      { transform: 'translateY(0) scale(1.03, 0.97)', offset: 0.88, easing: SAI },
+      { transform: 'none' },
+    ], { duration: 820 });
+  }
+  // o botão afunda e volta
+  async function aperta() {
+    const cupula = mesa.querySelector('#botao-obj .cupula');
+    if (!cupula || calma.matches) return;
+    await anim(cupula, [{ transform: 'translateY(-34px)' }, { transform: 'translateY(-26px)' }], { duration: 90, easing: 'cubic-bezier(0.4, 0, 1, 1)' });
+    anim(cupula, [{ transform: 'translateY(-26px)' }, { transform: 'translateY(-36px)', offset: 0.6 }, { transform: 'translateY(-34px)' }], { duration: 240, easing: SAI });
+  }
+
   return {
     mesa,
+    solta,
+    aperta,
     alinha: posicionaAlvos,
     remonta: (novo) => {
       Object.assign(opts, novo);

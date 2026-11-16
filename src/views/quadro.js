@@ -1,13 +1,20 @@
-// Quadro livre da encerrada: cortiça de tamanho fixo (LARG x ALT) que escala pra caber na tela.
-// Cada pessoa tem um doc em rounds/{id}/board/{uid} com a posição da própria nota, os rabiscos
-// e até 3 fotos. Todo mundo vê tudo; cada um só mexe no que é seu (as rules garantem).
-import { saveBoard } from '../api.js';
+// Quadro livre: cortiça de tamanho fixo (LARG x ALT) que escala pra caber na tela.
+// Dois usos:
+// - Resenha (encerrada): doc rounds/{id}/board/{uid} com a posição da própria nota (a página
+//   da nota de estrelas), os rabiscos e até 3 fotos.
+// - Jogando (diário): doc rounds/{id}/diario/{uid}_{página} com notinhas (comentários curtos),
+//   rabiscos e até 3 fotos; o play.js troca de página com trocaPagina().
+// Todo mundo vê tudo; cada um só mexe no que é seu (as rules garantem). Quem grava é a função
+// salvar() que vem de fora: este módulo não fala com o Firestore.
 import { icon } from '../lib/icons.js';
 import { CAPA_DATA_MAX, esc, fotoParaQuadro, safeImgData, toast } from '../lib/util.js';
 
 export const LARG = 1730;
 export const ALT = 1210;
 const NOTA_L = 240;
+const NOTINHA_L = 280;
+export const NOTINHA_MAX = 140; // caracteres (mesmo limite das rules)
+export const NOTINHAS_MAX = 6; // por pessoa e por página (mesmo limite das rules)
 const ZOOM_MAX = 5;
 const ESC_NOTA = 1.25; // mesmo valor do scale de .ql-nota no CSS
 const FOLGA = 28; // espaço mínimo entre notas (cobre a inclinação das páginas)
@@ -19,9 +26,13 @@ const CORES_NOME = ['Preto', 'Vermelho', 'Azul', 'Verde', 'Amarelo', 'Branco'];
 const LARGURAS = [3, 6, 12];
 // traço gravado como "cor|largura|x,y x,y ..." (só dígitos: seguro pra ir direto no SVG)
 const TRACO = /^([0-5])\|(3|6|12)\|(-?\d{1,4},-?\d{1,4}(?: -?\d{1,4},-?\d{1,4})*)$/;
+// papel das notinhas (post-its) e inclinação, variando por posição
+const PAPEIS = ['#ffd77a', '#9fe0d4', '#ffb3c6', '#d6ef9f', '#fbf6e6'];
+const GIROS = ['-3deg', '2deg', '-1.2deg', '3.4deg', '-2.2deg', '1deg'];
 
 const prende = (v, min, max) => Math.min(max, Math.max(min, Math.round(v)));
 const posPadrao = (i) => ({ x: 40 + (i % 5) * 335, y: 130 + Math.floor(i / 5) * 340 });
+const notinhaOk = (n) => n && typeof n.text === 'string' && n.text.trim() && Number.isInteger(n.x) && Number.isInteger(n.y);
 
 function linhaSvg(traco, dono, i) {
   const m = TRACO.exec(traco);
@@ -39,32 +50,61 @@ function fotoHtml(f, dono, i, minha) {
   </div>`;
 }
 
-// pages = páginas das notas (já com .id = uid); pagina(p, i) = html da página (vem do play.js)
-export function montaQuadro(raiz, { roundId, uid, pages, board, pagina }) {
-  const meu = board.find((b) => b.id === uid) ?? {};
-  const estado = {
-    note: meu.note ?? null,
-    strokes: (meu.strokes ?? []).filter((t) => TRACO.test(t)),
-    images: (meu.images ?? []).filter((f) => safeImgData(f.data)),
+// opts:
+//   uid, board (docs dos outros e o meu, cada um com .id = uid), salvar(estado) => Promise
+//   titulo / tituloId: a tira de papel no topo do quadro
+//   resenha: pages (já com .id = uid) + pagina(p, i) = html da página (vem do play.js)
+//   diário:  notinhas: true + nomeDe(uid) = nome de quem pregou
+//   soLeitura: só olhar (zoom continua)
+export function montaQuadro(raiz, opts) {
+  const { uid, notinhas = false, nomeDe = () => '', soLeitura = false, titulo = 'Resenha', tituloId = 'quadro-titulo' } = opts;
+  let { board, salvar, pages = [] } = opts;
+  const pagina = opts.pagina;
+  let estado;
+  // carrega o que é meu do board (descarta o que não passa no formato)
+  const carrega = () => {
+    const meu = board.find((b) => b.id === uid) ?? {};
+    estado = {
+      strokes: (meu.strokes ?? []).filter((t) => TRACO.test(t)),
+      images: (meu.images ?? []).filter((f) => safeImgData(f.data)),
+    };
+    if (notinhas) estado.notes = (meu.notes ?? []).filter(notinhaOk).slice(0, NOTINHAS_MAX);
+    else estado.note = pages.some((p) => p.id === uid) ? (meu.note ?? null) : null;
   };
-  const temNota = pages.some((p) => p.id === uid);
+  carrega();
   let ferramenta = 'mover';
   let cor = 0;
   let largura = 6;
 
+  // ---------- notas da resenha (uma página por pessoa)
   const notaPos = (p, i) => {
     const n = p.id === uid ? estado.note : board.find((b) => b.id === p.id)?.note;
     const d = posPadrao(i);
     return { x: prende(n?.x ?? d.x, -50, LARG - 60), y: prende(n?.y ?? d.y, -20, ALT - 60) };
   };
-
   const notasHtml = (lista) => lista.map((p, i) => {
     const { x, y } = notaPos(p, i);
     return pagina(p, i).replace('<li class="pagina" style="', `<li class="pagina ql-nota${p.id === uid ? ' ql-nota--minha' : ''}" data-dono="${esc(p.id)}" style="left:${x}px;top:${y}px;width:${NOTA_L}px;`);
   }).join('');
 
-  raiz.innerHTML = `
-    <div class="ql-barra papel" role="toolbar" aria-label="Ferramentas do quadro">
+  // ---------- notinhas do diário (várias por pessoa; as minhas por último, por cima)
+  const notinhaHtml = (n, dono, i, k) => {
+    const minha = dono === uid;
+    return `<li class="ql-notinha${minha && !soLeitura ? ' ql-notinha--minha' : ''}" data-dono="${esc(dono)}" data-n="${i}" style="left:${prende(n.x, -50, LARG - 60)}px;top:${prende(n.y, -20, ALT - 60)}px;width:${NOTINHA_L}px;--r:${GIROS[k % GIROS.length]};--papel:${PAPEIS[k % PAPEIS.length]}">
+      <span class="tacha" aria-hidden="true"></span>
+      <p class="ql-notinha__txt">${esc(n.text)}</p>
+      <span class="ql-notinha__quem">${minha ? 'você' : esc(nomeDe(dono))}</span>
+      ${minha && !soLeitura ? `<button class="ql-notinha__x" type="button" data-tira-nota="${i}" aria-label="Despregar notinha">×</button>` : ''}
+    </li>`;
+  };
+  const notinhasHtml = () => {
+    let k = 0;
+    const outras = board.filter((b) => b.id !== uid).flatMap((b) => (b.notes ?? []).filter(notinhaOk).map((n, i) => notinhaHtml(n, b.id, i, k++)));
+    return outras.join('') + estado.notes.map((n, i) => notinhaHtml(n, uid, i, k++)).join('');
+  };
+  const listaHtml = () => (notinhas ? notinhasHtml() : notasHtml(pages));
+
+  const ferramentas = soLeitura ? '' : `
       <div class="ql-grupo">
         <button class="ql-btn ql-btn--ico" type="button" data-ferr="mover" aria-pressed="true" aria-label="Mover" title="Mover (V)">${icon('move')}</button>
         <button class="ql-btn ql-btn--ico" type="button" data-ferr="caneta" aria-pressed="false" aria-label="Caneta" title="Caneta (B)">${icon('pencil')}</button>
@@ -80,7 +120,10 @@ export function montaQuadro(raiz, { roundId, uid, pages, board, pagina }) {
         <label class="ql-btn ql-btn--ico" title="Pregar foto">${icon('image')}<span class="sr-only">Pregar foto</span><input class="sr-only" type="file" accept="image/*" data-foto-in></label>
         <button class="ql-btn ql-btn--ico" type="button" data-desfaz aria-label="Desfazer" title="Desfazer (Ctrl+Z)">${icon('undo')}</button>
         <button class="ql-btn ql-btn--ico" type="button" data-limpa aria-label="Apagar meus rabiscos" title="Apagar meus rabiscos">${icon('trash')}</button>
-      </div>
+      </div>`;
+
+  raiz.innerHTML = `
+    <div class="ql-barra papel" role="toolbar" aria-label="Ferramentas do quadro">${ferramentas}
       <div class="ql-grupo" aria-label="Zoom">
         <button class="ql-btn ql-btn--q" type="button" data-zoom="-1" aria-label="Diminuir zoom" title="Diminuir zoom">${icon('zoomOut')}</button>
         <button class="ql-btn" type="button" data-zoom="0" aria-label="Zoom normal" title="Voltar pra 100%"><span data-zoom-txt>100%</span></button>
@@ -89,9 +132,9 @@ export function montaQuadro(raiz, { roundId, uid, pages, board, pagina }) {
     </div>
     <div class="ql-moldura quadro"><div class="ql-janela"><div class="ql-tamanho"></div>
       <div class="ql-palco quadro__cortica" data-ferr="mover" style="width:${LARG}px;height:${ALT}px">
-        <h2 class="quadro__titulo ql-titulo" id="quadro-titulo" tabindex="-1"><span class="tacha" aria-hidden="true"></span><span class="tacha" aria-hidden="true"></span>Resenha</h2>
+        <h2 class="quadro__titulo ql-titulo" id="${tituloId}" tabindex="-1"><span class="tacha" aria-hidden="true"></span><span class="tacha" aria-hidden="true"></span>${esc(titulo)}</h2>
         <div class="ql-fotos"></div>
-        <ul class="ql-notas">${notasHtml(pages)}</ul>
+        <ul class="ql-notas">${listaHtml()}</ul>
         <svg class="ql-tinta" viewBox="0 0 ${LARG} ${ALT}" width="${LARG}" height="${ALT}" aria-hidden="true"></svg>
       </div>
     </div></div>`;
@@ -100,6 +143,7 @@ export function montaQuadro(raiz, { roundId, uid, pages, board, pagina }) {
   const janela = raiz.querySelector('.ql-janela');
   const svg = raiz.querySelector('.ql-tinta');
   const fotos = raiz.querySelector('.ql-fotos');
+  const lista = raiz.querySelector('.ql-notas');
   const tamanho = raiz.querySelector('.ql-tamanho');
   const zoomTxt = raiz.querySelector('[data-zoom-txt]');
   let base = 1; // escala que faz o quadro inteiro caber na largura
@@ -189,13 +233,17 @@ export function montaQuadro(raiz, { roundId, uid, pages, board, pagina }) {
   };
   const desenhaFotos = () => {
     const outras = board.filter((b) => b.id !== uid).flatMap((b) => (b.images ?? []).map((f, i) => fotoHtml(f, b.id, i, false)));
-    fotos.innerHTML = outras.join('') + estado.images.map((f, i) => fotoHtml(f, uid, i, true)).join('');
+    fotos.innerHTML = outras.join('') + estado.images.map((f, i) => fotoHtml(f, uid, i, !soLeitura)).join('');
   };
   desenhaTinta();
   desenhaFotos();
 
   // ---------- "física" das notas: ocupam espaço, uma não fica em cima da outra
-  const caixa = (el) => ({ x: parseFloat(el.style.left), y: parseFloat(el.style.top), w: el.offsetWidth * ESC_NOTA + FOLGA, h: el.offsetHeight * ESC_NOTA + FOLGA });
+  const COLADOS = '.ql-nota, .ql-notinha';
+  const caixa = (el) => {
+    const k = el.classList.contains('ql-nota') ? ESC_NOTA : 1;
+    return { x: parseFloat(el.style.left), y: parseFloat(el.style.top), w: el.offsetWidth * k + FOLGA, h: el.offsetHeight * k + FOLGA };
+  };
   // empurra (x, y) de el pra fora das outras pelo lado que entrou menos
   const separa = (el, x, y, outras) => {
     const { w, h } = caixa(el);
@@ -218,7 +266,7 @@ export function montaQuadro(raiz, { roundId, uid, pages, board, pagina }) {
   };
   // ao abrir: cada nota desvia das que vieram antes (só na tela; ninguém grava a nota dos outros)
   const arruma = () => {
-    const notas = [...raiz.querySelectorAll('.ql-nota')];
+    const notas = [...raiz.querySelectorAll(COLADOS)];
     notas.forEach((el, i) => {
       const { x, y } = separa(el, parseFloat(el.style.left), parseFloat(el.style.top), notas.slice(0, i));
       el.style.left = `${x}px`;
@@ -226,16 +274,24 @@ export function montaQuadro(raiz, { roundId, uid, pages, board, pagina }) {
     });
   };
   requestAnimationFrame(arruma);
+  const redesenha = () => {
+    lista.innerHTML = listaHtml();
+    desenhaTinta();
+    desenhaFotos();
+    arruma();
+  };
 
-  // ---------- salvar (debounce; flush ao fechar)
+  // ---------- salvar (debounce; flush ao fechar e ao trocar de página)
   let timer = null;
   let pendente = false;
   const salvaJa = async () => {
     clearTimeout(timer);
-    if (!pendente) return;
+    if (!pendente || soLeitura) return;
     pendente = false;
+    const fn = salvar; // guarda a página de agora: trocar de página no meio não mistura
+    const dados = { ...estado };
     try {
-      await saveBoard(roundId, uid, estado);
+      await fn(dados);
     } catch (err) {
       console.error(err);
       toast('Não deu pra salvar o quadro. Tenta de novo.', 'erro');
@@ -257,6 +313,9 @@ export function montaQuadro(raiz, { roundId, uid, pages, board, pagina }) {
   const barra = raiz.querySelector('.ql-barra');
   const marca = (sel, btn) => barra.querySelectorAll(sel).forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
   barra.addEventListener('click', (e) => {
+    const z = e.target.closest('[data-zoom]');
+    if (z) zoomEm(z.dataset.zoom === '0' ? 1 : zoom * (z.dataset.zoom === '1' ? 1.4 : 1 / 1.4));
+    if (soLeitura) return;
     const f = e.target.closest('[data-ferr]');
     if (f) {
       ferramenta = f.dataset.ferr;
@@ -275,8 +334,6 @@ export function montaQuadro(raiz, { roundId, uid, pages, board, pagina }) {
       marca('[data-larg]', l);
       if (ferramenta !== 'caneta') barra.querySelector('[data-ferr="caneta"]').click();
     }
-    const z = e.target.closest('[data-zoom]');
-    if (z) zoomEm(z.dataset.zoom === '0' ? 1 : zoom * (z.dataset.zoom === '1' ? 1.4 : 1 / 1.4));
     if (e.target.closest('[data-desfaz]') && estado.strokes.length) {
       estado.strokes.pop();
       desenhaTinta();
@@ -290,11 +347,11 @@ export function montaQuadro(raiz, { roundId, uid, pages, board, pagina }) {
     }
   });
 
-  barra.querySelector('[data-foto-in]').addEventListener('change', async (e) => {
+  barra.querySelector('[data-foto-in]')?.addEventListener('change', async (e) => {
     const file = e.target.files?.[0];
     e.target.value = '';
     if (!file) return;
-    if (estado.images.length >= MAX_FOTOS) return toast(`Cada um prega no máximo ${MAX_FOTOS} fotos. Desprega uma antes.`, 'erro');
+    if (estado.images.length >= MAX_FOTOS) return toast(`Cada um prega no máximo ${MAX_FOTOS} fotos${notinhas ? ' por página' : ''}. Desprega uma antes.`, 'erro');
     try {
       const data = await fotoParaQuadro(file);
       if (data.length > CAPA_DATA_MAX) throw new Error('grande-demais');
@@ -361,13 +418,13 @@ export function montaQuadro(raiz, { roundId, uid, pages, board, pagina }) {
   svg.addEventListener('pointerup', fimTraco);
   svg.addEventListener('pointercancel', fimTraco);
 
-  // ---------- mover a própria nota/foto e redimensionar foto
+  // ---------- mover a própria nota/notinha/foto e redimensionar foto
   palco.addEventListener('pointerdown', (e) => {
-    if (ferramenta !== 'mover' || e.button > 0) return;
-    if (e.target.closest('[data-tira]')) return;
+    if (soLeitura || ferramenta !== 'mover' || e.button > 0) return;
+    if (e.target.closest('[data-tira], [data-tira-nota]')) return;
     const alca = e.target.closest('[data-alca]');
     const foto = e.target.closest('.ql-foto--minha');
-    const nota = e.target.closest('.ql-nota--minha');
+    const nota = e.target.closest('.ql-nota--minha, .ql-notinha--minha');
     const el = foto ?? nota;
     if (!el || e.target.closest('summary, a, button, input, textarea')) return;
     e.preventDefault();
@@ -384,7 +441,7 @@ export function montaQuadro(raiz, { roundId, uid, pages, board, pagina }) {
       else {
         let x = prende(x0 + p.x - ini.x, -50, LARG - 60);
         let y = prende(y0 + p.y - ini.y, -20, ALT - 60);
-        if (nota) ({ x, y } = separa(el, x, y, [...raiz.querySelectorAll('.ql-nota')].filter((o) => o !== el)));
+        if (nota) ({ x, y } = separa(el, x, y, [...raiz.querySelectorAll(COLADOS)].filter((o) => o !== el)));
         el.style.left = `${x}px`;
         el.style.top = `${y}px`;
       }
@@ -397,6 +454,7 @@ export function montaQuadro(raiz, { roundId, uid, pages, board, pagina }) {
       arrastando = false;
       const pos = { x: Math.round(parseFloat(el.style.left)), y: Math.round(parseFloat(el.style.top)) };
       if (foto) Object.assign(estado.images[Number(foto.dataset.foto)], pos, { w: Math.round(parseFloat(el.style.width)) });
+      else if (notinhas) Object.assign(estado.notes[Number(el.dataset.n)], pos);
       else estado.note = pos;
       salva();
     };
@@ -405,16 +463,24 @@ export function montaQuadro(raiz, { roundId, uid, pages, board, pagina }) {
     el.addEventListener('pointercancel', solta);
   });
   palco.addEventListener('click', (e) => {
+    if (soLeitura) return;
     const tira = e.target.closest('[data-tira]');
-    if (!tira) return;
-    estado.images.splice(Number(tira.dataset.tira), 1);
-    desenhaFotos();
-    salva();
+    if (tira) {
+      estado.images.splice(Number(tira.dataset.tira), 1);
+      desenhaFotos();
+      salva();
+    }
+    const tiraNota = e.target.closest('[data-tira-nota]');
+    if (tiraNota) {
+      estado.notes.splice(Number(tiraNota.dataset.tiraNota), 1);
+      redesenha();
+      salva();
+    }
   });
 
   // atalhos de editor de imagem: V mover, B caneta, E borracha, Ctrl+Z desfazer
   const atalhos = (e) => {
-    if (!raiz.isConnected || e.target.closest?.('input, textarea, select')) return;
+    if (soLeitura || !raiz.isConnected || e.target.closest?.('input, textarea, select')) return;
     const k = e.key.toLowerCase();
     if ((e.ctrlKey || e.metaKey) && k === 'z') {
       e.preventDefault();
@@ -427,11 +493,50 @@ export function montaQuadro(raiz, { roundId, uid, pages, board, pagina }) {
   };
   document.addEventListener('keydown', atalhos);
 
-  if (!temNota) estado.note = null;
-  // nota salva com o quadro aberto: só as páginas são redesenhadas (posições continuam)
-  const trocaNotas = (novas) => {
-    raiz.querySelector('.ql-notas').innerHTML = notasHtml(novas);
-    arruma();
+  return {
+    salvaJa,
+    // resenha: nota salva com o quadro aberto; só as páginas são redesenhadas (posições continuam)
+    trocaNotas: (novas) => {
+      pages = novas;
+      lista.innerHTML = notasHtml(novas);
+      arruma();
+    },
+    // diário: prega uma notinha no meio do que está à vista; false se não coube
+    pregaNotinha: (texto) => {
+      const text = String(texto ?? '').trim().slice(0, NOTINHA_MAX);
+      if (!text || soLeitura) return false;
+      if (estado.notes.length >= NOTINHAS_MAX) {
+        toast(`Cabem ${NOTINHAS_MAX} notinhas tuas por página. Despregue uma ou vira a página.`, 'erro');
+        return false;
+      }
+      const cx = (janela.scrollLeft + janela.clientWidth / 2) / escala - NOTINHA_L / 2;
+      const cy = (janela.scrollTop + janela.clientHeight / 2) / escala - 60;
+      estado.notes.push({ x: prende(cx + (Math.random() - 0.5) * 80, 0, LARG - NOTINHA_L), y: prende(cy + (Math.random() - 0.5) * 60, 90, ALT - 140), text });
+      lista.innerHTML = listaHtml();
+      // a nova (última) desvia das outras e grava onde parou
+      const els = [...raiz.querySelectorAll(COLADOS)];
+      const nova = els.at(-1);
+      const { x, y } = separa(nova, parseFloat(nova.style.left), parseFloat(nova.style.top), els.slice(0, -1));
+      nova.style.left = `${x}px`;
+      nova.style.top = `${y}px`;
+      Object.assign(estado.notes.at(-1), { x, y });
+      salva();
+      return true;
+    },
+    // diário: troca a página (grava a anterior antes, sem esperar a rede)
+    trocaPagina: (novoBoard, novoSalvar) => {
+      salvaJa();
+      board = novoBoard;
+      salvar = novoSalvar;
+      carrega();
+      redesenha();
+    },
+    estadoAtual: () => estado,
+    moldura: raiz.querySelector('.ql-moldura'),
+    fecha: () => {
+      obs.disconnect();
+      document.removeEventListener('keydown', atalhos);
+      return salvaJa();
+    },
   };
-  return { salvaJa, trocaNotas, fecha: () => { obs.disconnect(); document.removeEventListener('keydown', atalhos); return salvaJa(); } };
 }

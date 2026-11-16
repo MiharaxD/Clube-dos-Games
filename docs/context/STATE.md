@@ -8,13 +8,18 @@
   (sugestão pela caixinha, voto pelo ticket, empate/roleta, calendário, resenha no quadro, encerrar, finalizar).
 - **Sorteio do fechamento** (`src/views/sorteio.js`): overlay animado ao fechar a votação (vencedor único e
   empate com TV, roleta de cassino e explosão), mesmo payload gravado de antes.
+- **Mesa de jogando nova:** videogame com a capinha em cima, botão ZEREI + estatuetas (`zerei/{uid}`), quadro de
+  jogando com 3 páginas (`diario`); a encerrada guarda os dois quadros. Ambiente de teste sem Firebase em
+  `teste/quadro.html`. Testado no ambiente de teste e renderizando a tela real com dados falsos; não testado logado
+  no emulador (o login do emulador não voltou no painel de preview).
 
 ## Pendências (prioridade)
 1. Usuário criar o projeto Firebase real e fazer o primeiro deploy (README §2–9, §13).
 2. **Campos novos que os mocks pedem (perguntar antes; mudam modelo + rules + testes):** balões de
-   recado na capa (os recados já existem, só no mural da caixinha), "zerou" (botão ZEREI, tempo, recado, ordem → estatuetas, placar,
-   vitrine, "quem zera primeiro"/lanterninha nas stats), descrição do jogo ("Do que se trata" no manual). Hoje
-   omitidos; as resenhas do quadro usam o comentário das notas.
+   recado na capa (os recados já existem, só no mural da caixinha), extras do "zerei" (tempo, recado, placar,
+   vitrine da estatueta, estatuetas na mesa da encerrada, "quem zera primeiro"/lanterninha nas stats), descrição
+   do jogo ("Do que se trata" no manual). Hoje omitidos; as resenhas do quadro usam o comentário das notas.
+   Voltar de jogando pra votando não apaga `zerei`/`diario` (sobram se a rodada voltar a jogando).
 3. Estante: o mock faz a capinha voar até a mesa da rodada na própria página; no app a caixinha abre e o botão
    "Ver a mesa da rodada" leva a `#/rodada/:id` (mesa só leitura). Decidir se vale portar o voo.
 4. O detector só dá avisos (advisory): cores de material dos objetos 3D e alguns tamanhos/raios fora do YAML do

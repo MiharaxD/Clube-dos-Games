@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex" />
+    <title>Teste · Quadro de jogando</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <style>
+      /* só a barra de controle do teste; o resto vem do CSS do app */
+      .teste-barra .actions { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; margin-top: 10px; }
+      .teste-barra label { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; }
+      .teste-barra select { min-height: 44px; padding: 0 8px; border: 2px solid var(--paper-ink); border-radius: 4px; background: #fbf6e6; color: var(--paper-ink); font: inherit; }
+    </style>
+  </head>
+  <body>
+    <!-- Ambiente de teste (só no npm run dev; não entra no build): mesa de jogando com dados
+         falsos, sem Firebase e sem login. O quadro grava no localStorage deste navegador. -->
+    <div class="cena-parede" id="cena-parede" aria-hidden="true"></div>
+    <div class="cena-luz" id="cena-luz" aria-hidden="true"></div>
+    <div class="cena-grao" aria-hidden="true"></div>
+    <div class="cena-vinheta" aria-hidden="true"></div>
+
+    <div id="app" class="app"><main id="main" class="main" tabindex="-1"></main></div>
+    <div id="toast" class="toast" aria-hidden="true" hidden></div>
+    <div id="toast-status" class="sr-only" role="status"></div>
+    <div id="toast-alert" class="sr-only" role="alert"></div>
+    <script type="module" src="./quadro.js"></script>
+  </body>
+</html>

@@ -481,6 +481,15 @@ describe('quadro de jogando (diario)', () => {
     for (const p of [0, 1, 2]) await assertSucceeds(setDoc(doc(as('alice'), `rounds/r-jog/diario/alice_${p}`), pagina()));
   });
 
+  it('página cheia (6 notinhas, 3 fotos grandes, 150 traços) cabe no limite de expressões', async () => {
+    const grande = img({ data: 'data:image/jpeg;base64,' + 'A'.repeat(99000) });
+    await assertSucceeds(setDoc(doc(as('alice'), 'rounds/r-jog/diario/alice_1'), pagina({
+      notes: Array.from({ length: 6 }, () => notinha({ text: 'b'.repeat(140) })),
+      strokes: Array.from({ length: 150 }, () => '0|6|1,2 3,4'),
+      images: [grande, grande, grande],
+    })));
+  });
+
   it('não existe 4ª página', async () => {
     await assertFails(setDoc(doc(as('alice'), 'rounds/r-jog/diario/alice_3'), pagina()));
   });
@@ -499,8 +508,8 @@ describe('quadro de jogando (diario)', () => {
     await assertFails(setDoc(doc(as('alice'), 'rounds/r-jog/diario/alice_0'), pagina({ notes: [notinha({ text: '' })] })));
   });
 
-  it('mais de 8 notinhas ou 3 fotos por página é negado', async () => {
-    await assertFails(setDoc(doc(as('alice'), 'rounds/r-jog/diario/alice_0'), pagina({ notes: Array.from({ length: 9 }, () => notinha()) })));
+  it('mais de 6 notinhas ou 3 fotos por página é negado', async () => {
+    await assertFails(setDoc(doc(as('alice'), 'rounds/r-jog/diario/alice_0'), pagina({ notes: Array.from({ length: 7 }, () => notinha()) })));
     await assertFails(setDoc(doc(as('alice'), 'rounds/r-jog/diario/alice_0'), pagina({ images: [img(), img(), img(), img()] })));
   });
 

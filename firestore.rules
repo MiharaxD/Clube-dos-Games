@@ -373,15 +373,13 @@ service cloud.firestore {
         function validDiario(d) {
           return d.keys().hasOnly(['notes', 'strokes', 'images', 'updatedAt'])
             && d.keys().hasAll(['notes', 'strokes', 'images', 'updatedAt'])
-            && d.notes is list && d.notes.size() <= 8
+            && d.notes is list && d.notes.size() <= 6
             && (d.notes.size() < 1 || validNotinha(d.notes[0]))
             && (d.notes.size() < 2 || validNotinha(d.notes[1]))
             && (d.notes.size() < 3 || validNotinha(d.notes[2]))
             && (d.notes.size() < 4 || validNotinha(d.notes[3]))
             && (d.notes.size() < 5 || validNotinha(d.notes[4]))
             && (d.notes.size() < 6 || validNotinha(d.notes[5]))
-            && (d.notes.size() < 7 || validNotinha(d.notes[6]))
-            && (d.notes.size() < 8 || validNotinha(d.notes[7]))
             && d.strokes is list && d.strokes.size() <= 150
             && d.images is list && d.images.size() <= 3
             && (d.images.size() < 1 || validImgD(d.images[0]))

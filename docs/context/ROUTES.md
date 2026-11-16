@@ -15,7 +15,7 @@
   `src/lib/motion.js` (motor WAAPI + `rolaNaMao` + `elastico`, este só no sorteio), `src/lib/festa.js` (confete em canvas), `src/lib/rickroll.js` (easter egg de toda TV: clique →
   pulo, chiado em canvas + ruído WebAudio (`chiar`/`somDeChiado` exportados, reusados no sorteio), vídeo `public/rickroll.mp4` (H.264/AAC, toca em celular); TV comum liga por `[data-tv-liga]`), `src/lib/scene.js` (luz nasce de `data-luz="tv|abajur|neon"`;
   `placeLights` após cada render), `src/lib/icons.js`. Fontes em `public/fonts/` (licenças em `LICENSE.md`).
-- **Testes:** `npm run build`; detector: `impeccable detect --json index.html src`
+- **Testes:** `npm run build`; mesa de jogando/quadro sem Firebase: `npm run dev` → `/teste/quadro.html` (dados falsos no localStorage; `teste/` não entra no build); detector: `impeccable detect --json index.html src`
   (script em `~/.claude/plugins/cache/impeccable/.../scripts/impeccable`).
 - **Mundo:** "Sexta no quarto", definido em `DESIGN.md` (manda em conflito) e já aplicado em todas as telas.
 - **Consulta visual (`Estetica/DOSSIE.md`): leia SÓ quando a tarefa exigir decisão ou inspiração visual
@@ -31,8 +31,8 @@
   `.ficha`/`.confirm`/`.papel`; classes de mesa 3D com nome genérico (`.abajur`, `.capa`) vão escopadas.
   Mudou regra visual → atualizar `DESIGN.md` (e `Estetica/DOSSIE.md` se for direção) e regenerar `.impeccable/design.json`.
 - **Mocks (referência, já portados):** `.impeccable/mocks/rodada-{sugerindo,votando,jogando,encerrada}.html`,
-  `estante.html`, `stats.html`. Arquivos grandes: grep nas seções, nunca ler inteiros. Elementos sem campo no
-  modelo (ZEREI/estatuetas/placar, descrição do jogo, capa enviada do aparelho) ficaram fora.
+  `estante.html`, `stats.html`. Arquivos grandes: grep nas seções, nunca ler inteiros. Ficaram fora: tempo/recado/placar/vitrine do
+  ZEREI e descrição do jogo (sem campo no modelo).
 - **Não precisa ler:** `Estetica/arquivo/`, o resto de `.impeccable/mocks/` (obsoletos, inclusive
   `prateleira-3d-v3.html`, Y2K rejeitado), `.impeccable/review/`.
 
@@ -46,7 +46,7 @@
 - **Ir direto para:** `src/main.js` (array `ROUTES`, hash routing, casca/nav, telas soltas `solo()`: espera,
   carregando, erro; login é `src/views/login.js`) → a tela em `src/views/`: `round.js` (carrega a rodada, cabeçalho/ficha/TV de
   sugerindo/votando, balcão do admin) que delega para `phases/suggest.js` | `phases/vote.js` |
-  `phases/play.js` (jogando/encerrada: monta a página inteira com a mesa; o quadro aberto da encerrada é o quadro livre de `src/views/quadro.js`: palco fixo 1730x1210 escalado + zoom até 5x (botões, ctrl+roda, pinça; janela rola), notas ocupam espaço (`separa` empurra a sua ao arrastar, `arruma` desvia as sobrepostas ao abrir, só na tela), mover/caneta/borracha/foto com ícones pixel de `icons.js` e atalhos V/B/E/Ctrl+Z; no PC (≥ 900px) o formulário da nota fica em linha no canto de baixo, à direita do quadro; salva com debounce e no fechar; CSS `.ql-*` em `round.css`); `shelf.js`, `stats.js`,
+  `phases/play.js` (jogando/encerrada: monta a página inteira com a mesa; ZEREI grava `zerei/{uid}` e `mountMesa().solta(i)` derruba a estatueta; o quadro de jogando abre por `src/views/diario.js` (3 páginas, setinhas giram o quadro; sem Firestore: recebe `salvar`); o quadro aberto da encerrada e o de jogando usam o quadro livre de `src/views/quadro.js` (modo resenha ou `notinhas: true`; grava pela `salvar` recebida): palco fixo 1730x1210 escalado + zoom até 5x (botões, ctrl+roda, pinça; janela rola), notas ocupam espaço (`separa` empurra a sua ao arrastar, `arruma` desvia as sobrepostas ao abrir, só na tela), mover/caneta/borracha/foto com ícones pixel de `icons.js` e atalhos V/B/E/Ctrl+Z; no PC (≥ 900px) o formulário da nota fica em linha no canto de baixo, à direita do quadro; salva com debounce e no fechar; CSS `.ql-*` em `round.css`); `shelf.js`, `stats.js`,
   `profile.js`, `admin.js` (aprova fila e remove sócio com `removeMember`, que apaga o doc de `members`; só admin, nunca a si mesmo; jogos/votos ficam e o nome vira "Ex-sócio"; quem volta a logar cai na fila de novo); `sorteio.js` (overlay de fechar a votação, chamado por `closeVoting` em `phases/vote.js`:
   vencedor único ou empate com clone da TV, glitch, roda de `roulette.js` e explosão; voa até `#caso-obj`).
 - **Cuidados:** telas recriam `<main>` a cada navegação (a casca aparece antes de `listMembers()` voltar; `rotaAtual` descarta navegação velha); listeners ficam no container da tela. A espera de aprovação reconfere `getMember` ao voltar pra aba. O `toast()` fala por `#toast-status`/`#toast-alert` (balão `aria-hidden`).

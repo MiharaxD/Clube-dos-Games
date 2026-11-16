@@ -6,10 +6,12 @@ import {
   getMyVotes,
   listAllVotes,
   listDateVotes,
+  listDiario,
   listGames,
   listQuestions,
   listRatings,
   listRounds,
+  listZerei,
 } from '../api.js';
 import { buildAnnouncement } from '../lib/announce.js';
 import { icon } from '../lib/icons.js';
@@ -46,13 +48,15 @@ export async function renderRound(main, ctx) {
     if (session.isAdmin) data.votesByGame = await listAllVotes(round.id, games);
   }
   if (round.status === 'jogando' || round.status === 'encerrada') {
-    const [votesByGame, dateVotes, ratings, questions] = await Promise.all([
+    const [votesByGame, dateVotes, ratings, questions, zerei, diario] = await Promise.all([
       listAllVotes(round.id, games),
       listDateVotes(round.id),
       listRatings(round.id),
       listQuestions(round.id),
+      listZerei(round.id),
+      listDiario(round.id),
     ]);
-    Object.assign(data, { votesByGame, dateVotes, ratings, questions });
+    Object.assign(data, { votesByGame, dateVotes, ratings, questions, zerei, diario });
     data.ranking = rankGames(games, votesByGame);
   }
 

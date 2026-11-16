@@ -1,12 +1,17 @@
 // Fases "jogando" e "encerrada" (rodada-jogando.html / rodada-encerrada.html): faixa de pano no
-// lugar do h1, a mesa 3D (abajur, calendário, capinha com coroa, console; na encerrada o quadro de
-// cortiça), a ficha do jogo, o placar da votação, as resenhas (notas), as perguntas e o balcão.
-// Sem o botão ZEREI e as estatuetas dos mocks: "zerou" não existe no modelo de dados.
+// lugar do h1, a mesa 3D, a ficha do jogo, o placar da votação, as resenhas (notas), as perguntas e
+// o balcão. Jogando: calendário, videogame com a capinha em cima, estatuetas de quem zerou, botão
+// ZEREI e o quadro de jogando (diario.js). Encerrada: quadro de resenha + o de jogando guardado.
+// O tempo/recado do "zerei" dos mocks ficou fora: o zerei grava só a hora (ordem de chegada).
 import {
   addQuestion,
+  desfazZerei,
   listBoard,
   deleteQuestion,
+  marcaZerei,
+  saveBoard,
   saveDateVote,
+  saveDiario,
   saveRating,
   updateQuestion,
   updateRound,
@@ -19,8 +24,9 @@ import { confirmInline, esc, fmtDateTime, fmtDay, fmtPrice, listJoin, safeUrl, t
 import { avatar, empty, memberName, stamp } from '../parts.js';
 import { openReading } from '../caixinha.js';
 import { caseFront } from '../rack.js';
-import { coroaSvg, mesaSection, mountMesa } from '../mesa.js';
+import { METAIS, coroaSvg, mesaSection, mountMesa } from '../mesa.js';
 import { montaQuadro } from '../quadro.js';
+import { abreDiario } from '../diario.js';
 
 const QUESTION_MAX = 300;
 
@@ -45,9 +51,16 @@ export function renderPlay(main, data, ctx, extra) {
   const mini = miniCalendar(data);
   const pages = ratingPages(data);
 
+  // quem zerou, em ordem de chegada (as estatuetas); some quem saiu do clube
+  const zerados = (data.zerei ?? []).map((z) => members.find((m) => m.id === z.id)).filter(Boolean);
+  const minhaPos = zerados.findIndex((m) => m.id === uid);
+
   const alvos = [{ obj: 'caso-obj', label: `Abrir a caixinha de ${esc(game.name)}: manual do jogo` }];
-  if (playing) alvos.push({ obj: 'cal-obj', label: 'Abrir o calendário e marcar os dias que você pode na reunião' });
-  else alvos.push({ obj: 'quadro-obj', label: 'Abrir o quadro de resenhas' });
+  if (playing) {
+    alvos.push({ obj: 'cal-obj', label: 'Abrir o calendário e marcar os dias que você pode na reunião' });
+    alvos.push({ obj: 'botao-obj', label: minhaPos < 0 ? 'Zerei! Marcar que você zerou o jogo' : `Você já zerou (${minhaPos + 1}º lugar)`, popup: false });
+  } else alvos.push({ obj: 'quadro-obj', label: 'Abrir o quadro de resenhas' });
+  alvos.push({ obj: 'diario-obj', label: playing ? 'Abrir o quadro de jogando: notinhas, rabiscos e fotos' : 'Rever o quadro de jogando' });
 
   main.innerHTML = `
     <div class="rodada--mesa">
@@ -62,7 +75,7 @@ export function renderPlay(main, data, ctx, extra) {
       </div>
       ${extra.steps}
       <div class="falta papel"><p>${extra.todo}</p>${extra.cta ?? ''}</div>
-      ${mesaSection({ alvos })}
+      ${mesaSection({ alvos, depois: zeradosHtml(zerados, uid, playing, members) })}
       ${infoSection(data, game, tied, ctx.session.isAdmin)}
       ${resultSection(data)}
     </div>
@@ -75,7 +88,13 @@ export function renderPlay(main, data, ctx, extra) {
   const notaMesa = playing
     ? (round.meetingDate ? `reunião ${fmtDateTime(round.meetingDate)}` : 'marca teus dias')
     : `${data.ratings.length} de ${members.filter((m) => m.approved).length} deram nota`;
-  const mesa = mountMesa(sec, { fase: playing ? 'jogando' : 'encerrada', game, front, mini, pages, nota: notaMesa });
+  const textosBotao = (pos) => (pos < 0
+    ? { placa: 'Zerei!', notaZ: 'aperta quando zerar' }
+    : { placa: `Zerado · ${pos + 1}º`, notaZ: 'já foi, chora' });
+  const mesa = mountMesa(sec, {
+    fase: playing ? 'jogando' : 'encerrada', game, front, mini, pages, nota: notaMesa,
+    zerados, ...textosBotao(minhaPos), notinhas: (data.diario ?? []).reduce((n, d) => n + (d.notes?.length ?? 0), 0),
+  });
 
   // capinha da mesa → caixinha (manual do jogo, só leitura)
   sec.querySelector('[data-obj="caso-obj"]').addEventListener('click', (e) => {
@@ -84,6 +103,58 @@ export function renderPlay(main, data, ctx, extra) {
   });
   sec.querySelector('[data-obj="cal-obj"]')?.addEventListener('click', (e) => openCalendar(e.currentTarget, mesa, data, ctx));
   sec.querySelector('[data-obj="quadro-obj"]')?.addEventListener('click', (e) => openBoard(e.currentTarget, mesa, data, ctx, pages));
+  sec.querySelector('[data-obj="diario-obj"]')?.addEventListener('click', (e) => abreDiario({
+    gatilho: e.currentTarget,
+    objeto: mesa.mesa.querySelector('#diario-obj'),
+    face: () => mesa.mesa.querySelector('#diario-obj .m-quadro > .f'),
+    docs: data.diario ?? [],
+    uid,
+    nomeDe: (id) => memberName(members, id),
+    soLeitura: !playing,
+    salvar: (pagina, estado) => saveDiario(round.id, uid, pagina, estado),
+    aoFechar: (mexeu) => (mexeu ? ctx.refresh() : null),
+  }));
+
+  // ZEREI: grava, a estatueta cai na mesa; desfazer fica no texto embaixo da mesa
+  let zerando = false;
+  sec.querySelector('[data-obj="botao-obj"]')?.addEventListener('click', async (e) => {
+    const botao = e.currentTarget;
+    mesa.aperta();
+    if (zerando) return;
+    if (zerados.some((m) => m.id === uid)) {
+      toast('Já foi, chora. Tua estatueta tá na mesa.');
+      return;
+    }
+    zerando = true;
+    try {
+      await marcaZerei(round.id, uid);
+    } catch (err) {
+      console.error(err);
+      toast('Não deu pra marcar. Tenta de novo.', 'erro');
+      zerando = false;
+      return;
+    }
+    const eu = members.find((m) => m.id === uid) ?? { id: uid, name: ctx.session.member?.name };
+    zerados.push(eu);
+    data.zerei = [...(data.zerei ?? []), { id: uid }];
+    const i = zerados.length - 1;
+    mesa.remonta({ zerados, ...textosBotao(i) });
+    sec.querySelector('.zerados').outerHTML = zeradosHtml(zerados, uid, playing, members);
+    botao.querySelector('.sr-only').textContent = `Você já zerou (${i + 1}º lugar)`;
+    await mesa.solta(i);
+    toast(`Zerado! Você chegou em ${i + 1}º. Tua estatueta de ${METAIS[i % METAIS.length].nome} tá na mesa.`);
+    zerando = false;
+  });
+  sec.addEventListener('click', async (e) => {
+    const desfaz = e.target.closest('[data-desfaz-zerei]');
+    if (!desfaz) return;
+    if (!(await confirmInline(desfaz, 'Desfazer teu zerei? A estatueta sai da mesa e você perde o lugar na fila.', 'Desfazer'))) return;
+    const ok = await withBusy(desfaz, () => desfazZerei(round.id, uid).then(() => true));
+    if (ok) {
+      toast('Zerei desfeito. Bora jogar.');
+      await ctx.refresh();
+    }
+  });
 
   main.querySelector('[data-announce]')?.addEventListener('click', extra.announce);
   if (playing) bindRating(main.querySelector('.resenhas'), data, ctx);
@@ -91,6 +162,17 @@ export function renderPlay(main, data, ctx, extra) {
   bindDates(main, data, ctx);
   bindQuestions(main, data, ctx);
   entrar(main.querySelectorAll('.falta, .info, .placar'), 120, 60);
+}
+
+// Texto das estatuetas (a mesa é decorativa pro leitor de tela): quem zerou, em ordem.
+function zeradosHtml(zerados, uid, playing, members) {
+  const total = members.filter((m) => m.approved).length;
+  const eu = zerados.some((m) => m.id === uid);
+  const lista = zerados.length
+    ? `<ol>${zerados.map((m, i) => `<li><b>${i + 1}º</b> ${m.id === uid ? 'você' : esc(m.name ?? 'Ex-sócio')}</li>`).join('')}</ol>`
+    : (playing ? 'ninguém ainda. A estatueta de ouro tá esperando.' : 'ninguém.');
+  return `<div class="zerados actions"><p>${zerados.length ? `${zerados.length} de ${total} zeraram: ` : 'Quem zerou: '}${lista}</p>
+    ${playing && eu ? '<button class="btn btn--ghost btn--sm" type="button" data-desfaz-zerei>Desfazer meu zerei</button>' : ''}</div>`;
 }
 
 // ------------------------------------------------------------ ficha do jogo + placar da votação
@@ -243,9 +325,6 @@ async function openCalendar(gatilho, mesa, data, ctx) {
   modal.innerHTML = `<div class="modal__fundo" data-fechar></div><div class="folha papel">${folhaHtml(data, picked)}</div>`;
   modal.querySelector('[data-titulo]').id = 'cal-titulo';
   modal.setAttribute('aria-labelledby', 'cal-titulo');
-  let board = [];
-  try { board = await listBoard(data.round.id); } catch (err) { console.error(err); }
-  const livre = montaQuadro(modal.querySelector('.ql'), { roundId: data.round.id, uid: data.uid, pages, board, pagina: pageHtml });
   document.body.append(modal);
   const fundo = modal.querySelector('.modal__fundo');
   const folha = modal.querySelector('.folha');
@@ -416,7 +495,9 @@ async function openBoard(gatilho, mesa, data, ctx, pages) {
     <div class="modal__acoes"><button class="btn" type="button" data-fechar>Fechar o quadro</button></div></div>`;
   let board = [];
   try { board = await listBoard(data.round.id); } catch (err) { console.error(err); }
-  const livre = montaQuadro(modal.querySelector('.ql'), { roundId: data.round.id, uid: data.uid, pages, board, pagina: pageHtml });
+  const livre = montaQuadro(modal.querySelector('.ql'), {
+    uid: data.uid, pages, board, pagina: pageHtml, salvar: (estado) => saveBoard(data.round.id, data.uid, estado),
+  });
   document.body.append(modal);
   const fundo = modal.querySelector('.modal__fundo');
   const quadro = modal.querySelector('.quadro');

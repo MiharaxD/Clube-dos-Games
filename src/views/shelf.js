@@ -1,6 +1,6 @@
 // Estante (portada de estante.html): todo jogo que já foi escolhido, da rodada mais nova pra mais
 // velha, na prateleira 3D. Clicar na capinha abre a caixinha (manual); dali dá pra rever a mesa da rodada.
-// Sem a fila de "quem zerou" do mock: "zerou" não existe no modelo de dados.
+// Sem a fila de "quem zerou" do mock: quem zerou aparece na mesa da rodada (zerei/{uid}).
 import { listGames, listRatings, listRounds } from '../api.js';
 import { average } from '../lib/tally.js';
 import { esc, fmtScore } from '../lib/util.js';

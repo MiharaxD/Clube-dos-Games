@@ -461,9 +461,13 @@ tarja e preço aparecem, o carimbo SEU bate e a caixa volta pro nicho.
 ### Mesa 3D (jogando, encerrada)
 No lugar do h1 "FASE N", uma **faixa de pano** vermelha pendurada ("Jogo escolhido" / "Encerrado") e um bilhete com o que
 falta. A mesa é CSS 3D puro (caixas de faces, câmera que acompanha o mouse no PC): abajur aceso (a luz dominante), capinha do
-vencedor com a coroa, console e controle; no jogando o **calendário** de mesa (a folha voa pra frente e os dias oferecidos são
-circulados); na encerrada o **quadro de cortiça**, onde cada nota vira uma página de caderno pregada. Cliques em botões reais
-(.alvo, ≥ 44px) por cima da projeção. Finalizar a encerrada faz tudo da mesa voar pra cima.
+vencedor com a coroa, console e controle. No jogando: **calendário** de mesa (a folha voa pra frente e os dias oferecidos são
+circulados), a capinha em pé **em cima do videogame**, **estatuetas** de quem zerou (pedestal de pedra, boneco de metal na cor
+da posição: ouro, prata, bronze e metais próprios; a cabeça é a foto, sempre virada pra câmera) que caem do céu com squash e
+fazem a mesa pular, o **botão ZEREI** de fliperama na ponta e o **quadro de jogando** no fundo (post-its coloridos com
+comentários curtos, rabiscos e fotos; 3 páginas, a setinha gira o quadro meia volta e ele volta na outra página). Na
+encerrada o **quadro de cortiça** da resenha, onde cada nota vira uma página de caderno pregada, e o quadro de jogando guardado
+ao lado. Cliques em botões reais (.alvo, ≥ 44px) por cima da projeção. Finalizar a encerrada faz tudo da mesa voar pra cima.
 
 ### Capa na prateleira (versão plana)
 Capa 3:4 com sombra de estojo apoiada no beiço de madeira (rack escuro, tábuas com veio sutil), etiqueta de preço âmbar à mão no canto superior direito (5deg), tarja rosa à esquerda, nome em Title abaixo, metadados em muted e as ações empilhadas no rodapé. A etiqueta de lombada de locadora (papel, título Bebas, plataforma e quem sugeriu em Special Elite, "LOCAÇÃO 2 DIAS" como piada de interface) é usada onde a capa não aparece. Hover do link: nome em âmbar.
