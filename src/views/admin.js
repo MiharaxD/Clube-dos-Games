@@ -1,6 +1,6 @@
 // Admin (Balcão): aprova quem está esperando. (Novos admins só pelo console, em config/admins.)
-import { approveMember } from '../api.js';
-import { esc, toast, withBusy } from '../lib/util.js';
+import { approveMember, removeMember } from '../api.js';
+import { confirmInline, esc, toast, withBusy } from '../lib/util.js';
 import { avatar, empty, memberChip } from './parts.js';
 
 export async function renderAdmin(main, { session, refresh }) {
@@ -29,11 +29,22 @@ export async function renderAdmin(main, { session, refresh }) {
       </section>
       <section aria-labelledby="socios-title">
         <h2 id="socios-title">Sócios</h2>
-        <ul class="list">${approved.map((m) => `<li>${memberChip(m, { platforms: true })}</li>`).join('')}</ul>
+        <ul class="list">${approved.map((m) => `<li>${memberChip(m, { platforms: true })}${m.id === session.user.uid ? '' : `
+          <div class="actions"><button class="btn btn--sm" type="button" data-remove="${esc(m.id)}" data-name="${esc(m.name)}">Remover<span class="sr-only"> ${esc(m.name)}</span></button></div>`}</li>`).join('')}</ul>
       </section>
     </div>`;
 
   main.addEventListener('click', async (event) => {
+    const remove = event.target.closest('[data-remove]');
+    if (remove) {
+      if (!(await confirmInline(remove, `Remover ${remove.dataset.name} do clube? Se entrar de novo, volta pra fila.`, 'Remover sócio'))) return;
+      const feito = await withBusy(remove, () => removeMember(remove.dataset.remove).then(() => true));
+      if (feito) {
+        toast('Sócio removido.');
+        await refresh();
+      }
+      return;
+    }
     const button = event.target.closest('[data-approve]');
     if (!button) return;
     const ok = await withBusy(button, () => approveMember(button.dataset.approve).then(() => true));

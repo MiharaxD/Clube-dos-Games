@@ -54,6 +54,11 @@ export function approveMember(uid) {
   return updateDoc(doc(db, 'members', uid), { approved: true });
 }
 
+// Admin tira o sócio do clube. Jogos/votos dele ficam, e o nome vira "Ex-sócio".
+export function removeMember(uid) {
+  return deleteDoc(doc(db, 'members', uid));
+}
+
 export function updateProfile(uid, { name, platforms }) {
   return updateDoc(doc(db, 'members', uid), { name, platforms });
 }
@@ -240,6 +245,43 @@ export function saveBoard(roundId, uid, { note, strokes, images }) {
     images,
     updatedAt: serverTimestamp(),
   });
+}
+
+// ---------------------------------------------------------------- quadro de jogando (diário)
+
+// 3 páginas por pessoa; doc "{uid}_{página}": { notes: [{x,y,text}], strokes, images }.
+// Devolve cada doc com .uid e .pagina já tirados do ID.
+export async function listDiario(roundId) {
+  const snap = await getDocs(collection(db, 'rounds', roundId, 'diario'));
+  return snap.docs.map((d) => {
+    const i = d.id.lastIndexOf('_');
+    return { ...d.data(), uid: d.id.slice(0, i), pagina: Number(d.id.slice(i + 1)) };
+  });
+}
+
+export function saveDiario(roundId, uid, pagina, { notes, strokes, images }) {
+  return setDoc(doc(db, 'rounds', roundId, 'diario', `${uid}_${pagina}`), {
+    notes,
+    strokes,
+    images,
+    updatedAt: serverTimestamp(),
+  });
+}
+
+// ---------------------------------------------------------------- zerei
+
+// Ordem de chegada: quem zerou primeiro vem primeiro (ouro).
+export async function listZerei(roundId) {
+  const snap = await getDocs(query(collection(db, 'rounds', roundId, 'zerei'), orderBy('at')));
+  return snap.docs.map(withId);
+}
+
+export function marcaZerei(roundId, uid) {
+  return setDoc(doc(db, 'rounds', roundId, 'zerei', uid), { at: serverTimestamp() });
+}
+
+export function desfazZerei(roundId, uid) {
+  return deleteDoc(doc(db, 'rounds', roundId, 'zerei', uid));
 }
 
 // ---------------------------------------------------------------- perguntas

@@ -203,6 +203,13 @@ describe('(d) não aprovado não escreve nada', () => {
     await assertSucceeds(updateDoc(doc(as('admin'), 'members/pendente'), { approved: true }));
   });
 
+  it('só o admin remove sócio, e não a si mesmo', async () => {
+    await assertFails(deleteDoc(doc(as('alice'), 'members/bob')));
+    await assertFails(deleteDoc(doc(as('alice'), 'members/alice')));
+    await assertFails(deleteDoc(doc(as('admin'), 'members/admin')));
+    await assertSucceeds(deleteDoc(doc(as('admin'), 'members/bob')));
+  });
+
   it('controle: membro aprovado edita o próprio perfil, mas não o approved', async () => {
     await assertSucceeds(updateDoc(doc(as('alice'), 'members/alice'), { name: 'Alice B.', platforms: ['PC', 'Xbox'] }));
     await assertFails(updateDoc(doc(as('alice'), 'members/alice'), { approved: false }));
@@ -461,5 +468,83 @@ describe('quadro livre (encerrada)', () => {
 
   it('pendente não grava', async () => {
     await assertFails(setDoc(doc(as('pendente'), 'rounds/r-enc/board/pendente'), board()));
+  });
+});
+
+// ---------------------------------------------------------------------------
+describe('quadro de jogando (diario)', () => {
+  const img = (extra = {}) => ({ data: 'data:image/jpeg;base64,' + 'A'.repeat(40), x: 10, y: 20, w: 200, ...extra });
+  const notinha = (extra = {}) => ({ x: 40, y: 60, text: 'Morri pro peixe de novo', ...extra });
+  const pagina = (extra = {}) => ({ notes: [notinha()], strokes: ['2|3|1,2 3,4'], images: [img()], updatedAt: serverTimestamp(), ...extra });
+
+  it('cada um grava as próprias 3 páginas em "jogando"', async () => {
+    for (const p of [0, 1, 2]) await assertSucceeds(setDoc(doc(as('alice'), `rounds/r-jog/diario/alice_${p}`), pagina()));
+  });
+
+  it('não existe 4ª página', async () => {
+    await assertFails(setDoc(doc(as('alice'), 'rounds/r-jog/diario/alice_3'), pagina()));
+  });
+
+  it('ninguém grava a página dos outros', async () => {
+    await assertFails(setDoc(doc(as('alice'), 'rounds/r-jog/diario/bob_0'), pagina()));
+  });
+
+  it('fora de "jogando" é negado (fica só pra ver)', async () => {
+    await assertFails(setDoc(doc(as('alice'), 'rounds/r-enc/diario/alice_0'), pagina()));
+    await assertFails(setDoc(doc(as('alice'), 'rounds/r-vot/diario/alice_0'), pagina()));
+  });
+
+  it('notinha acima de 140 caracteres ou vazia é negada', async () => {
+    await assertFails(setDoc(doc(as('alice'), 'rounds/r-jog/diario/alice_0'), pagina({ notes: [notinha({ text: 'a'.repeat(141) })] })));
+    await assertFails(setDoc(doc(as('alice'), 'rounds/r-jog/diario/alice_0'), pagina({ notes: [notinha({ text: '' })] })));
+  });
+
+  it('mais de 8 notinhas ou 3 fotos por página é negado', async () => {
+    await assertFails(setDoc(doc(as('alice'), 'rounds/r-jog/diario/alice_0'), pagina({ notes: Array.from({ length: 9 }, () => notinha()) })));
+    await assertFails(setDoc(doc(as('alice'), 'rounds/r-jog/diario/alice_0'), pagina({ images: [img(), img(), img(), img()] })));
+  });
+
+  it('não dá pra dar nota pelo quadro de jogando', async () => {
+    await assertFails(setDoc(doc(as('alice'), 'rounds/r-jog/diario/alice_0'), pagina({ score: 10 })));
+  });
+
+  it('pendente não grava nem lê', async () => {
+    await assertFails(setDoc(doc(as('pendente'), 'rounds/r-jog/diario/pendente_0'), pagina()));
+    await assertFails(getDoc(doc(as('pendente'), 'rounds/r-jog/diario/alice_0')));
+  });
+});
+
+// ---------------------------------------------------------------------------
+describe('zerei', () => {
+  const zerei = () => ({ at: serverTimestamp() });
+
+  it('cada um marca o próprio zerei em "jogando" e pode desfazer', async () => {
+    await assertSucceeds(setDoc(doc(as('alice'), 'rounds/r-jog/zerei/alice'), zerei()));
+    await assertSucceeds(getDoc(doc(as('bob'), 'rounds/r-jog/zerei/alice')));
+    await assertSucceeds(deleteDoc(doc(as('alice'), 'rounds/r-jog/zerei/alice')));
+  });
+
+  it('ninguém zera no nome dos outros nem apaga o zerei alheio', async () => {
+    await assertFails(setDoc(doc(as('alice'), 'rounds/r-jog/zerei/bob'), zerei()));
+    await assertSucceeds(setDoc(doc(as('bob'), 'rounds/r-jog/zerei/bob'), zerei()));
+    await assertFails(deleteDoc(doc(as('alice'), 'rounds/r-jog/zerei/bob')));
+  });
+
+  it('data inventada (furar a fila do ouro) é negada', async () => {
+    await assertFails(setDoc(doc(as('alice'), 'rounds/r-jog/zerei/alice'), { at: Timestamp.fromDate(new Date('2020-01-01')) }));
+  });
+
+  it('não dá pra regravar por cima (mudar a posição)', async () => {
+    await assertSucceeds(setDoc(doc(as('alice'), 'rounds/r-jog/zerei/alice'), zerei()));
+    await assertFails(setDoc(doc(as('alice'), 'rounds/r-jog/zerei/alice'), zerei()));
+  });
+
+  it('fora de "jogando" é negado', async () => {
+    await assertFails(setDoc(doc(as('alice'), 'rounds/r-enc/zerei/alice'), zerei()));
+    await assertFails(setDoc(doc(as('alice'), 'rounds/r-vot/zerei/alice'), zerei()));
+  });
+
+  it('pendente não zera', async () => {
+    await assertFails(setDoc(doc(as('pendente'), 'rounds/r-jog/zerei/pendente'), zerei()));
   });
 });
