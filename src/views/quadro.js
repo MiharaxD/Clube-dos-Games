@@ -5,10 +5,10 @@ import { saveBoard } from '../api.js';
 import { icon } from '../lib/icons.js';
 import { CAPA_DATA_MAX, esc, fotoParaQuadro, safeImgData, toast } from '../lib/util.js';
 
-export const LARG = 1000;
-export const ALT = 700;
+export const LARG = 1730;
+export const ALT = 1210;
 const NOTA_L = 170;
-const ZOOM_MAX = 3;
+const ZOOM_MAX = 5;
 const MAX_TRACOS = 150;
 const MAX_PONTOS = 300;
 const MAX_FOTOS = 3;
