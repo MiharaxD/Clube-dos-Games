@@ -1,5 +1,5 @@
 // Motor de movimento (WAAPI), extraído dos mocks. Personalidade "objeto físico": plástico rígido,
-// quase sem overshoot. Só anima transform e opacity.
+// quase sem overshoot (exceção: `elastico`, só no sorteio). Só anima transform e opacity.
 // Durações: rápida 140–260ms (controles), padrão 560–760ms (tampa, voo), camada secundária ~1300ms.
 
 // Reduced-motion: tudo pula direto para o quadro final. (Contraste alto não mexe no movimento:
@@ -92,4 +92,27 @@ export function rolaNaMao(el) {
   el.addEventListener('touchend', () => {
     y0 = null;
   });
+}
+
+// Elástico: SÓ para a sequência do sorteio (DESIGN.md, exceção registrada); no resto do site
+// o movimento continua "quase sem overshoot". Simula uma mola amortecida de 0 a 1 e devolve
+// keyframes amostrados (sem linear(), que iPhone antigo não tem). quadro(p) recebe o progresso
+// (passa de 1 e volta) e devolve o keyframe. Uso: const e = elastico(fn); anim(el, e.quadros, { duration: e.ms }).
+export function elastico(quadro, { rigidez = 180, amortece = 13, amostras = 36 } = {}) {
+  const dt = 1 / 600;
+  const xs = [0];
+  let x = 0;
+  let v = 0;
+  for (let t = 0; t < 3; t += dt) {
+    v += (-rigidez * (x - 1) - amortece * v) * dt;
+    x += v * dt;
+    xs.push(x);
+    if (Math.abs(x - 1) < 0.002 && Math.abs(v) < 0.02) break;
+  }
+  const quadros = [];
+  for (let i = 0; i < amostras; i++) {
+    const p = i === amostras - 1 ? 1 : xs[Math.round((i / (amostras - 1)) * (xs.length - 1))];
+    quadros.push({ ...quadro(p), offset: i / (amostras - 1) });
+  }
+  return { quadros, ms: Math.round(xs.length * dt * 1000) };
 }

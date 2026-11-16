@@ -268,7 +268,7 @@ export async function openReading({ game, members, uid, fonte, gatilho, front, c
     if (botao) {
       if (cx.ocupado || botao.disabled) return;
       botao.disabled = true;
-      votar.toggle().then((votado) => {
+      votar.toggle(cx.acoes).then((votado) => {
         // refaz o botão com o estado novo e devolve o foco a ele
         botao.outerHTML = botaoVotar(votado ?? votar.voted());
         cx.acoes.querySelector('[data-votar]')?.focus();

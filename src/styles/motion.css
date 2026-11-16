@@ -22,7 +22,7 @@
   .tv__fase { text-shadow: none; }
   .neon__l.apaga { opacity: 1; }
   .btn:active { transform: none; }
-  .roulette__item.is-lit { transform: none; }
+  .sorteio__raios { animation: none; }
 }
 @media (prefers-contrast: more) {
   .cena-grao, .poeira, .tv__rolo { display: none; }
@@ -30,4 +30,7 @@
   .tv__fase { text-shadow: none; }
   .cena-vinheta { background: radial-gradient(ellipse 85% 80% at 50% 42%, transparent 55%, rgb(12 6 9 / 0.3) 100%); }
   .cena-luz { display: none; }
+  /* sorteio: sem halo, clarão, barras RGB nem fumaça; estática mais fraca */
+  .sorteio__raios, .sorteio__clarao, .sorteio__rgb, .fumaca { display: none; }
+  .sorteio__tv .tv-chiado { opacity: 0.2; }
 }

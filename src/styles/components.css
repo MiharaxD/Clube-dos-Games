@@ -238,6 +238,9 @@ fieldset { border: 0; padding: 0; min-width: 0; }
   background: var(--ink); color: var(--deep); font-weight: 700; box-shadow: var(--sh-aviso);
 }
 .toast[data-kind='error'] { background: var(--pink); cursor: pointer; }
+/* 'pop': pipoca na tela, não pega clique e fica por cima até do modal da caixinha (z 100) */
+.toast[data-kind='pop'] { background: var(--pink); z-index: 140; pointer-events: none; animation: toast-pop 320ms cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+@keyframes toast-pop { from { scale: 0.5; opacity: 0; } to { scale: 1; opacity: 1; } }
 .toast[hidden] { display: none; }
 
 /* ---------- Capa 3:4 ---------- */

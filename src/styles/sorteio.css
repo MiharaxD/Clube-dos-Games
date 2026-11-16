@@ -1,0 +1,160 @@
+/* ==========================================================================
+   Sorteio (src/views/sorteio.js): overlay de tela cheia ao fechar a votação.
+   Vencedor único em evidência; no empate, as capas entram na TV (clone 2D-por-fora da cadeia 3D
+   da página), glitch, roleta de cassino no vidro, explosão e o sorteado saindo pelo vidro.
+   Movimento por WAAPI; aqui só o estado de repouso. Reduced-motion/contraste em motion.css.
+   ========================================================================== */
+.sorteio {
+  /* dourado da roleta e vidro dos cacos: variações dos tokens âmbar e teal sobre deep */
+  --ouro-luz: color-mix(in oklab, var(--amber), var(--ink) 60%);
+  --ouro: color-mix(in oklab, var(--amber), var(--deep) 30%);
+  --ouro-sombra: color-mix(in oklab, var(--amber), var(--deep) 65%);
+  --vidro-1: color-mix(in oklab, var(--teal) 40%, var(--deep));
+  --vidro-2: color-mix(in oklab, var(--teal) 25%, var(--deep));
+  --vidro-3: color-mix(in oklab, var(--teal) 12%, var(--deep));
+  position: fixed; inset: 0; z-index: 110; display: grid; place-items: center; padding: 16px;
+  overflow: hidden; overflow: clip; isolation: isolate; /* clip: nada vira área de rolagem (o foco rolava o overlay) */
+}
+html.sorteando .toast { z-index: 130; } /* erro do withBusy aparece por cima do overlay */
+.sorteio__fundo {
+  position: fixed; inset: 0; z-index: 0;
+  background: radial-gradient(ellipse 70% 60% at 50% 42%, rgb(30 14 22 / 0.94), rgb(12 6 9 / 0.98));
+}
+/* fundo de comemoração: halo âmbar e rosa girando devagar (luz com dono: o "palco" do sorteio) */
+.sorteio__raios {
+  position: fixed; left: 50%; top: 42%; z-index: 1; width: 150vmax; aspect-ratio: 1; translate: -50% -50%;
+  pointer-events: none; opacity: 0.55;
+  background:
+    radial-gradient(closest-side, rgb(255 193 94 / 0.2), rgb(255 92 138 / 0.07) 45%, transparent 70%),
+    repeating-conic-gradient(from 0deg, rgb(255 193 94 / 0.06) 0 8deg, transparent 8deg 24deg);
+  -webkit-mask: radial-gradient(closest-side, var(--deep) 20%, transparent 70%); /* máscara: só o alfa conta */
+  mask: radial-gradient(closest-side, var(--deep) 20%, transparent 70%);
+  animation: sorteio-gira 40s linear infinite;
+}
+@keyframes sorteio-gira { to { rotate: 360deg; } }
+.sorteio__festa { position: absolute; inset: 0; z-index: 6; width: 100%; height: 100%; pointer-events: none; }
+
+.sorteio__palco {
+  position: relative; z-index: 3; display: flex; flex-direction: column; align-items: center; gap: 12px;
+  width: min(100%, 1040px); max-height: 100%; text-align: center;
+}
+/* texto sempre sobre superfície sólida: placa deep atrás do título e da dica */
+.sorteio__titulo, .sorteio__dica { padding: 4px 12px; background: var(--deep); border-radius: var(--r-bar); }
+.sorteio__titulo { font: 400 clamp(2rem, 7vw, 3rem)/1 var(--f-placa); letter-spacing: 0.05em; color: var(--amber); overflow-wrap: anywhere; }
+.sorteio__titulo:focus { outline: none; }
+.sorteio__dica { max-width: 46ch; color: var(--ink); font-weight: 700; }
+.sorteio__erro { padding: 4px 12px; background: var(--deep); color: var(--pink); font-weight: 700; }
+.sorteio__erro[hidden] { display: none; }
+.sorteio__acoes { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.sorteio__acoes .btn { min-height: var(--toque); }
+
+/* evidência: grade dos empatados (2 a 12), tamanho pela largura e pela altura da tela */
+.sorteio__capas {
+  --w: min(190px, (100vw - 32px - (var(--cols, 2) - 1) * 12px) / var(--cols, 2), ((100dvh - 300px) / var(--rows, 1) - 44px) * 0.75);
+  display: grid; grid-template-columns: repeat(var(--cols, 2), var(--w)); gap: 12px; justify-content: center;
+}
+.sorteio__jogo { display: grid; gap: 6px; margin: 0; }
+.sorteio__jogo figcaption {
+  padding: 2px 4px; background: var(--deep); color: var(--ink); font: 700 clamp(0.75rem, 2.6vw, 0.9375rem)/1.2 var(--f-texto);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere;
+}
+.sorteio__capa { position: relative; }
+
+/* tela final: a capa grande vem primeiro, nome e votos embaixo */
+.sorteio--final .sorteio__capas { order: -1; display: block; }
+.sorteio__heroi { position: relative; width: min(300px, 64vw, calc((100dvh - 290px) * 0.75)); }
+
+/* capas voando até a TV (fora da grade, em coordenadas da tela) */
+.sorteio__voo { position: fixed; z-index: 5; pointer-events: none; }
+
+/* ---------- TV do sorteio (clone de parts.tv) ---------- */
+.sorteio__tv {
+  position: fixed; left: 50%; top: 50%; z-index: 2; width: min(94vw, 600px, calc((100dvh - 150px) * 1.1));
+  translate: -50% -50%; pointer-events: none;
+}
+.sorteio__tv .mesa-tv { width: 100%; padding-top: 40px; }
+.sorteio__tv .movel-tv { display: none; }
+.sorteio__tv .tv-chiado { opacity: 0.4; } /* estática baixa: o vidro não "pisca" claro */
+.sorteio__vidro--furado { background: var(--deep); box-shadow: inset 0 0 8cqw 3cqw var(--deep); }
+.sorteio__vidro--furado::before, .sorteio__vidro--furado::after { display: none; }
+
+/* barras de separação RGB do glitch: deslizam (transform), não piscam */
+.sorteio__rgb { position: absolute; inset: 0; z-index: 2; pointer-events: none; overflow: hidden; }
+.sorteio__rgb i { position: absolute; left: -10%; right: -10%; height: 9%; animation: sorteio-rgb 700ms steps(7) infinite; }
+.sorteio__rgb i:nth-child(1) { top: 18%; background: linear-gradient(90deg, rgb(255 92 138 / 0.35), rgb(70 195 181 / 0.3)); }
+.sorteio__rgb i:nth-child(2) { top: 52%; height: 5%; background: linear-gradient(90deg, rgb(70 195 181 / 0.3), rgb(255 193 94 / 0.3)); animation-duration: 900ms; animation-direction: reverse; }
+.sorteio__rgb i:nth-child(3) { top: 74%; height: 3%; background: rgb(255 92 138 / 0.28); animation-duration: 1100ms; }
+@keyframes sorteio-rgb {
+  0% { transform: translate(-4%, 0); }
+  30% { transform: translate(3%, 140%); }
+  60% { transform: translate(-2%, -80%); }
+  100% { transform: translate(4%, 60%); }
+}
+
+/* rachaduras: linhas radiais no vidro, desenhadas por stroke-dashoffset */
+.sorteio__racha { position: absolute; inset: 0; z-index: 4; width: 100%; height: 100%; pointer-events: none; }
+.sorteio__racha path {
+  fill: none; stroke: var(--ink); stroke-opacity: 0.8; stroke-width: 1.4; vector-effect: non-scaling-stroke;
+  stroke-linejoin: bevel; stroke-dasharray: 1; stroke-dashoffset: 1;
+}
+
+/* ---------- Roleta de cassino (src/views/roulette.js), dentro do vidro ---------- */
+.roda { position: absolute; z-index: 1; left: 50%; top: 3%; height: 76%; aspect-ratio: 1; translate: -50% 0; }
+.roda__disco {
+  position: absolute; inset: 7%; border-radius: 50%; overflow: hidden;
+  background: repeating-conic-gradient(from -0.7deg, rgb(255 193 94 / 0.75) 0 1.4deg, transparent 1.4deg var(--s)), var(--fatias);
+  box-shadow: inset 0 0 0 1px rgb(12 6 9 / 0.6);
+}
+.roda__fatia { position: absolute; inset: 0; rotate: var(--a); }
+.roda__capa { position: absolute; left: 50%; top: 4%; width: var(--cw); translate: -50% 0; }
+.roda__capa .cover { box-shadow: 0 0 0 1px rgb(12 6 9 / 0.7); }
+.roda__pino { position: absolute; left: 50%; top: 0; width: 5%; height: 50%; translate: -50% 0; rotate: var(--a); transform-origin: 50% 100%; }
+.roda__pino::before {
+  content: ''; position: absolute; left: 0; top: 1%; width: 100%; aspect-ratio: 1; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, var(--ouro-luz), var(--amber) 45%, var(--ouro-sombra));
+}
+/* aro dourado fixo e cubo central */
+.roda__aro {
+  position: absolute; inset: 0; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(closest-side, transparent 86%, var(--ouro-sombra) 86.5%, var(--amber) 90%, var(--ouro) 95%, var(--ouro-sombra) 99%, transparent 100%);
+}
+.roda__cubo {
+  position: absolute; inset: 42%; border-radius: 50%;
+  background: radial-gradient(circle at 38% 34%, var(--ouro-luz), var(--amber) 35%, var(--ouro) 70%, var(--ouro-sombra));
+  box-shadow: 0 0 0 2px rgb(12 6 9 / 0.6);
+}
+/* ponteiro fixo no topo: lingueta que "bate" nos pinos (gira na base) */
+.roda__ponteiro {
+  position: absolute; left: 50%; top: -3%; width: 10%; height: 15%; translate: -50% 0; transform-origin: 50% 12%;
+  background: linear-gradient(180deg, color-mix(in oklab, var(--pink), var(--ink) 55%), var(--pink) 55%, color-mix(in oklab, var(--pink), var(--deep) 40%));
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+}
+/* OSD: nome do jogo sob o ponteiro, numa faixa sólida acima das scanlines */
+.roda-osd {
+  position: absolute; z-index: 4; left: 8%; right: 8%; bottom: 3%; padding: 0.6cqw 2cqw;
+  background: var(--deep); color: var(--teal); border-radius: var(--r-bar);
+  font: 400 6.4cqw/1.1 var(--f-placa); letter-spacing: 0.06em; text-align: center;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.roda-osd--fim { color: var(--amber); }
+
+/* ---------- Explosão: camada 2D por cima de tudo ---------- */
+.sorteio__fx { position: fixed; inset: 0; z-index: 5; pointer-events: none; }
+.sorteio__cacos { position: fixed; }
+.caco {
+  position: absolute; inset: 0;
+  background:
+    linear-gradient(125deg, color-mix(in srgb, var(--ink) 28%, transparent), transparent 35%),
+    radial-gradient(ellipse 75% 70% at 50% 45%, var(--vidro-1), var(--vidro-2) 55%, var(--vidro-3));
+}
+.sorteio__clarao {
+  position: fixed; width: 60vmin; aspect-ratio: 1; border-radius: 50%; opacity: 0;
+  background: radial-gradient(closest-side, rgb(255 193 94 / 0.7), rgb(255 92 138 / 0.18) 55%, transparent);
+}
+.sorteio__onda {
+  position: fixed; width: 30vmin; aspect-ratio: 1; border-radius: 50%; opacity: 0;
+  border: 3px solid rgb(255 193 94 / 0.8);
+}
+.faisca, .fumaca { position: fixed; left: var(--fx-x, 50%); top: var(--fx-y, 50%); border-radius: 50%; }
+.faisca { width: 5px; height: 5px; background: var(--ouro-luz); box-shadow: 0 0 6px 1px rgb(255 193 94 / 0.8); }
+.fumaca { width: 90px; height: 90px; opacity: 0; background: radial-gradient(closest-side, color-mix(in srgb, var(--muted) 45%, transparent), transparent); }

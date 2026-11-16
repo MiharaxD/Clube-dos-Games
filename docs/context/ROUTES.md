@@ -6,14 +6,14 @@
   carimbo, adesivo, casca, telas soltas), `rack.css` (prateleira 3D, estojo, post-it, ticket, etiqueta VOTADO,
   tela Estante), `caixinha.css` (modal do estojo, manual, CD, formulário da sugestão), `round.css` (grade da
   rodada, faixa de pano, mesa 3D, calendário, quadro de cortiça, balcão), `stats.css`, `pages.css` (perfil,
-  Balcão/admin, roleta), `login.css` (cena do login: TV/prancheta/videogame na mesa), `motion.css` (reduced-motion desliga movimento; contraste alto só tira grão/brilho; sempre por último; `calma` em `src/lib/motion.js` = só reduced-motion). Seções por comentário
+  Balcão/admin), `login.css` (cena do login: TV/prancheta/videogame na mesa), `sorteio.css` (overlay do sorteio, roleta, cacos), `motion.css` (reduced-motion desliga movimento; contraste alto só tira grão/brilho; sempre por último; `calma` em `src/lib/motion.js` = só reduced-motion). Seções por comentário
   `/* ---------- Nome ---------- */`. JS visual: `src/views/parts.js` (`neonSign`, `tv`, `cover`/`genericCover`/
   `coverPalette`, `priceTag`, `stamp`, `sticker`, `stateChip`, `phaseSteps`, avatar), `src/views/rack.js`
   (prateleira 3D: `rackHtml`, `nicho`, `caseHtml`, `postit`, `vitrine`, `bindTilt`), `src/views/caixinha.js`
   (`Estojo`, `openReading` com mural de recados em sugerindo/votando), `src/views/tema.js` (flâmula do tema da
   rodada acima da prateleira; admin clica e edita), `src/views/mesa.js` (`caixa()`, layouts PC/celular por fase, inclusive `login`; `mountMesa`),
-  `src/lib/motion.js` (motor WAAPI + `rolaNaMao`), `src/lib/rickroll.js` (easter egg de toda TV: clique →
-  pulo, chiado em canvas + ruído WebAudio, vídeo `public/rickroll.mp4` (H.264/AAC, toca em celular); TV comum liga por `[data-tv-liga]`), `src/lib/scene.js` (luz nasce de `data-luz="tv|abajur|neon"`;
+  `src/lib/motion.js` (motor WAAPI + `rolaNaMao` + `elastico`, este só no sorteio), `src/lib/festa.js` (confete em canvas), `src/lib/rickroll.js` (easter egg de toda TV: clique →
+  pulo, chiado em canvas + ruído WebAudio (`chiar`/`somDeChiado` exportados, reusados no sorteio), vídeo `public/rickroll.mp4` (H.264/AAC, toca em celular); TV comum liga por `[data-tv-liga]`), `src/lib/scene.js` (luz nasce de `data-luz="tv|abajur|neon"`;
   `placeLights` após cada render), `src/lib/icons.js`. Fontes em `public/fonts/` (licenças em `LICENSE.md`).
 - **Testes:** `npm run build`; detector: `impeccable detect --json index.html src`
   (script em `~/.claude/plugins/cache/impeccable/.../scripts/impeccable`).
@@ -47,11 +47,16 @@
   carregando, erro; login é `src/views/login.js`) → a tela em `src/views/`: `round.js` (carrega a rodada, cabeçalho/ficha/TV de
   sugerindo/votando, balcão do admin) que delega para `phases/suggest.js` | `phases/vote.js` |
   `phases/play.js` (jogando/encerrada: monta a página inteira com a mesa); `shelf.js`, `stats.js`,
-  `profile.js`, `admin.js`; `roulette.js` (sorteio de empate).
+  `profile.js`, `admin.js`; `sorteio.js` (overlay de fechar a votação, chamado por `closeVoting` em `phases/vote.js`:
+  vencedor único ou empate com clone da TV, glitch, roda de `roulette.js` e explosão; voa até `#caso-obj`).
 - **Cuidados:** telas recriam `<main>` a cada navegação (a casca aparece antes de `listMembers()` voltar; `rotaAtual` descarta navegação velha); listeners ficam no container da tela. A espera de aprovação reconfere `getMember` ao voltar pra aba. O `toast()` fala por `#toast-status`/`#toast-alert` (balão `aria-hidden`).
   Ações chamam `ctx.refresh()` depois de gravar. O `route()` põe `document.title` (campo `title` em `ROUTES`),
   foca o `<main>` e a casca traz o link `.pular`; `href="#main"` cairia no roteador, então o clique é interceptado.
   `.fatos`/`.fato` existem em `round.css` (escopo `.info`) e em `stats.css`: não remover o escopo.
+  Voto: desfazer é limitado a 2 por rodada (pegadinha só da UI, contador em `localStorage` `clube:desfez:<rodada>:<uid>`
+  em `phases/vote.js`; 3ª tentativa = toast `'pop'` (2,5 s, sem clique, acima do modal), insistir = `window.open` do Rick Roll; as rules não limitam).
+  Sorteio: sorteia e grava ANTES de animar; o overlay `.sorteio` não usa `.modal` (o `ctx.refresh()` é o próprio
+  roteador e apaga modais), reaplica `inert`/`trava` depois do refresh e aborta no `hashchange`.
 
 ## Dados (Firestore) / regras de negócio
 - **Ir direto para:** `src/api.js` (todas as leituras/escritas), `firestore.rules`,

@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Telas avulsas: Seu perfil (carteirinha), Balcão (admin) e roleta do desempate.
+   Telas avulsas: Seu perfil (carteirinha) e Balcão (admin).
    ========================================================================== */
 
 .perfil > .cabeca, .tela-balcao > .cabeca { margin-bottom: 28px; }
@@ -33,28 +33,4 @@
 .ficha--mini .ficha__title { padding-right: 0; overflow-wrap: anywhere; min-width: 0; }
 @media (min-width: 760px) {
   .fichas { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; }
-}
-
-/* ---------- Roleta do desempate: grade de capas sobre deep ---------- */
-/* roleta do desempate */
-.roulette {
-  list-style: none; margin: 12px 0 0; padding: 16px 12px; background: var(--deep); border-radius: var(--r);
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 132px), 1fr)); gap: 16px 12px;
-}
-.roulette__item {
-  position: relative; display: grid; align-content: start; gap: 8px; padding: 8px 8px 10px;
-  border-radius: var(--r); outline: none; transition: transform 60ms linear;
-}
-/* contorno âmbar num pseudo-elemento: acende só por opacidade */
-.roulette__item::after {
-  content: ''; position: absolute; inset: 0; pointer-events: none;
-  border: 3px solid var(--amber); border-radius: var(--r); opacity: 0; transition: opacity 60ms linear;
-}
-.roulette__item.is-lit { transform: translateY(-4px); }
-.roulette__item.is-lit::after { opacity: 1; }
-.roulette__item.is-winner { background: rgb(255 193 94 / 0.14); }
-.roulette__art { position: relative; }
-.roulette__name { font: 700 1rem/1.25 var(--f-texto); overflow-wrap: anywhere; }
-@media (min-width: 760px) {
-  .roulette { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); padding: 20px 16px; }
 }

@@ -4,8 +4,10 @@
 - Os 7 marcos do pedido original: as 12 regras de negócio implementadas, README de setup,
   testes das rules passando no emulador, `DESIGN.md`.
 - **Visual "Sexta no quarto" em todas as telas** (login, espera, rodada nas 4 fases, estante, stats, perfil,
-  Balcão, roleta), portado dos mocks sem mudar modelo, rules nem `api.js`. Fluxo completo testado no emulador
+  Balcão), portado dos mocks sem mudar modelo, rules nem `api.js`. Fluxo completo testado no emulador
   (sugestão pela caixinha, voto pelo ticket, empate/roleta, calendário, resenha no quadro, encerrar, finalizar).
+- **Sorteio do fechamento** (`src/views/sorteio.js`): overlay animado ao fechar a votação (vencedor único e
+  empate com TV, roleta de cassino e explosão), mesmo payload gravado de antes.
 
 ## Pendências (prioridade)
 1. Usuário criar o projeto Firebase real e fazer o primeiro deploy (README §2–9, §13).
@@ -22,7 +24,8 @@
 - Login Google real (popup e redirect) e as rules no projeto real. No painel de preview do Claude o popup é
   bloqueado e o redirect do emulador não voltou logado (teste feito com credencial do emulador).
 - Busca RAWG com chave válida (só o modo manual foi testado) e capas com imagem real.
-- `prefers-reduced-motion`/`prefers-contrast` só por código (CSS + `calma`), sem emulação no navegador.
+- `prefers-contrast` só por código. `prefers-reduced-motion` emulado só no sorteio (Playwright); o resto, por código.
+- Sorteio no Safari/iPhone de verdade (testado só no Chromium; som do chiado depende do desbloqueio no clique).
 
 ## Limitações conhecidas
 - Chaves `VITE_*` (incl. RAWG) ficam visíveis no bundle; sem Cloud Functions não há como esconder.

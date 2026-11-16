@@ -388,7 +388,9 @@ Camadas irmãs da interface, `position: fixed/absolute; inset: 0; pointer-events
 
 **The Sem Filtro no 3D Rule.** Luz, glow, grão e vinheta nunca são pai nem o próprio elemento da prateleira 3D (nem da TV 3D): `opacity < 1`, `filter`, `mix-blend-mode`, `isolation`, `mask` e `clip-path` numa cadeia `preserve-3d` achatam o 3D.
 
-**The Movimento Opcional Rule.** Respiração da TV, poeira, lava e parallax são lentos e sutis (flicker nunca acima de 3 vezes por segundo, ciclo ≥ 5 s) e desligam com `prefers-reduced-motion`; `prefers-contrast: more` só remove grão, scanlines, aberração e brilho (não mexe no movimento). Carimbo e etiqueta VOTADO deixam de "bater" em reduced-motion e surgem num fade de 160 ms; a roleta desliga.
+**The Movimento Opcional Rule.** Respiração da TV, poeira, lava e parallax são lentos e sutis (flicker nunca acima de 3 vezes por segundo, ciclo ≥ 5 s) e desligam com `prefers-reduced-motion`; `prefers-contrast: more` só remove grão, scanlines, aberração e brilho (não mexe no movimento). Carimbo e etiqueta VOTADO deixam de "bater" em reduced-motion e surgem num fade de 160 ms; o sorteio pula direto para o resultado.
+
+**The Sorteio Rule.** Exceção consciente, só na sequência de fechar a votação (`src/views/sorteio.js`): ali vale elástico (mola amortecida, `elastico()` em `src/lib/motion.js`) e o vidro da TV racha e estoura. Fora dela o movimento continua sem overshoot e tela quebrada continua proibida. Mesmo ali: um clarão âmbar só (nunca branco de tela cheia), estática a 40% de opacidade, barras RGB que deslizam em vez de piscar, texto só em faixa ou placa deep; `prefers-contrast: more` tira halo, clarão, barras e fumaça.
 
 ## Shapes
 
@@ -476,8 +478,8 @@ O bilhete é papel creme à mão colado na base da capa (-3deg, sombra macia). O
 ### Confirmação
 Ficha de papel inserida logo abaixo do botão que a disparou (-0.4deg, sombra de papel solto, até 520px), com pergunta em Atkinson 700 e ações confirmar/cancelar. O foco vai para confirmar e volta ao botão de origem ao fechar.
 
-### Roleta do desempate
-Grade de capas sobre deep; o item aceso ganha contorno âmbar de 3px e sobe 4px (60ms linear); o vencedor fica com fundo âmbar a 14% e recebe o carimbo SORTEADO. Desliga em reduced-motion.
+### Sorteio do fechamento
+Overlay de tela cheia (fora do `#app`) com halo âmbar/rosa girando devagar e confete âmbar, rosa e papel em canvas. Vencedor único: a capa cresce com elástico, carimbo VENCEDOR. Empate: as capas (2 a 12) entram em evidência, voam em arco para um clone 2D da TV, a TV chia (glitch ~1,4 s) e mostra a roleta de cassino no vidro (fatias iguais com as capas, aro dourado com pinos, cubo e ponteiro rosa que bate nos pinos; o nome sob o ponteiro aparece no OSD, faixa deep); ela gira ~6 s e para exatamente no sorteado, que já foi gravado. O vidro racha e estoura em cacos, e o sorteado sai por ele com carimbo SORTEADO. Nos dois casos a capa termina voando até a capinha da mesa. Em reduced-motion: evidência → resultado → Finalizar.
 
 ### Toast
 Bloco ink com texto deep em Atkinson 700, centralizado a 16px da base, com sombra de aviso; em erro vira rosa, dura 8 s (4 s os outros) e some ao toque. O balão é `aria-hidden`: o leitor de tela ouve as regiões `#toast-status` e `#toast-alert` (erro), sempre no DOM.
@@ -504,7 +506,7 @@ Bloco ink com texto deep em Atkinson 700, centralizado a 16px da base, com sombr
 - **Don't** escrever texto corrido, botão ou rótulo em Bebas Neue, Special Elite ou Permanent Marker.
 - **Don't** pôr texto claro sobre âmbar, rosa ou teal, nem texto de interface sobre halo, grão ou scanline.
 - **Don't** aplicar sombra (dura ou macia) em painel, lista ou botão.
-- **Don't** usar preto puro, pixel em tudo, mais de um neon, nem arco-íris de luzes; nada de vaporwave, Y2K, Frutiger Aero, cyberpunk ou terror analógico (vidro translúcido, cromo, bolhas, pastel rosa-ciano, tela quebrada).
+- **Don't** usar preto puro, pixel em tudo, mais de um neon, nem arco-íris de luzes; nada de vaporwave, Y2K, Frutiger Aero, cyberpunk ou terror analógico (vidro translúcido, cromo, bolhas, pastel rosa-ciano, tela quebrada fora do sorteio).
 - **Don't** pôr filtro, blend, máscara ou opacidade na cadeia da prateleira 3D.
 - **Don't** piscar luz mais de 3 vezes por segundo nem deixar movimento correr sem como desligar.
 - **Don't** usar ícones de fonte ou glifos; ícones são SVG próprios em grade 24x24, sem curvas, em currentColor.

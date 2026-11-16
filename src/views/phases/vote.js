@@ -2,17 +2,36 @@
 // etiqueta VOTADO na capa; o canhoto que sobra desfaz. Clicar na capinha abre a caixinha (manual).
 // A proibição de votar no próprio jogo é garantida nas firestore.rules; aqui a UI só explica.
 import { castVote, changeStatus, listAllVotes, removeVote } from '../../api.js';
-import { icon } from '../../lib/icons.js';
 import { calma } from '../../lib/motion.js';
-import { drawIndex, leaders, rankGames } from '../../lib/tally.js';
+import { leaders, rankGames } from '../../lib/tally.js';
+import { RICKROLL_URL } from '../../lib/rickroll.js';
 import { confirmInline, esc, toast, withBusy } from '../../lib/util.js';
 import { memberName, stamp } from '../parts.js';
 import { openReading } from '../caixinha.js';
 import { bindTilt, caseHtml, nicho, postit, rackHtml, vitrine } from '../rack.js';
-import { spinRoulette } from '../roulette.js';
+import { revelaVencedor, sorteiaEmpate } from '../sorteio.js';
 import { bindTema, temaHtml } from '../tema.js';
 
 const ETIQUETA = '<span class="etiqueta" data-etiqueta hidden>Votado</span>';
+
+// Pegadinha: cada pessoa só pode desfazer voto 2 vezes por rodada. Na 3ª tentativa leva bronca;
+// insistindo, abre o Rick Roll em outra janela. É brincadeira só da UI (as rules continuam deixando
+// desfazer), então o contador mora no aparelho: sobrevive ao ctx.refresh() e ao recarregar a página.
+const MAX_DESFAZER = 2;
+const chaveDesfez = (roundId, uid) => `clube:desfez:${roundId}:${uid}`;
+const lerDesfez = (roundId, uid) => {
+  try {
+    return Number(localStorage.getItem(chaveDesfez(roundId, uid))) || 0;
+  } catch {
+    return 0;
+  }
+};
+const gravarDesfez = (roundId, uid, n) => {
+  try {
+    localStorage.setItem(chaveDesfez(roundId, uid), String(n));
+  } catch { /* sem storage: o contador vale só até recarregar */ }
+};
+let teimosia = 0; // tentativas depois do limite, só na memória
 
 export function renderVote(container, data, ctx) {
   const { games, members, uid, myVotes } = data;
@@ -65,7 +84,8 @@ export function renderVote(container, data, ctx) {
 
   // Vota ou desfaz pelo ticket da prateleira (o da caixinha chama a mesma função).
   // Devolve se o jogo está votado depois da tentativa.
-  const alterna = async (ticket) => {
+  // `ancora` = onde a confirmação aparece (na caixinha o ticket da prateleira está atrás do modal).
+  const alterna = async (ticket, ancora = ticket) => {
     if (!ticket || ticket.disabled || ticket.classList.contains('rasgando')) return undefined;
     const gameId = ticket.dataset.vote;
     const label = ticket.closest('.rack__slot').querySelector('[data-etiqueta]');
@@ -74,9 +94,21 @@ export function renderVote(container, data, ctx) {
     body.classList.remove('volta');
 
     if (voted) {
+      const feitos = lerDesfez(data.round.id, uid);
+      if (feitos >= MAX_DESFAZER) {
+        // Sem await antes: o window.open precisa nascer do clique, senão o navegador bloqueia o popup.
+        teimosia += 1;
+        if (teimosia === 1) toast('não pode mais otario xD', 'pop');
+        else window.open(RICKROLL_URL, '_blank', 'noopener');
+        return true;
+      }
+      const restam = MAX_DESFAZER - feitos;
+      const certeza = await confirmInline(ancora, `Desfazer o voto? Você só pode desfazer ${restam === 1 ? 'mais 1 vez' : `${restam} vezes`} nessa rodada.`, 'Desfazer');
+      if (!certeza) return true;
       // desfazer: o ticket volta inteiro e a etiqueta sai
       const ok = await withBusy(ticket, () => removeVote(data.round.id, gameId, uid).then(() => true));
       if (!ok) return myVotes.has(gameId);
+      gravarDesfez(data.round.id, uid, feitos + 1);
       myVotes.delete(gameId);
       ticket.setAttribute('aria-pressed', 'false');
       label.hidden = true;
@@ -121,7 +153,7 @@ export function renderVote(container, data, ctx) {
       const slot = abrir.closest('.rack__slot');
       const game = games.find((g) => g.id === slot.dataset.game);
       const fonte = slot.querySelector('.case');
-      const votar = game.id === uid ? null : { voted: () => myVotes.has(game.id), toggle: () => alterna(slot.querySelector('[data-vote]')) };
+      const votar = game.id === uid ? null : { voted: () => myVotes.has(game.id), toggle: (ancora) => alterna(slot.querySelector('[data-vote]'), ancora) };
       openReading({ game, members, uid, fonte, gatilho: abrir, front: slot.querySelector('.case__front').innerHTML, votar,
         recados: { roundId: data.round.id, isAdmin: ctx.session.isAdmin } });
       return;
@@ -132,49 +164,32 @@ export function renderVote(container, data, ctx) {
 
 // ------------------------------------------------------------ admin: fechar votação
 
-// Conta os votos no cliente. Vencedor único: grava direto. Empate: mostra a roleta.
-export async function closeVoting(panel, data, ctx, button) {
+// Conta os votos no cliente. Vencedor único: confirma e revela. Empate: overlay do sorteio
+// (src/views/sorteio.js), que sorteia, grava e só depois anima o resultado.
+export async function closeVoting(data, ctx, button) {
   const { round, games } = data;
   const votesByGame = await listAllVotes(round.id, games); // lê de novo pra pegar votos recentes
   const ranking = rankGames(games, votesByGame);
   const top = leaders(ranking);
-  const votes = ranking[0]?.count ?? 0;
+  const votos = ranking[0]?.count ?? 0;
   const plural = (n) => `${n} ${n === 1 ? 'voto' : 'votos'}`;
 
   if (top.length === 1) {
-    const ok = await confirmInline(button, `Fechar a votação? “${top[0].name}” ganhou com ${plural(votes)}.`, 'Fechar e revelar');
+    const ok = await confirmInline(button, `Fechar a votação? “${top[0].name}” ganhou com ${plural(votos)}.`, 'Fechar e revelar');
     if (!ok) return;
-    await saveWinner(top[0], null, data, ctx);
+    await revelaVencedor({ game: top[0], votos, grava: () => saveWinner(top[0], null, data), ctx, gatilho: button });
     return;
   }
-
-  panel.innerHTML = `
-    <div class="desempate">
-      <h3 class="desempate__titulo">Empate entre ${top.length} jogos com ${plural(votes)} cada</h3>
-      <p class="muted">O sorteio é feito aqui e o resultado fica gravado na rodada.</p>
-      <div id="roulette"></div>
-      <div class="actions actions--center"><button class="btn btn--primary" id="spin">${icon('dice')} Sortear</button></div>
-    </div>`;
-  const stage = panel.querySelector('#roulette');
-  spinRoulette(stage, top, null); // mostra os candidatos parados
-  panel.querySelector('#spin').addEventListener('click', async (event) => {
-    event.currentTarget.disabled = true;
-    const winnerIndex = drawIndex(top.length);
-    await spinRoulette(stage, top, winnerIndex);
-    await saveWinner(top[winnerIndex], top.map((g) => g.id), data, ctx);
-  });
+  await sorteiaEmpate({ jogos: top, votos, grava: (game, ids) => saveWinner(game, ids, data), ctx, gatilho: button });
 }
 
-async function saveWinner(game, tiedIds, data, ctx) {
+// Grava o vencedor (mesmo payload de sempre). Devolve true/false; o withBusy avisa o erro.
+function saveWinner(game, tiedIds, data) {
   const extra = {
     winnerGameId: game.id,
     // Cópia do vencedor na rodada: a estante e o anúncio não precisam ler os jogos.
     winner: { name: game.name, cover: game.cover ?? '', coverData: game.coverData ?? '', suggestedBy: game.suggestedBy },
   };
   if (tiedIds) extra.tiebreak = { candidates: tiedIds };
-  const ok = await withBusy(null, () => changeStatus(data.round, 'jogando', { extra }).then(() => true));
-  if (ok) {
-    toast(`Deu ${game.name}! Bora jogar.`);
-    await ctx.refresh();
-  }
+  return withBusy(null, () => changeStatus(data.round, 'jogando', { extra }).then(() => true)).then(Boolean);
 }

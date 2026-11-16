@@ -103,6 +103,8 @@ export function toast(message, kind = 'ok') {
   if (!el) return;
   el.textContent = message;
   el.dataset.kind = kind;
+  el.hidden = true; // esconde e mostra de novo: reinicia a animação do 'pop' se já estava na tela
+  void el.offsetWidth;
   el.hidden = false;
   el.onclick = () => (el.hidden = true);
   // limpa e escreve depois: região que já tinha o mesmo texto não anunciaria de novo
@@ -112,7 +114,8 @@ export function toast(message, kind = 'ok') {
     setTimeout(() => (voz.textContent = message), 50);
   }
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => (el.hidden = true), kind === 'error' ? 8000 : 4000);
+  // 'pop' = aviso rápido que pipoca e some sozinho (não precisa fechar)
+  toastTimer = setTimeout(() => (el.hidden = true), kind === 'error' ? 8000 : kind === 'pop' ? 2500 : 4000);
 }
 
 // Roda uma ação assíncrona com o botão travado e mostra erro amigável se falhar.

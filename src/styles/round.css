@@ -495,8 +495,6 @@ textarea.campo-papel { display: block; width: 100%; min-height: 96px; margin-top
 .balcao--largo { justify-items: stretch; text-align: left; width: min(100%, 760px); }
 .balcao--largo .form { max-width: none; }
 .balcao__datas { width: 100%; }
-.desempate { display: grid; gap: 12px; width: 100%; margin-top: 8px; }
-.desempate__titulo { font: 400 1.6rem/1 var(--f-placa); letter-spacing: 0.05em; }
 
 /* rodada sem fita: TV "sem sinal" e o estado vazio */
 .rodada--vazia .rodada__vazia { grid-area: ficha; }

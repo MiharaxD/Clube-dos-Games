@@ -3,11 +3,12 @@
 import { anim, calma, SAI } from './motion.js';
 
 const VIDEO = '/rickroll.mp4';
+export const RICKROLL_URL = VIDEO; // também aberto em outra janela (votação: desfazer demais)
 const CHIADO_MS = 1300;
 
 // Som de chiado: ruído branco curtinho pelo WebAudio (sem arquivo).
 let audio = null;
-function somDeChiado(ms) {
+export function somDeChiado(ms) {
   try {
     audio ??= new AudioContext();
     const n = Math.floor(audio.sampleRate * (ms / 1000));
@@ -27,7 +28,7 @@ function somDeChiado(ms) {
 }
 
 // Estática: canvas pequeno com pixels aleatórios, ampliado (pixelado) por CSS.
-function chiar(vidro, ms) {
+export function chiar(vidro, ms) {
   const tela = document.createElement('canvas');
   tela.className = 'tv-chiado';
   tela.width = 96;

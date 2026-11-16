@@ -116,8 +116,9 @@ Tudo é assíncrono: cada um entra quando puder, e as sugestões e os votos fica
 1. **Sugerindo**: o admin abre a fase em **Rodada**. Cada membro põe 1 jogo na prateleira e
    pode editar ou tirar o seu. Para abrir a votação, precisa haver pelo menos 2 jogos.
 2. **Votando**: cada um separa todos os jogos que toparia jogar, menos o próprio. O voto é
-   secreto até o admin clicar em "Fechar votação". Em caso de empate aparece a roleta, e o
-   sorteado fica gravado.
+   secreto até o admin clicar em "Fechar votação". O vencedor aparece em tela cheia; em caso de
+   empate, a TV sorteia numa roleta. O sorteio é gravado antes da animação, que só roda no
+   navegador do admin (os outros veem o resultado ao abrir a rodada).
 3. **Jogando**: o admin define o prazo e o link da call e propõe datas. Os membros marcam as
    datas em que podem e o admin confirma uma. Notas e perguntas já ficam liberadas.
 4. **Encerrada**: o jogo vai para a **Estante** e entra nas **Stats**. Daí o admin abre a

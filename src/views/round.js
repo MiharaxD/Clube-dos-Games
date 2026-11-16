@@ -263,7 +263,6 @@ function adminPanel({ round, games }) {
       <p class="balcao__dica">Etapa <b>${i + 1} de 4</b>. Avance quando o grupo já tiver tido tempo.</p>
       <div class="balcao__acoes">${buttons.join('')}</div>
       ${hint}
-      <div id="tie"></div>
     </section>`;
 }
 
@@ -277,9 +276,7 @@ function bindAdmin(main, data, ctx) {
   const { round, games } = data;
   bindCreateRound(main, ctx, round.number + 1, { finaliza: round.status === 'encerrada' });
 
-  main.querySelector('#close-voting')?.addEventListener('click', (event) =>
-    closeVoting(main.querySelector('#tie'), data, ctx, event.currentTarget),
-  );
+  main.querySelector('#close-voting')?.addEventListener('click', (event) => closeVoting(data, ctx, event.currentTarget));
 
   main.querySelectorAll('[data-status]').forEach((button) => {
     button.addEventListener('click', async () => {
