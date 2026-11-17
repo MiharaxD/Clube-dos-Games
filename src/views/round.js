@@ -142,12 +142,6 @@ function bindCta(main) {
         ticket?.focus({ preventScroll: true });
         break;
       }
-      case 'nota': { // jogando: o slider fica inline na página
-        const campo = por('#score');
-        campo?.scrollIntoView({ block: 'center', behavior: suave });
-        campo?.focus({ preventScroll: true });
-        break;
-      }
       case 'datas': por('[data-obj="cal-obj"]')?.click(); break;
       case 'quadro': por('[data-obj="quadro-obj"]')?.click(); break;
       default:
@@ -189,8 +183,7 @@ function todo({ round, games, uid, myVotes, dateVotes, ratings }) {
     if ((round.dateOptions?.length ?? 0) > 0 && !hasDates && !round.meetingDate) {
       return line('Falta você: marcar seus dias no calendário da mesa.', 'Toca no calendário.', { action: 'datas', label: 'Marcar meus dias' });
     }
-    if (!hasRating) return line('Joga e depois prega sua resenha no quadro.', 'Dá pra mudar a nota até a rodada fechar e depois também.', { action: 'nota', label: 'Dar minha nota' });
-    return line('Tudo certo por aqui.', 'Agora é jogar e trazer assunto pra reunião.');
+    return line('Tudo certo por aqui.', 'Agora é jogar. A resenha vai pro quadro quando a rodada fechar.');
   }
   return hasRating
     ? line('Rodada encerrada. Valeu! Sua resenha tá no quadro.')

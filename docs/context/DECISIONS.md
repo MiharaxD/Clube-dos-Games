@@ -17,7 +17,7 @@
 - **Contagem no cliente** (sem Functions); vencedor copiado na rodada (`winner{name,cover,suggestedBy}`)
   para estante/anúncio não lerem jogos. Empate: sorteio com `crypto` no cliente do admin, gravado em
   `tiebreak.candidates`.
-- **Notas:** 0–10 em meio ponto nas rules; a UI mostra 5 estrelas com meia (grava inteiro 0–10, 1 = meia estrela); notas e perguntas valem em "jogando" e "encerrada". Pergunta: autor
+- **Notas:** 0–10 em meio ponto nas rules; a UI mostra 5 estrelas com meia (grava inteiro 0–10, 1 = meia estrela); as rules aceitam notas e perguntas em "jogando" e "encerrada", mas a UI só mostra quadro de resenha e perguntas na encerrada. Pergunta: autor
   edita/apaga, admin apaga.
 - **Enquete de datas:** multi-seleção; admin confirma `meetingDate`; voto só em datas de `dateOptions`.
 - **Plataformas em famílias** (PC, PlayStation, Xbox, Nintendo, Mobile, Mac, Linux) — lista repetida

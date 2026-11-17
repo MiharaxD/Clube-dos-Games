@@ -510,12 +510,9 @@ textarea.campo-papel { display: block; width: 100%; min-height: 96px; margin-top
 .placar .tally { margin-top: 12px; }
 .tally__quem { grid-column: 1 / -1; }
 
-/* resenhas (jogando): o quadro de cortiça fica deitado na página */
-.resenhas, .perguntas { margin-top: 40px; }
+.perguntas { margin-top: 40px; }
 .perguntas > .muted { margin-bottom: 12px; }
 .perguntas__form { margin-top: 16px; }
-.quadro__media { display: table; margin: 14px auto 0; padding: 4px 12px; background: var(--paper); color: var(--paper-ink); font: 400 0.95rem/1.35 var(--f-dati); rotate: 1deg; box-shadow: 2px 3px 0 rgb(12 6 9 / 0.45); }
-.quadro__media .sticker { margin-right: 6px; }
 .pagina__topo .sticker { margin-left: auto; transform: rotate(4deg); }
 .pagina__txt--vazia { color: var(--paper-muted); font-style: italic; }
 .pagina .spoiler summary { border-color: var(--stamp); color: var(--stamp); margin-top: 10px; }

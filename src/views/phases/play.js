@@ -1,7 +1,7 @@
 // Fases "jogando" e "encerrada" (rodada-jogando.html / rodada-encerrada.html): faixa de pano no
-// lugar do h1, a mesa 3D, a ficha do jogo, o placar da votação, as resenhas (notas), as perguntas e
-// o balcão. Jogando: calendário, videogame com a capinha em cima, estatuetas de quem zerou, botão
-// ZEREI e o quadro de jogando (diario.js). Encerrada: quadro de resenha + o de jogando guardado.
+// lugar do h1, a mesa 3D, a ficha do jogo, o placar da votação e o balcão. Jogando: calendário,
+// videogame com a capinha em cima, estatuetas de quem zerou, botão ZEREI e o quadro de jogando
+// (diario.js). Encerrada: quadro de resenha (notas) + o de jogando guardado + perguntas.
 // O tempo/recado do "zerei" dos mocks ficou fora: o zerei grava só a hora (ordem de chegada).
 import {
   addQuestion,
@@ -19,7 +19,6 @@ import {
 } from '../../api.js';
 import { icon } from '../../lib/icons.js';
 import { ENTRA_RAPIDO, NA_TELA, SAI, anim, calma, entrar } from '../../lib/motion.js';
-import { average } from '../../lib/tally.js';
 import { confirmInline, esc, fmtDateTime, fmtDay, fmtPrice, listJoin, safeUrl, toast, withBusy, DURATION_LABEL, MODE_LABEL } from '../../lib/util.js';
 import { avatar, empty, memberName, stamp } from '../parts.js';
 import { openReading } from '../caixinha.js';
@@ -79,8 +78,7 @@ export function renderPlay(main, data, ctx, extra) {
       ${infoSection(data, game, tied, ctx.session.isAdmin)}
       ${resultSection(data)}
     </div>
-    ${playing ? `<section class="resenhas" aria-labelledby="quadro-titulo">${boardHtml(data, pages)}</section>` : ''}
-    ${questionsSection(data, ctx)}
+    ${playing ? '' : questionsSection(data, ctx)}
     ${canEdit ? adminForms(round) : ''}
     ${extra.balcao}`;
 
@@ -157,10 +155,9 @@ export function renderPlay(main, data, ctx, extra) {
   });
 
   main.querySelector('[data-announce]')?.addEventListener('click', extra.announce);
-  if (playing) bindRating(main.querySelector('.resenhas'), data, ctx);
   bindInfo(main, data, ctx);
   bindDates(main, data, ctx);
-  bindQuestions(main, data, ctx);
+  if (!playing) bindQuestions(main, data, ctx);
   entrar(main.querySelectorAll('.falta, .info, .placar'), 120, 60);
 }
 
@@ -417,22 +414,6 @@ function pageHtml(p, i) {
       ${estrelas(p.score, 'estrelas--pagina')}</div>
     ${comment}
   </li>`;
-}
-
-function boardHtml(data, pages) {
-  const { ratings, uid } = data;
-  const mine = ratings.find((r) => r.id === uid);
-  const avg = average(ratings.map((r) => r.score));
-  const score = mine?.score ?? 5;
-  return `
-    <div class="quadro"><div class="quadro__cortica">
-      <h2 class="quadro__titulo" id="quadro-titulo" tabindex="-1"><span class="tacha" aria-hidden="true"></span><span class="tacha" aria-hidden="true"></span>Resenha</h2>
-      <p class="quadro__media">${avg === null ? 'Ninguém deu nota ainda. Estreia o quadro!' : `${estrelas(avg, 'estrelas--media')} média de ${ratings.length} ${ratings.length === 1 ? 'nota' : 'notas'}`}</p>
-      <ul class="quadro__grade">
-        ${pages.map(pageHtml).join('')}
-        ${formHtml(mine, score)}
-      </ul>
-    </div></div>`;
 }
 
 function formHtml(mine, score) {
