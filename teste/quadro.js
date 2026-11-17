@@ -98,7 +98,7 @@ function render() {
   const textos = (pos) => (pos < 0 ? { placa: 'Zerei!', notaZ: 'aperta quando zerar' } : { placa: `Zerado · ${pos + 1}º`, notaZ: 'já foi, chora' });
   const mini = { mes: 'Dezembro', ano: 2026, ini: 2, fim: 31, of: new Set([4, 5, 11, 12, 18, 19]), sel: new Set([11]), nota: 'marca teus dias' };
   const mesa = mountMesa(sec, {
-    fase: estado.fase, game: GAME, front: caseFront(GAME, stamp('Vencedor')), mini, pages: [], nota: playing ? 'reunião sex 19/12 20h' : '5 de 6 deram nota',
+    fase: estado.fase, game: GAME, front: caseFront(GAME, stamp('Vencedor')), mini, pages: [], nota: playing ? '' : '5 de 6 deram nota', nomeVencedor: 'Mari', podeTrocarFoto: true,
     zerados, vagas: MEMBROS.length, ...textos(minhaPos), notinhas,
   });
 

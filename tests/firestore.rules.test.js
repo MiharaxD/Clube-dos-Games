@@ -290,6 +290,13 @@ describe('tema da rodada', () => {
   it('tema acima de 60 caracteres é negado', async () => {
     await assertFails(updateDoc(doc(as('admin'), 'rounds/r-sug'), { theme: 'x'.repeat(61) }));
   });
+
+  it('foto do ganhador: só o admin põe, e só JPEG em data URL', async () => {
+    const FOTO = 'data:image/jpeg;base64,/9j/4AAQSkZJRg==';
+    await assertSucceeds(updateDoc(doc(as('admin'), 'rounds/r-jog'), { fotoVencedor: FOTO }));
+    await assertFails(updateDoc(doc(as('alice'), 'rounds/r-jog'), { fotoVencedor: FOTO }));
+    await assertFails(updateDoc(doc(as('admin'), 'rounds/r-jog'), { fotoVencedor: 'https://x.com/a.jpg' }));
+  });
 });
 
 describe('recados no jogo', () => {

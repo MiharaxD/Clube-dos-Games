@@ -85,6 +85,11 @@ export function updateRound(roundId, data) {
   return updateDoc(doc(db, 'rounds', roundId), data);
 }
 
+// Foto do ganhador da votação (porta-retrato da mesa; só o admin). JPEG em data URL.
+export function updateRoundFoto(roundId, foto) {
+  return updateDoc(doc(db, 'rounds', roundId), { fotoVencedor: foto || deleteField() });
+}
+
 // Tema da rodada (faixa em cima da prateleira). Vazio = sem tema.
 export function updateRoundTheme(roundId, theme) {
   return updateDoc(doc(db, 'rounds', roundId), { theme: theme || deleteField() });

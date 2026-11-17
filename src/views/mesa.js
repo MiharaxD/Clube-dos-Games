@@ -22,12 +22,12 @@ const obj = (id, [x, z, ry = 0], s, inner, y = 0, extra = '') =>
 // Encerrada: quadro de resenha + o quadro de jogando guardado no fundo.
 const LAYOUTS = {
   jogando: {
-    pc: { W: 1040, H: 1000, cy: 740, po: 532, cam: -26, mesa: [1000, 440], lamp: [-440, -170, 0], cal: [-315, -10, 20], console: [-70, 40, -8], controle: [105, 172, 14],
+    pc: { W: 1040, H: 1000, cy: 740, po: 532, cam: -26, mesa: [1000, 440], lamp: [-440, -170, 0], cal: [-315, -10, 20], console: [-70, 40, -8], controle: [105, 172, 14], retrato: [-310, 188, 10],
       est: { dx: 150, larg: 960, z: -270, s: 0.95, y: 230 }, botao: [432, 130, -12], diario: [235, -60, -8],
-      esc: { cal: 1, caso: 1, console: 1, botao: 0.95, diario: 1.02 }, nota: [-300, 160], notaZ: [330, 196] },
-    cel: { W: 600, H: 960, cy: 680, po: 444, cam: -30, mesa: [580, 560], lamp: [-248, -238, 0], cal: [-178, -112, 18], console: [-8, 118, -6], controle: [62, 238, 18],
+      esc: { cal: 1, caso: 1, console: 1, botao: 0.95, diario: 1.02, retrato: 0.82 }, nota: [-300, 160], notaZ: [330, 196] },
+    cel: { W: 600, H: 960, cy: 680, po: 444, cam: -30, mesa: [580, 560], lamp: [-248, -238, 0], cal: [-178, -112, 18], console: [-8, 118, -6], controle: [62, 238, 18], retrato: [-215, 150, 14],
       est: { dx: 90, larg: 560, z: -295, s: 0.62, y: 200 }, botao: [205, 196, -12], diario: [160, -70, -6],
-      esc: { cal: 0.95, caso: 0.85, console: 0.8, botao: 0.85, diario: 0.74 }, nota: [-205, 70], notaZ: [180, 272] },
+      esc: { cal: 0.95, caso: 0.85, console: 0.8, botao: 0.85, diario: 0.74, retrato: 0.85 }, nota: [-205, 70], notaZ: [180, 272] },
   },
   encerrada: {
     pc: { W: 1040, H: 560, cy: 300, cam: -26, mesa: [1000, 440], lamp: [-150, -185, 0], quadro: [-305, -40, 16], caso: [40, 40, -4], console: [300, 0, -12], diario: [205, -168, -8], esc: { quadro: 1, caso: 1, console: 1, diario: 0.72 }, nota: [130, 175], marca: [-130, 165] },
@@ -76,6 +76,7 @@ function mesaHtml(L, nota, notaZ) {
     L.lamp ? `<span class="decal decal--luz" data-de="abajur-obj" style="${ponto(lx + 180, lz + 120)};width:${W * 0.75}px;height:${D * 1.1}px"></span>` : '',
     L.tv ? `<span class="decal decal--luz decal--luz-tv" style="${ponto(L.tv[0] - 60, L.tv[1] + 160)};width:${W * 0.7}px;height:${D}px"></span>` : '',
     L.cal ? sombra(L.cal, 200 * L.esc.cal, 110 * L.esc.cal, 'cal-obj') : '',
+    L.retrato ? sombra(L.retrato, 130 * L.esc.retrato, 70 * L.esc.retrato, 'retrato-obj') : '',
     L.quadro ? sombra(L.quadro, 360 * L.esc.quadro, 110 * L.esc.quadro, 'quadro-obj') : '',
     L.caso ? sombra(L.caso, 190 * L.esc.caso, 60 * L.esc.caso, 'caso-obj') : '',
     L.diario ? sombra(L.diario, 360 * L.esc.diario, 110 * L.esc.diario, 'diario-obj') : '',
@@ -153,6 +154,16 @@ function calHtml(mini) {
   return `<div class="cal3d"><div class="cal3d__tras"></div><div class="cal3d__frente" data-cal-frente>
     <div class="mini__aros"></div><div class="mini__topo">${esc(mini.mes)} <small>${mini.ano}</small></div><div class="mini__grade">${g}</div>
     <span class="mini__nota">${esc(mini.nota)}</span></div></div>`;
+}
+
+// Porta-retrato de mesa (jogando): a foto do ganhador da votação, que o admin põe clicando nele.
+// foto = JPEG em data URL (ou vazio); nome = de quem sugeriu o jogo; vazio = moldura esperando a foto.
+function retratoHtml(foto, nome, podeTrocar) {
+  const dentro = foto
+    ? `<img src="${esc(foto)}" alt="">`
+    : `<span class="retrato3d__vazio">${podeTrocar ? 'toca pra pôr a foto do ganhador' : 'foto do ganhador em breve'}</span>`;
+  return `<div class="retrato3d"><div class="retrato3d__pe"></div><div class="retrato3d__frente" data-retrato>
+    <span class="retrato3d__foto">${dentro}</span>${nome ? `<span class="retrato3d__placa">${esc(nome)}</span>` : ''}</div></div>`;
 }
 
 // Quadro de cortiça no cavalete: miniaturas das páginas (foto + rabiscos); o texto fica no modal.
@@ -316,6 +327,7 @@ function videogameHtml() {
 // ------------------------------------------------------------ montagem
 
 // opts: { fase: 'jogando'|'encerrada', game, front, mini, pages, nota, alvos: [{ obj, label, attr }],
+//         fotoVencedor/nomeVencedor/podeTrocarFoto: o porta-retrato do jogando,
 //         zerados: [membro] em ordem de chegada, vagas: quantos sócios (lugares na prateleira), placa (texto do botão), notaZ (bilhete do botão),
 //         notinhas: quantas notinhas tem o quadro de jogando }
 export function mesaSection(opts) {
@@ -355,6 +367,7 @@ export function mountMesa(section, opts) {
     let html = mesaHtml(L, opts.nota, opts.notaZ) + (L.lamp ? obj('abajur-obj', L.lamp, 1, abajurHtml()) : '');
     if (L.est) html += prateleiraHtml(L);
     if (L.cal) html += obj('cal-obj', L.cal, L.esc.cal, calHtml(opts.mini));
+    if (L.retrato) html += obj('retrato-obj', L.retrato, L.esc.retrato, retratoHtml(opts.fotoVencedor, opts.nomeVencedor, opts.podeTrocarFoto));
     if (L.quadro) html += obj('quadro-obj', L.quadro, L.esc.quadro, quadroHtml(opts.pages ?? []));
     if (L.diario) html += obj('diario-obj', L.diario, L.esc.diario, diarioHtml(opts.notinhas ?? 0));
     if (L.caso) html += obj('caso-obj', L.caso, L.esc.caso, casoHtml(opts.game.name, opts.front));
@@ -382,6 +395,7 @@ export function mountMesa(section, opts) {
   // Os botões reais ficam por cima da projeção dos objetos (mínimo 44px).
   const PECAS = {
     'cal-obj': ['[data-cal-frente]'],
+    'retrato-obj': ['[data-retrato]'],
     'caso-obj': ['.m-estojo > .f', '.coroa'],
     'quadro-obj': ['.m-quadro > .f'],
     'diario-obj': ['.m-quadro > .f'],

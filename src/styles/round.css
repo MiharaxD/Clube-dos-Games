@@ -821,3 +821,21 @@ textarea.campo-papel { display: block; width: 100%; min-height: 96px; margin-top
   .raios, .aura, .brilho, .est--top .m-metal > .f { animation: none; }
   .brilho { opacity: 0.8; scale: 0.7; }
 }
+
+/* porta-retrato de mesa (jogando): moldura de madeira apoiada no pezinho, com a foto do ganhador */
+.retrato3d { position: absolute; left: 0; top: 0; transform-style: preserve-3d; }
+.retrato3d__frente, .retrato3d__pe { position: absolute; transform-origin: 50% 100%; backface-visibility: hidden; }
+.retrato3d__frente {
+  left: -56px; top: -150px; width: 112px; height: 150px; padding: 10px 10px 8px; transform: translateZ(10px) rotateX(12deg);
+  display: flex; flex-direction: column; gap: 5px;
+  background: linear-gradient(135deg, #a07652, var(--wood-3) 40%, var(--wood-2));
+  box-shadow: inset 0 0 0 2px #5a3f2a, inset 2px 2px 0 3px rgb(255 220 180 / 0.18), 0 3px 0 #2a1d17;
+}
+.retrato3d__foto { flex: 1; display: grid; place-items: center; overflow: hidden; background: var(--paper); box-shadow: inset 0 0 0 4px var(--paper), inset 0 0 0 5px rgb(42 29 23 / 0.25); }
+.retrato3d__foto img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.retrato3d__vazio { padding: 6px; color: var(--paper-ink); font: 400 12px/1.2 var(--f-mao); text-align: center; }
+.retrato3d__placa {
+  align-self: center; max-width: 100%; padding: 1px 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  background: linear-gradient(180deg, #f2d48a, #c99a2e); color: var(--deep); font: 700 10px/1.3 var(--f-texto);
+}
+.retrato3d__pe { left: -14px; top: -110px; width: 28px; height: 110px; transform: translateZ(-6px) rotateX(-24deg) rotateY(180deg); background: linear-gradient(180deg, #6b5040, #4a3428); }

@@ -128,7 +128,7 @@ service cloud.firestore {
         return d.keys().hasOnly([
             'number', 'status', 'createdAt',
             'winnerGameId', 'winner', 'tiebreak',
-            'deadline', 'callLink', 'dateOptions', 'meetingDate', 'theme'
+            'deadline', 'callLink', 'dateOptions', 'meetingDate', 'theme', 'fotoVencedor'
           ])
           // De "jogando" em diante precisa ter vencedor, e ele precisa existir.
           // Antes disso não pode ter (ao voltar pra "votando" o vencedor é limpo).
@@ -140,7 +140,11 @@ service cloud.firestore {
           && d.get('dateOptions', []).size() <= 20
           && isText(d.get('callLink', ''), 0, 500)
           // tema da rodada (faixa em cima da prateleira)
-          && isText(d.get('theme', ''), 0, 60);
+          && isText(d.get('theme', ''), 0, 60)
+          // foto do ganhador da votação (porta-retrato da mesa): JPEG em data URL, mesmo limite da capa
+          && (d.get('fotoVencedor', '') == ''
+            || (d.fotoVencedor is string && d.fotoVencedor.size() <= 100000
+                && d.fotoVencedor.matches('^data:image/jpeg;base64,[A-Za-z0-9+/=]+$')));
       }
 
       allow read: if isApproved();

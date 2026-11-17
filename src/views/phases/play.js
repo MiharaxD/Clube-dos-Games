@@ -15,10 +15,11 @@ import {
   saveRating,
   updateQuestion,
   updateRoundDates,
+  updateRoundFoto,
 } from '../../api.js';
 import { icon } from '../../lib/icons.js';
 import { ENTRA_RAPIDO, NA_TELA, SAI, anim, calma, entrar } from '../../lib/motion.js';
-import { confirmInline, esc, fmtDateTime, fmtPrice, fotoParaQuadro, listJoin, safeImgData, toast, youtubeId, withBusy, DURATION_LABEL, MODE_LABEL } from '../../lib/util.js';
+import { confirmInline, esc, fmtDateTime, fmtPrice, fotoParaCapa, fotoParaQuadro, listJoin, safeImgData, toast, youtubeId, withBusy, DURATION_LABEL, MODE_LABEL } from '../../lib/util.js';
 import { avatar, empty, memberName, stamp } from '../parts.js';
 import { openReading } from '../caixinha.js';
 import { caseFront } from '../rack.js';
@@ -63,6 +64,7 @@ export function renderPlay(main, data, ctx, extra) {
     alvos.push({ obj: 'botao-obj', label: minhaPos < 0 ? 'Zerei! Mandar a foto de prova e marcar que você zerou' : `Você já zerou (${minhaPos + 1}º lugar)`, popup: false });
     zerados.forEach((m, i) => alvos.push(alvoEst(m, i)));
   } else alvos.push({ obj: 'quadro-obj', label: 'Abrir o quadro de resenhas' });
+  if (canEdit) alvos.push({ obj: 'retrato-obj', label: 'Pôr a foto do ganhador da votação no porta-retrato', popup: false });
   alvos.push({ obj: 'diario-obj', label: playing ? 'Abrir o quadro de jogando: notinhas, rabiscos e fotos' : 'Rever o quadro de jogando' });
 
   main.innerHTML = `
@@ -87,14 +89,14 @@ export function renderPlay(main, data, ctx, extra) {
     ${extra.balcao}`;
 
   const sec = main.querySelector('.mesa-sec');
-  const notaMesa = playing
-    ? (round.meetingDate ? `reunião ${fmtDateTime(round.meetingDate)}` : 'marca teus dias')
-    : `${data.ratings.length} de ${members.filter((m) => m.approved).length} deram nota`;
+  // jogando: no lugar do bilhete fica o porta-retrato do ganhador da votação
+  const notaMesa = playing ? '' : `${data.ratings.length} de ${members.filter((m) => m.approved).length} deram nota`;
   const textosBotao = (pos) => (pos < 0
     ? { placa: 'Zerei!', notaZ: 'aperta quando zerar' }
     : { placa: `Zerado · ${pos + 1}º`, notaZ: 'já foi, chora' });
   const mesa = mountMesa(sec, {
     fase: playing ? 'jogando' : 'encerrada', game, front, mini, pages, nota: notaMesa,
+    fotoVencedor: safeImgData(round.fotoVencedor), nomeVencedor: memberName(members, game.suggestedBy), podeTrocarFoto: canEdit,
     zerados, vagas: members.filter((m) => m.approved).length, ...textosBotao(minhaPos), notinhas: (data.diario ?? []).reduce((n, d) => n + (d.notes?.length ?? 0), 0),
   });
 
@@ -116,6 +118,28 @@ export function renderPlay(main, data, ctx, extra) {
     salvar: (pagina, estado) => saveDiario(round.id, uid, pagina, estado),
     aoFechar: (mexeu) => (mexeu ? ctx.refresh() : null),
   }));
+
+  // porta-retrato (só o admin): escolhe a foto do ganhador da votação, corta 3:4 e grava na rodada
+  sec.querySelector('[data-obj="retrato-obj"]')?.addEventListener('click', () => {
+    const arq = document.createElement('input');
+    arq.type = 'file';
+    arq.accept = 'image/*';
+    arq.addEventListener('change', async () => {
+      const file = arq.files?.[0];
+      if (!file) return;
+      try {
+        const foto = await fotoParaCapa(file);
+        await updateRoundFoto(round.id, foto);
+        round.fotoVencedor = foto;
+        mesa.remonta({ fotoVencedor: foto });
+        toast('Foto no porta-retrato. Agora todo mundo vê.');
+      } catch (err) {
+        console.error(err);
+        toast(err.message === 'nao-imagem' ? 'Isso não é imagem não, hein.' : 'Não deu pra pôr essa foto. Tenta outra.', 'erro');
+      }
+    });
+    arq.click();
+  });
 
   // estatueta → vem pra frente com a foto de prova; o admin anula dali
   sec.addEventListener('click', (e) => {
