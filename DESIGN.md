@@ -467,8 +467,9 @@ No lugar do h1 "FASE N", uma **faixa de pano** vermelha pendurada ("Jogo escolhi
 falta. A mesa é CSS 3D puro (caixas de faces, câmera que acompanha o mouse no PC): abajur aceso (a luz dominante), capinha do
 vencedor com a coroa, console e controle. No jogando: **calendário** de mesa (a folha voa pra frente e os dias oferecidos são
 circulados), a capinha em pé **em cima do videogame**, **estatuetas** de quem zerou (pedestal de pedra, boneco de metal na cor
-da posição: ouro, prata, bronze e metais próprios; a cabeça é a foto, sempre virada pra câmera) que caem do céu com squash e
-fazem a mesa pular, o **botão ZEREI** de fliperama na ponta e o **quadro de jogando** no fundo (post-its coloridos com
+da posição: ouro, prata, bronze e metais próprios; a cabeça é a foto, sempre virada pra câmera; recado em balãozinho) numa
+**prateleira de parede** atrás da mesa (PC: uma tábua com as 12; celular: duas de 6), que caem do céu com squash e
+fazem a mesa pular; clicar numa estatueta traz ela pra frente com a foto de prova, o **botão ZEREI** de fliperama na ponta e o **quadro de jogando** no fundo (post-its coloridos com
 comentários curtos, rabiscos e fotos; 3 páginas, a setinha gira o quadro meia volta e ele volta na outra página). Na
 encerrada o **quadro de cortiça** da resenha, onde cada nota vira uma página de caderno pregada, e o quadro de jogando guardado
 ao lado. Cliques em botões reais (.alvo, ≥ 44px) por cima da projeção. Finalizar a encerrada faz tudo da mesa voar pra cima.

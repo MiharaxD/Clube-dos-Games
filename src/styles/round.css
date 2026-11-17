@@ -769,3 +769,10 @@ textarea.campo-papel { display: block; width: 100%; min-height: 96px; margin-top
   content: ''; position: absolute; left: 50%; top: 100%; translate: -50% 0;
   border: 6px solid transparent; border-top-color: var(--paper); border-bottom: 0;
 }
+/* prateleira de parede das estatuetas (atrás da mesa de jogando) */
+.m-prat > .u { background: var(--grain-h) 0 0 / 640px 160px, linear-gradient(180deg, #8c6646, var(--wood-4)); }
+.m-prat > .f { background: linear-gradient(180deg, #a07652 0 2px, var(--wood-3) 2px); }
+.m-prat > .l { background: var(--wood-2); }
+.m-prat > .r { background: var(--wood-1); }
+.m-prat--mao > .f { background: var(--wood-2); }
+.m-prat--mao > .l, .m-prat--mao > .r { background: linear-gradient(to bottom left, var(--wood-3) 50%, transparent 50%); }

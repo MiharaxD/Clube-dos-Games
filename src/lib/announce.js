@@ -1,5 +1,5 @@
 // Monta a mensagem pronta pra colar no WhatsApp/Discord. Não envia nada sozinho.
-import { fmtDateTime, fmtDay, fmtScore, listJoin } from './util.js';
+import { fmtDateTime, fmtScore, listJoin } from './util.js';
 import { average } from './tally.js';
 
 export function roundLink(roundId) {
@@ -42,10 +42,8 @@ export function buildAnnouncement({ round, games, ranking, ratings, nameOf }) {
   lines.push(result);
 
   if (round.status === 'jogando') {
-    if (round.deadline) lines.push(`Prazo pra jogar: ${fmtDay(round.deadline)}.`);
     if (round.meetingDate) lines.push(`Reunião: ${fmtDateTime(round.meetingDate)}.`);
     else if (round.dateOptions?.length) lines.push('Marca no site as datas que você pode pra reunião.');
-    if (round.callLink) lines.push(`Link da call: ${round.callLink}`);
   } else {
     const avg = average((ratings ?? []).map((r) => r.score));
     lines.push(avg === null ? 'Rodada encerrada. Bora dar as notas!' : `Rodada encerrada com nota média ${fmtScore(avg)}.`);

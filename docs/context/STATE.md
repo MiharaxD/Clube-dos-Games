@@ -8,7 +8,7 @@
   (sugestão pela caixinha, voto pelo ticket, empate/roleta, calendário, resenha no quadro, encerrar, finalizar).
 - **Sorteio do fechamento** (`src/views/sorteio.js`): overlay animado ao fechar a votação (vencedor único e
   empate com TV, roleta de cassino e explosão), mesmo payload gravado de antes.
-- **Mesa de jogando nova:** videogame com a capinha em cima, botão ZEREI + estatuetas (`zerei/{uid}`), quadro de
+- **Mesa de jogando nova:** videogame com a capinha em cima, botão ZEREI (com foto de prova) + estatuetas na prateleira da parede (`zerei/{uid}`), quadro de
   jogando com 3 páginas (`diario`); a encerrada guarda os dois quadros. Ambiente de teste sem Firebase em
   `teste/quadro.html`. Testado no ambiente de teste e renderizando a tela real com dados falsos; não testado logado
   no emulador (o login do emulador não voltou no painel de preview).

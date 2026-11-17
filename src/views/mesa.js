@@ -17,16 +17,16 @@ const obj = (id, [x, z, ry = 0], s, inner, y = 0, extra = '') =>
   `<div class="obj" id="${id}" style="--x:${x}px;--z:${z}px;--y:${y}px;--ry:${ry}deg;--s:${s};${extra}"><div class="mola">${inner}</div></div>`;
 
 // Duas composições da mesma mesa: PC (larga) e celular (mais funda).
-// Jogando: videogame no meio com a capinha em pé em cima; estatuetas de quem zerou à direita
-// (grade: est), botão ZEREI na ponta e o quadro de jogando (diario) no fundo.
+// Jogando: videogame no meio com a capinha em pé em cima, botão ZEREI na ponta e o quadro de
+// jogando (diario) no fundo; estatuetas de quem zerou na prateleira da parede, atrás da mesa (est).
 // Encerrada: quadro de resenha + o quadro de jogando guardado no fundo.
 const LAYOUTS = {
   jogando: {
-    pc: { W: 1040, H: 600, cy: 340, cam: -26, mesa: [1000, 440], lamp: [-440, -170, 0], cal: [-315, -10, 20], console: [-70, 40, -8], controle: [105, 172, 14],
-      est: { x0: 140, dx: 62, z0: -46, dz: 62, cols: 4, s: 0.9 }, botao: [432, 110, -12], diario: [175, -168, -6],
+    pc: { W: 1040, H: 760, cy: 500, cam: -26, mesa: [1000, 440], lamp: [-440, -170, 0], cal: [-315, -10, 20], console: [-70, 40, -8], controle: [105, 172, 14],
+      est: { x0: -330, dx: 60, z: -270, cols: 12, s: 0.74, y0: 280, dy: 0 }, botao: [432, 110, -12], diario: [175, -168, -6],
       esc: { cal: 1, caso: 1, console: 1, botao: 0.95, diario: 0.78 }, nota: [-300, 160], notaZ: [330, 196] },
-    cel: { W: 600, H: 700, cy: 390, cam: -30, mesa: [580, 560], lamp: [-248, -238, 0], cal: [-178, -112, 18], console: [-8, 118, -6], controle: [62, 238, 18],
-      est: { x0: 92, dx: 56, z0: -104, dz: 56, cols: 3, s: 0.78 }, botao: [205, 196, -12], diario: [70, -212, -4],
+    cel: { W: 600, H: 840, cy: 530, cam: -30, mesa: [580, 560], lamp: [-248, -238, 0], cal: [-178, -112, 18], console: [-8, 118, -6], controle: [62, 238, 18],
+      est: { x0: -130, dx: 52, z: -295, cols: 6, s: 0.66, y0: 200, dy: 118 }, botao: [205, 196, -12], diario: [70, -212, -4],
       esc: { cal: 0.95, caso: 0.85, console: 0.8, botao: 0.85, diario: 0.6 }, nota: [-205, 70], notaZ: [180, 272] },
   },
   encerrada: {
@@ -42,14 +42,30 @@ const LAYOUTS = {
 
 // ------------------------------------------------------------ peças
 
-// lugar da estatueta i na grade (fileiras alternadas meio passo pro lado)
+// Prateleira de parede atrás da mesa: tábuas flutuando (com mão-francesa), uma por fileira.
+// Fileira 0 (do 1º em diante) na tábua de cima; no PC é uma tábua só com as 12.
+const MAX_ZERADOS = 12;
+const fileiras = (L) => Math.ceil(MAX_ZERADOS / L.est.cols);
+const alturaTabua = (L, row) => L.est.y0 + L.est.dy * (fileiras(L) - 1 - row);
+// lugar da estatueta i: [x, z, altura da tábua]
 const slot = (L, i) => {
-  const { x0, dx, z0, dz, cols } = L.est;
+  const { x0, dx, z, cols } = L.est;
   const row = Math.floor(i / cols);
-  return [x0 + (i % cols) * dx + (row % 2) * dx * 0.5, z0 + row * dz];
+  return [x0 + (i % cols) * dx, z, alturaTabua(L, row)];
 };
+function prateleiraHtml(L) {
+  const { x0, dx, z, cols } = L.est;
+  const w = cols * dx + 24;
+  const xc = x0 + (cols - 1) * dx / 2;
+  const tabuas = Array.from({ length: fileiras(L) }, (_, r) => {
+    const y = alturaTabua(L, r);
+    const mao = (lado) => caixa({ w: 8, h: 34, t: 30, x: lado * (w / 2 - 30), y: y - 44, z: -8, cls: 'm-prat m-prat--mao', faces: 'flr' });
+    return caixa({ w, h: 10, t: 46, y: y - 10, cls: 'm-prat', faces: 'fulr' }) + mao(-1) + mao(1);
+  }).join('');
+  return obj('prat-obj', [xc, z, 0], 1, tabuas);
+}
 
-function mesaHtml(L, nota, notaZ, nEst = 0) {
+function mesaHtml(L, nota, notaZ) {
   const [W, D] = L.mesa;
   const ponto = (x, z) => `left:${x + W / 2}px;top:${z + D / 2}px`;
   const sombra = ([x, z], w, d, de) => `<span class="decal decal--sombra" data-de="${de}" style="${ponto(x, z)};width:${w}px;height:${d}px"></span>`;
@@ -62,8 +78,6 @@ function mesaHtml(L, nota, notaZ, nEst = 0) {
     L.caso ? sombra(L.caso, 190 * L.esc.caso, 60 * L.esc.caso, 'caso-obj') : '',
     L.diario ? sombra(L.diario, 360 * L.esc.diario, 110 * L.esc.diario, 'diario-obj') : '',
     L.botao ? sombra(L.botao, 140 * L.esc.botao, 130 * L.esc.botao, 'botao-obj') : '',
-    ...(L.est ? Array.from({ length: nEst }, (_, i) => sombra(slot(L, i), 80 * L.est.s, 80 * L.est.s, `est-${i}`)) : []),
-    ...(L.est ? Array.from({ length: nEst }, (_, i) => `<span class="decal decal--poeira" data-poeira="${i}" style="${ponto(...slot(L, i))}"></span>`) : []),
     L.console ? sombra(L.console, 280 * L.esc.console, 220 * L.esc.console, 'console-obj') : '',
     L.controle ? sombra(L.controle, 150 * L.esc.console, 90 * L.esc.console, 'controle-obj') : '',
     L.tv ? sombra(L.tv, 340 * L.esc.tv, 250 * L.esc.tv, 'tv-obj') : '',
@@ -221,8 +235,8 @@ function estatuetaCorpo(membro, i) {
     + (membro?.recado ? `<div class="balao3d" style="--hy:${y0 + 124 + (i % 2) * 50}px"><span>${esc(membro.recado)}</span></div>` : '');
 }
 function estatuetaHtml(L, membro, i) {
-  const [x, z] = slot(L, i);
-  return obj(`est-${i}`, [x, z, -6 + (i % 5) * 3], L.est.s, `<div class="est__corpo">${estatuetaCorpo(membro, i)}</div>`, 0, metalVars(i));
+  const [x, z, y] = slot(L, i);
+  return obj(`est-${i}`, [x, z, -6 + (i % 5) * 3], L.est.s, `<div class="est__corpo">${estatuetaCorpo(membro, i)}</div>`, y, metalVars(i));
 }
 
 // Estatueta sozinha, grande, fora da mesa (o modal de quando você clica nela).
@@ -303,7 +317,8 @@ export function mountMesa(section, opts) {
     mundo.style.top = `${L.cy}px`;
     mundo.style.setProperty('--cam', `${L.cam}deg`);
     const zerados = L.est ? (opts.zerados ?? []) : [];
-    let html = mesaHtml(L, opts.nota, opts.notaZ, zerados.length) + (L.lamp ? obj('abajur-obj', L.lamp, 1, abajurHtml()) : '');
+    let html = mesaHtml(L, opts.nota, opts.notaZ) + (L.lamp ? obj('abajur-obj', L.lamp, 1, abajurHtml()) : '');
+    if (L.est) html += prateleiraHtml(L);
     if (L.cal) html += obj('cal-obj', L.cal, L.esc.cal, calHtml(opts.mini));
     if (L.quadro) html += obj('quadro-obj', L.quadro, L.esc.quadro, quadroHtml(opts.pages ?? []));
     if (L.diario) html += obj('diario-obj', L.diario, L.esc.diario, diarioHtml(opts.notinhas ?? 0));
@@ -436,8 +451,6 @@ export function mountMesa(section, opts) {
       const giro = o.id.startsWith('est-') ? (Math.random() < 0.5 ? -5 : 5) * forca : 0;
       pulinho(o.querySelector('.mola'), 6 + 22 * forca, 60 + d * 0.12, giro);
     });
-    const poeira = mesa.querySelector(`[data-poeira="${i}"]`);
-    if (poeira) anim(poeira, [{ transform: 'scale(0.3)', opacity: 0.7 }, { transform: 'scale(1.9)', opacity: 0 }], { duration: 620, easing: SAI });
   }
   // a estatueta i cai do céu na mesa (sem movimento: só aparece)
   async function solta(i) {
@@ -449,9 +462,7 @@ export function mountMesa(section, opts) {
     const k = (parseFloat(palco.style.scale) || 1) * L.est.s * Math.cos((L.cam * Math.PI) / 180);
     const tela = Math.max(260, cabeca.bottom + 40);
     const alto = tela / k;
-    const sombra = mesa.querySelector(`[data-de="est-${i}"]`);
     const QUEDA = Math.round(Math.min(760, Math.max(480, 360 + tela * 0.45)));
-    if (sombra) anim(sombra, [{ transform: 'scale(0.2)', opacity: 0 }, { transform: 'scale(1)', opacity: 1 }], { duration: QUEDA, easing: GRAVIDADE });
     await anim(corpo, [
       { transform: `translateY(${-alto}px) rotateZ(-12deg) scale(0.97, 1.03)` },
       { transform: `translateY(${-alto * 0.18}px) rotateZ(-4deg) scale(0.93, 1.1)`, offset: 0.8 },

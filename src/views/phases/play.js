@@ -14,12 +14,11 @@ import {
   saveDiario,
   saveRating,
   updateQuestion,
-  updateRound,
   updateRoundDates,
 } from '../../api.js';
 import { icon } from '../../lib/icons.js';
 import { ENTRA_RAPIDO, NA_TELA, SAI, anim, calma, entrar } from '../../lib/motion.js';
-import { confirmInline, esc, fmtDateTime, fmtDay, fmtPrice, fotoParaQuadro, listJoin, safeImgData, safeUrl, toast, youtubeId, withBusy, DURATION_LABEL, MODE_LABEL } from '../../lib/util.js';
+import { confirmInline, esc, fmtDateTime, fmtPrice, fotoParaQuadro, listJoin, safeImgData, toast, youtubeId, withBusy, DURATION_LABEL, MODE_LABEL } from '../../lib/util.js';
 import { avatar, empty, memberName, stamp } from '../parts.js';
 import { openReading } from '../caixinha.js';
 import { caseFront } from '../rack.js';
@@ -172,7 +171,6 @@ export function renderPlay(main, data, ctx, extra) {
     }
   });
 
-  bindInfo(main, data, ctx);
   bindDates(main, data, ctx);
   if (!playing) bindQuestions(main, data, ctx);
   entrar(main.querySelectorAll('.falta, .info, .placar'), 120, 60);
@@ -193,12 +191,10 @@ function zeradosHtml(zerados, uid, playing, members) {
 
 function infoSection({ round, members, ranking, me }, game, tied, isAdmin) {
   const votes = ranking.find((r) => r.game.id === round.winnerGameId)?.count ?? 0;
-  const call = safeUrl(round.callLink);
   const mine = new Set(me?.platforms ?? []);
   const fatos = [
     ['Ano', game.year], ['Gênero', game.genre], ['Duração', DURATION_LABEL[game.duration]], ['Modo', MODE_LABEL[game.mode]],
     ['Preço', Number.isInteger(game.price) ? fmtPrice(game.price) : ''],
-    ['Prazo pra jogar', round.deadline ? fmtDay(round.deadline) : 'sem prazo'],
     ['Reunião', round.meetingDate ? fmtDateTime(round.meetingDate) : 'data a decidir'],
   ].filter(([, v]) => v !== undefined && v !== null && v !== '');
   const by = memberName(members, game.suggestedBy);
@@ -210,7 +206,6 @@ function infoSection({ round, members, ranking, me }, game, tied, isAdmin) {
         ${tied.length ? `<p class="info__por">Deu empate e saiu no sorteio entre ${esc(listJoin(tied))}.</p>` : ''}
       </div>
       <ul class="fatos">${fatos.map(([k, v]) => `<li class="fato"><span class="fato__rot">${k}</span><span class="fato__val">${esc(v)}</span></li>`).join('')}</ul>
-      ${call ? `<p class="info__bloco"><a class="btn btn--primary" href="${esc(call)}" target="_blank" rel="noopener">${icon('link')} Entrar na call</a></p>` : ''}
       ${game.platforms?.length ? `
         <div class="info__bloco">
           <h3 class="painel__titulo">Onde jogar</h3>
@@ -633,18 +628,7 @@ function adminForms(round) {
   const options = round.dateOptions ?? [];
   return `
     <section class="balcao balcao--largo" aria-labelledby="admin-info-title">
-      <h2 class="panel__title" id="admin-info-title">Prazo, call e datas</h2>
-      <form class="form" id="info-form">
-        <div class="field-row">
-          <label class="field"><span>Prazo pra jogar</span>
-            <input class="input" type="date" name="deadline" value="${esc(round.deadline ?? '')}">
-          </label>
-          <label class="field"><span>Link da call</span>
-            <input class="input" type="url" name="callLink" placeholder="https://meet…" value="${esc(round.callLink ?? '')}">
-          </label>
-        </div>
-        <div class="actions"><button class="btn btn--primary" type="submit">Salvar prazo e call</button></div>
-      </form>
+      <h2 class="panel__title" id="admin-info-title">Datas da reunião</h2>
       ${options.length ? `<ul class="list balcao__datas">${options.map((date) => `
         <li class="${round.meetingDate === date ? 'is-confirmed' : ''}">
           <span>${esc(fmtDateTime(date))}${round.meetingDate === date ? ' <span class="pill">Marcada</span>' : ''}</span>
@@ -660,23 +644,6 @@ function adminForms(round) {
         <div class="actions"><button class="btn btn--primary" type="submit">Adicionar data</button></div>
       </form>
     </section>`;
-}
-
-function bindInfo(container, data, ctx) {
-  const form = container.querySelector('#info-form');
-  if (!form) return;
-  form.addEventListener('submit', async (event) => {
-    event.preventDefault();
-    const deadline = form.elements.deadline.value;
-    const rawLink = form.elements.callLink.value.trim();
-    const callLink = rawLink ? safeUrl(rawLink) : '';
-    if (rawLink && !callLink) return toast('O link da call precisa começar com https://', 'error');
-    const ok = await withBusy(form.querySelector('[type=submit]'), () => updateRound(data.round.id, { deadline, callLink }).then(() => true));
-    if (ok) {
-      toast('Prazo e call salvos.');
-      await ctx.refresh();
-    }
-  });
 }
 
 function bindDates(container, data, ctx) {
