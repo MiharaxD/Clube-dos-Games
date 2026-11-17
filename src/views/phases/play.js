@@ -79,7 +79,7 @@ export function renderPlay(main, data, ctx, extra) {
         <p>Fase ${esc(round.number)} · ${playing ? 'agora é jogar' : 'hora da resenha'}${data.isLatest ? '' : ` · <a href="#/">ir pra rodada atual</a>`}</p>
       </div>
       ${extra.steps}
-      <div class="falta papel"><p>${extra.todo}</p>${extra.cta ?? ''}</div>
+      ${extra.todo ? `<div class="falta papel"><p>${extra.todo}</p>${extra.cta ?? ''}</div>` : ''}
       ${mesaSection({ alvos, depois: zeradosHtml(zerados, uid, playing, members) })}
       ${infoSection(data, game, tied, ctx.session.isAdmin)}
       ${resultSection(data)}

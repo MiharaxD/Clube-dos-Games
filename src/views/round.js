@@ -183,7 +183,7 @@ function todo({ round, games, uid, myVotes, dateVotes, ratings }) {
     if ((round.dateOptions?.length ?? 0) > 0 && !hasDates && !round.meetingDate) {
       return line('Falta você: marcar seus dias no calendário da mesa.', 'Toca no calendário.', { action: 'datas', label: 'Marcar meus dias' });
     }
-    return line('Tudo certo por aqui.', 'Agora é jogar. A resenha vai pro quadro quando a rodada fechar.');
+    return line(''); // nada a fazer: a tela de jogando não mostra bilhete
   }
   return hasRating
     ? line('Rodada encerrada. Valeu! Sua resenha tá no quadro.')
