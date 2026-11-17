@@ -1,9 +1,9 @@
 // Stats do clube. Tudo calculado no cliente a partir das rodadas que já têm vencedor.
 // Cada número aparece junto da prova (as notas ou rodadas que o produziram).
-import { listGames, listRatings, listRounds } from '../api.js';
+import { listGames, listQuestions, listRatings, listRounds, listZerei } from '../api.js';
 import { entrar } from '../lib/motion.js';
 import { average, gameKey, stdDev } from '../lib/tally.js';
-import { esc, fmtScore, listJoin, safeUrl } from '../lib/util.js';
+import { esc, fmtPrice, fmtScore, listJoin, safeUrl } from '../lib/util.js';
 import { avatar, cover, empty, memberName, stamp, sticker, tv } from './parts.js';
 
 const MIN_FOR_CONTROVERSY = 3; // "mais polêmico" só com pelo menos 3 notas
@@ -17,9 +17,11 @@ export async function renderStats(main, { session }) {
   const quem = (uid) => (uid === me ? 'Você' : memberName(members, uid));
 
   const rounds = (await listRounds()).filter((r) => r.winnerGameId);
-  const [gamesPerRound, ratingsPerRound] = await Promise.all([
+  const [gamesPerRound, ratingsPerRound, zereiPerRound, questionsPerRound] = await Promise.all([
     Promise.all(rounds.map((r) => listGames(r.id))),
     Promise.all(rounds.map((r) => listRatings(r.id))),
+    Promise.all(rounds.map((r) => listZerei(r.id))),
+    Promise.all(rounds.map((r) => listQuestions(r.id))),
   ]);
 
   // Uma linha por rodada decidida: vencedor (com o gênero do jogo da rodada) + notas.
@@ -30,9 +32,16 @@ export async function renderStats(main, { session }) {
       round,
       winner: round.winner ?? game ?? {},
       genre: String(game?.genre ?? '').trim() || NO_GENRE,
+      platforms: Array.isArray(game?.platforms) ? game.platforms : [],
+      price: Number.isInteger(game?.price) ? game.price : null,
       scores,
       avg: average(scores),
       dev: stdDev(scores),
+      zereiCount: zereiPerRound[i].length,
+      questionsCount: questionsPerRound[i].length,
+      tiebreakNames: (round.tiebreak?.candidates ?? [])
+        .map((id) => gamesPerRound[i].find((g) => g.id === id)?.name)
+        .filter(Boolean),
     };
   });
 
@@ -58,6 +67,56 @@ export async function renderStats(main, { session }) {
   const controversial = played
     .filter((p) => p.scores.length >= MIN_FOR_CONTROVERSY)
     .sort((a, b) => b.dev - a.dev)[0];
+
+  // Pior avaliado: menor média, só conta se for um jogo diferente do melhor avaliado.
+  const worstCandidate = played
+    .filter((p) => p.scores.length)
+    .sort((a, b) => a.avg - b.avg || b.scores.length - a.scores.length)[0];
+  const worst = worstCandidate && worstCandidate.round.id !== best?.round.id ? worstCandidate : null;
+
+  // Taxa de zerada: quantos sócios aprovados bateram o jogo até o fim, rodada a rodada.
+  const approvedTotal = members.filter((m) => m.approved).length;
+  const zereiTotal = played.reduce((n, p) => n + p.zereiCount, 0);
+  const zereiRate = approvedTotal
+    ? Math.round((zereiTotal / (approvedTotal * played.length)) * 100)
+    : 0;
+  const topZerei = played.filter((p) => p.zereiCount > 0).sort((a, b) => b.zereiCount - a.zereiCount)[0];
+
+  // Sócio mais do contra: quem dá nota mais longe da média geral do clube (mín. 2 notas dadas).
+  const clubAvg = average(played.flatMap((p) => p.scores));
+  const scoresByMember = new Map();
+  for (const ratings of ratingsPerRound) {
+    for (const r of ratings) {
+      if (!scoresByMember.has(r.id)) scoresByMember.set(r.id, []);
+      scoresByMember.get(r.id).push(r.score);
+    }
+  }
+  let moodiest = null;
+  for (const [uid, scores] of scoresByMember) {
+    if (scores.length < 2) continue;
+    const avg = average(scores);
+    const diff = avg - clubAvg;
+    if (!moodiest || Math.abs(diff) > Math.abs(moodiest.diff)) moodiest = { uid, avg, diff, n: scores.length };
+  }
+
+  // Plataforma mais alugada: família mais comum entre os jogos vencedores.
+  const platformTally = new Map();
+  for (const p of played) {
+    for (const fam of p.platforms) platformTally.set(fam, (platformTally.get(fam) ?? 0) + 1);
+  }
+  const topPlatform = [...platformTally.entries()].sort((a, b) => b[1] - a[1])[0];
+
+  // Diferença de preço entre o jogo escolhido mais caro e o mais barato.
+  const pricedSorted = played.filter((p) => p.price !== null).sort((a, b) => b.price - a.price);
+  const priciest = pricedSorted[0];
+  const cheapest = pricedSorted[pricedSorted.length - 1];
+
+  // Sorteio no braço: rodadas em que o empate foi resolvido no sorteio.
+  const tiebreakRounds = played.filter((p) => p.tiebreakNames.length >= 2);
+
+  // Pergunta mais badalada: rodada com mais perguntas na sala de perguntas.
+  const questionsTotal = played.reduce((n, p) => n + p.questionsCount, 0);
+  const topQuestions = played.filter((p) => p.questionsCount > 0).sort((a, b) => b.questionsCount - a.questionsCount)[0];
 
   // Quem mais emplacou jogo: conta vitórias por quem sugeriu.
   // (sócios aprovados entram com zero, pra barra vazia também contar a história)
@@ -94,7 +153,11 @@ export async function renderStats(main, { session }) {
   main.innerHTML = `<div class="stats">
     ${head(`${plural(played.length, 'rodada decidida', 'rodadas decididas')}, ${plural(totalRatings, 'nota', 'notas')} no caderninho e resenha que não acaba mais.`)}
     ${genresSection(played)}
-    ${factsSection({ best, controversial, neverWon, played, totalRatings, totalSuggested })}
+    ${factsSection({
+      best, worst, controversial, neverWon, played, totalRatings, totalSuggested,
+      approvedTotal, zereiRate, topZerei, clubAvg, moodiest, quem,
+      topPlatform, priciest, cheapest, tiebreakRounds, topQuestions, questionsTotal,
+    })}
     ${partnerSection(winners, played.length, members, quem, me)}
     ${neverWonSection(neverWon, members)}
   </div>`;
@@ -164,7 +227,11 @@ const proofScores = (scores) =>
 const fact = (n, text, proof = '') =>
   `<li class="fato"><span class="fato__n">${esc(n)}</span><p class="fato__txt">${esc(text)}</p>${proof}</li>`;
 
-function factsSection({ best, controversial, neverWon, played, totalRatings, totalSuggested }) {
+function factsSection({
+  best, worst, controversial, neverWon, played, totalRatings, totalSuggested,
+  approvedTotal, zereiRate, topZerei, clubAvg, moodiest, quem,
+  topPlatform, priciest, cheapest, tiebreakRounds, topQuestions, questionsTotal,
+}) {
   const facts = [];
 
   facts.push(best
@@ -190,6 +257,48 @@ function factsSection({ best, controversial, neverWon, played, totalRatings, tot
     played.length > 1
       ? `<p class="fato__prova">De ${esc(first.winner.name)} (Fase ${esc(first.round.number)}) a ${esc(last.winner.name)} (Fase ${esc(last.round.number)}).</p>`
       : `<p class="fato__prova">A primeira foi ${esc(last.winner.name)}.</p>`));
+
+  if (worst) {
+    facts.push(fact(fmtScore(worst.avg), 'de média: o mais mal avaliado do clube até agora. Alguém deve satisfação.',
+      proofGame(worst) + proofScores(worst.scores)));
+  }
+
+  facts.push(fact(`${zereiRate}%`,
+    topZerei
+      ? `do clube zera o jogo até o fim, em média. Foi melhor na rodada de ${topZerei.winner.name}.`
+      : 'do clube zerou algum jogo até agora. Ninguém chegou no final de nada (ainda).',
+    topZerei ? proofGame(topZerei) + `<p class="fato__prova">${topZerei.zereiCount} de ${approvedTotal} zeraram.</p>` : ''));
+
+  facts.push(moodiest
+    ? fact(fmtScore(moodiest.avg),
+      `de média nas notas de ${quem(moodiest.uid)}, ${moodiest.diff > 0 ? 'bem acima' : 'bem abaixo'} do resto do clube. ${moodiest.diff > 0 ? 'Facinho de agradar' : 'Duro na régua'}.`,
+      `<p class="fato__prova">Média geral do clube: ${fmtScore(clubAvg)} (${moodiest.n} notas de ${esc(quem(moodiest.uid))}).</p>`)
+    : fact('0', 'sócios com nota suficiente pra saber quem é duro na régua. Dá nota aí, gente.'));
+
+  facts.push(topPlatform
+    ? fact(String(topPlatform[1]),
+      `dos jogos escolhidos saem também pra ${topPlatform[0]} — a plataforma mais comum do clube.`)
+    : fact('0', 'jogos vencedores com plataforma registrada ainda.'));
+
+  facts.push(priciest && cheapest && priciest.price !== cheapest.price
+    ? fact(fmtPrice(priciest.price - cheapest.price),
+      'de diferença entre o jogo mais caro e o mais barato já escolhido.',
+      `<p class="fato__prova">Mais caro: ${esc(priciest.winner.name)} (${fmtPrice(priciest.price)}). Mais barato: ${esc(cheapest.winner.name)} (${fmtPrice(cheapest.price)}).</p>`)
+    : fact('R$ 0', 'de diferença de preço. O clube só escolhe jogo da mesma faixa.'));
+
+  facts.push(fact(String(tiebreakRounds.length),
+    tiebreakRounds.length
+      ? `${tiebreakRounds.length === 1 ? 'rodada decidida' : 'rodadas decididas'} no sorteio porque empatou.`
+      : 'rodadas precisaram de sorteio. Vitória limpa sempre.',
+    tiebreakRounds.length
+      ? `<p class="fato__prova">Na Fase ${esc(tiebreakRounds[0].round.number)}, empate entre ${listJoin(tiebreakRounds[0].tiebreakNames.map(esc))}.</p>`
+      : ''));
+
+  facts.push(fact(String(questionsTotal),
+    topQuestions
+      ? `${plural(questionsTotal, 'pergunta feita', 'perguntas feitas')} na sala de perguntas. A rodada de ${topQuestions.winner.name} foi a mais badalada.`
+      : 'perguntas feitas até agora na sala de perguntas. Mistério total.',
+    topQuestions ? proofGame(topQuestions) + `<p class="fato__prova">${plural(topQuestions.questionsCount, 'pergunta', 'perguntas')} só nessa rodada.</p>` : ''));
 
   return `<section class="stats__fatos" aria-labelledby="st-fatos">
     <h2 id="st-fatos">Curiosidades</h2>
