@@ -6,10 +6,10 @@ import { icon } from '../../lib/icons.js';
 import { PLATFORMS } from '../../lib/platforms.js';
 import { rawgEnabled, searchGames } from '../../lib/rawg.js';
 import { SAI, anim, entrar, espera, sumir } from '../../lib/motion.js';
-import { DURATION_LABEL, MODE_LABEL, confirmInline, esc, fmtPrice, fotoParaCapa, safeImgData, safeUrl, toast, withBusy } from '../../lib/util.js';
+import { DURATION_LABEL, MODE_LABEL, confirmInline, esc, fmtPrice, fotoParaCapa, safeImgData, safeUrl, toast, withBusy, youtubeId } from '../../lib/util.js';
 import { genericCover, memberName, stamp } from '../parts.js';
 import { Estojo, openReading } from '../caixinha.js';
-import { bindTilt, caseHtml, emptyCase, nicho, postit, rackHtml, vitrine } from '../rack.js';
+import { avisoRecados, bindTilt, caseHtml, emptyCase, nicho, postit, rackHtml, vitrine } from '../rack.js';
 import { bindTema, temaHtml } from '../tema.js';
 
 const PITCH_MAX = 200;
@@ -19,9 +19,10 @@ export function renderSuggest(container, data, ctx) {
   const mine = games.find((g) => g.id === uid);
   const others = games.filter((g) => g !== mine);
   const meta = (g) => [g.year, g.genre].filter(Boolean).map(esc).join(' · ');
+  const aviso = avisoRecados(data);
 
   const slotMine = mine
-    ? `<li class="rack__slot" id="slot-meu" data-game="${esc(mine.id)}">${vitrine(nicho(caseHtml(mine, stamp('Seu', { tone: 'pink' }))), `Abrir a caixinha de ${esc(mine.name)}: manual e recados`)}
+    ? `<li class="rack__slot" id="slot-meu" data-game="${esc(mine.id)}">${vitrine(nicho(caseHtml(mine, stamp('Seu', { tone: 'pink' }))), `Abrir a caixinha de ${esc(mine.name)}: manual e recados`, aviso.balao(mine.id))}
         <div class="rack__info">${postit(esc(mine.name), [meta(mine), 'sugestão sua'])}
           <div class="rack__acoes rack__acoes--meu">
             <button class="btn" type="button" data-edit>${icon('pencil')} Editar</button>
@@ -35,7 +36,7 @@ export function renderSuggest(container, data, ctx) {
         </div>
       </li>`;
   const slotOther = (g) =>
-    `<li class="rack__slot" data-game="${esc(g.id)}">${vitrine(nicho(caseHtml(g)), `Abrir a caixinha de ${esc(g.name)}: manual e recados`)}<div class="rack__info">${postit(esc(g.name), [meta(g), `sugestão de ${esc(memberName(members, g.suggestedBy))}`])}</div></li>`;
+    `<li class="rack__slot" data-game="${esc(g.id)}">${vitrine(nicho(caseHtml(g)), `Abrir a caixinha de ${esc(g.name)}: manual e recados`, aviso.balao(g.id))}<div class="rack__info">${postit(esc(g.name), [meta(g), `sugestão de ${esc(memberName(members, g.suggestedBy))}`])}</div></li>`;
 
   container.innerHTML = `
     <h2 class="estante__titulo" id="shelf-title">Na prateleira</h2>
@@ -56,7 +57,7 @@ export function renderSuggest(container, data, ctx) {
     openReading({
       game, members, uid, fonte: slotEl.querySelector('.case'), gatilho: abrir,
       front: slotEl.querySelector('.case__front').innerHTML,
-      recados: { roundId: data.round.id, isAdmin: ctx.session.isAdmin },
+      recados: { roundId: data.round.id, isAdmin: ctx.session.isAdmin, aoVer: aviso.aoVer(slotEl, game.id) },
     });
   });
 
@@ -128,7 +129,11 @@ function manualHtml(game = {}) {
     </label>
     <fieldset class="mcampo"><legend>Plataformas</legend>
       <div class="mchips">${PLATFORMS.map((p) => `<label class="mchip"><input type="checkbox" name="platforms" value="${p}" ${has.has(p) ? 'checked' : ''}><span>${p}</span></label>`).join('')}</div>
-    </fieldset>`;
+    </fieldset>
+    <label class="mcampo"><span>Trailer no YouTube (opcional)</span>
+      <input name="trailer" type="url" inputmode="url" maxlength="200" placeholder="https://youtube.com/watch?v=…" value="${esc(game.trailer ?? '')}" aria-describedby="sg-trailer-ajuda">
+      <small id="sg-trailer-ajuda">Cola o link do vídeo. Ele aparece do lado da caixinha.</small>
+    </label>`;
 }
 
 async function openForm(fonte, gatilho, mine, data, ctx) {
@@ -238,6 +243,8 @@ async function openForm(fonte, gatilho, mine, data, ctx) {
     if (pitch.length > PITCH_MAX) return [`O pitch passou de ${PITCH_MAX} caracteres. Enxuga um pouco.`, f.pitch];
     if (year !== null && (!Number.isInteger(year) || year < 1950 || year > 2100)) return ['Ano esquisito. Confere aí.', f.year];
     if (!Number.isInteger(price) || price < 0 || price > 10000) return ['Preço em reais, número inteiro (0 se for grátis).', f.price];
+    const trailer = f.trailer.value.trim();
+    if (trailer && (!youtubeId(trailer) || trailer.length > 200)) return ['Esse link de trailer não é do YouTube. Cola o link do vídeo (ou deixa vazio).', f.trailer];
     return {
       name: f.name.value.trim(),
       pitch,
@@ -250,6 +257,7 @@ async function openForm(fonte, gatilho, mine, data, ctx) {
       price,
       platforms: [...form.querySelectorAll('input[name=platforms]:checked')].map((i) => i.value),
       rawgId: st.capa === 'rawg' && Number.isInteger(rawgId) ? rawgId : null,
+      trailer,
     };
   }
 

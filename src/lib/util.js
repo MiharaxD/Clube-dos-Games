@@ -73,7 +73,26 @@ export function safeUrl(value) {
   }
 }
 
-export const STATUS_ORDER = ['sugerindo', 'votando', 'jogando', 'encerrada'];
+// Trailer: aceita link do YouTube (watch?v=, youtu.be/, shorts/, embed/, live/) e devolve só o ID do vídeo
+// (11 caracteres), ou '' se não for do YouTube. As rules aceitam só https://(www.|m.)youtube.com|youtu.be.
+export function youtubeId(value) {
+  let url;
+  try {
+    url = new URL(String(value ?? '').trim());
+  } catch {
+    return '';
+  }
+  if (url.protocol !== 'https:') return '';
+  const host = url.hostname.replace(/^(www|m)\./, '');
+  let id = '';
+  if (host === 'youtu.be') id = url.pathname.split('/')[1] ?? '';
+  else if (host === 'youtube.com') {
+    id = url.searchParams.get('v') ?? url.pathname.match(/^\/(?:shorts|embed|live)\/([^/]+)/)?.[1] ?? '';
+  }
+  return /^[\w-]{11}$/.test(id) ? id : '';
+}
+
+export const STATUS_ORDER =['sugerindo', 'votando', 'jogando', 'encerrada'];
 
 export const STATUS_LABEL = {
   sugerindo: 'Sugerindo',

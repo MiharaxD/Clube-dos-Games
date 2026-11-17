@@ -168,7 +168,7 @@ service cloud.firestore {
         function validGame(d) {
           return d.keys().hasOnly([
               'name', 'cover', 'coverData', 'platforms', 'year', 'genre', 'pitch',
-              'duration', 'mode', 'price', 'suggestedBy', 'rawgId', 'createdAt'
+              'duration', 'mode', 'price', 'suggestedBy', 'rawgId', 'createdAt', 'trailer'
             ])
             && isText(d.name, 1, 100)
             && isText(d.pitch, 1, 200)
@@ -182,6 +182,10 @@ service cloud.firestore {
               || (d.coverData is string && d.coverData.size() <= 100000
                   && d.coverData.matches('^data:image/jpeg;base64,[A-Za-z0-9+/=]+$')))
             && isText(d.get('genre', ''), 0, 60)
+            // trailer: só link do YouTube (vira embed na caixinha)
+            && (d.get('trailer', '') == ''
+              || (d.trailer is string && d.trailer.size() <= 200
+                  && d.trailer.matches('^https://(www[.]|m[.])?(youtube[.]com|youtu[.]be)/.+$')))
             && (d.get('year', null) == null || (d.year is int && d.year >= 1950 && d.year <= 2100))
             && (d.get('rawgId', null) == null || d.rawgId is int);
         }

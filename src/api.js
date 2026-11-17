@@ -159,6 +159,15 @@ export async function listComments(roundId, gameId) {
   return snap.docs.map(withId);
 }
 
+// Recados de todos os jogos da rodada (pro balão de recado novo na prateleira): { [gameId]: [recado, ...] }
+export async function listAllComments(roundId, games) {
+  const result = {};
+  await Promise.all(games.map(async (g) => {
+    result[g.id] = await listComments(roundId, g.id);
+  }));
+  return result;
+}
+
 export function addComment(roundId, gameId, uid, text) {
   return addDoc(collection(db, 'rounds', roundId, 'games', gameId, 'comments'), {
     text,

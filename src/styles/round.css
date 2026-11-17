@@ -418,6 +418,11 @@ textarea.campo-papel { display: block; width: 100%; min-height: 96px; margin-top
 .balcao__dica b { color: var(--ink); }
 .balcao__acoes { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
 .balcao__acoes[hidden] { display: none; }
+/* quem falta votar (só em "votando") */
+.balcao__falta { display: grid; justify-items: center; gap: 8px; width: 100%; padding-top: 12px; border-top: 2px dashed rgb(70 195 181 / 0.35); }
+.balcao__faltam { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 16px; margin: 0; padding: 0; list-style: none; }
+.balcao__faltam li { display: flex; align-items: center; gap: 4px; }
+.balcao__faltam small { color: var(--muted); }
 
 /* ---------- Depois de finalizar: a mesa fica vazia e o bilhete do fechamento aparece ---------- */
 .fim {

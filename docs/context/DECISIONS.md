@@ -2,7 +2,8 @@
 
 - **Modelo de dados:** `config/admins{uids}`, `members/{uid}`, `rounds/{id}` com subcoleções
   `games/{uidDoAutor}/votes/{uidEleitor}` e `games/{uid}/comments/{auto}` (recados, criados só em
-  sugerindo/votando; apagar o jogo apaga os recados), `rounds.theme` (tema da rodada, ≤ 60, só admin), `dateVotes/{uid}`, `ratings/{uid}`, `questions/{auto}`, `board/{uid}` (quadro livre da encerrada: `note{x,y}`|null,
+  sugerindo/votando; apagar o jogo apaga os recados; "já vi" fica só no aparelho, `localStorage` em `src/lib/visto.js`),
+  `games.trailer` (opcional, link https do YouTube ≤ 200; vira embed `youtube-nocookie` pelo ID), `rounds.theme` (tema da rodada, ≤ 60, só admin), `dateVotes/{uid}`, `ratings/{uid}`, `questions/{auto}`, `board/{uid}` (quadro livre da encerrada: `note{x,y}`|null,
   `strokes` ≤ 150 strings `cor|largura|x,y x,y…`, `images` ≤ 3 `{data JPEG ≤ 100 mil, x, y, w 60–500}`; cada um só grava o seu),
   `diario/{uid}_{0|1|2}` (quadro de jogando, 3 páginas por pessoa: `notes` ≤ 6 `{x,y,text 1–140}`, `strokes`/`images`
   iguais ao board; sem nota; só grava em "jogando", depois fica pra ver; 6 notinhas é o teto que cabe no limite de

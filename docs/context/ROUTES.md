@@ -9,8 +9,8 @@
   Balcão/admin), `login.css` (cena do login: TV/prancheta/videogame na mesa), `sorteio.css` (overlay do sorteio, roleta, cacos), `motion.css` (reduced-motion desliga movimento; contraste alto só tira grão/brilho; sempre por último; `calma` em `src/lib/motion.js` = só reduced-motion). Seções por comentário
   `/* ---------- Nome ---------- */`. JS visual: `src/views/parts.js` (`neonSign`, `tv`, `cover`/`genericCover`/
   `coverPalette`, `priceTag`, `stamp`, `sticker`, `stateChip`, `phaseSteps`, avatar), `src/views/rack.js`
-  (prateleira 3D: `rackHtml`, `nicho`, `caseHtml`, `postit`, `vitrine`, `bindTilt`), `src/views/caixinha.js`
-  (`Estojo`, `openReading` com mural de recados em sugerindo/votando), `src/views/tema.js` (flâmula do tema da
+  (prateleira 3D: `rackHtml`, `nicho`, `caseHtml`, `postit`, `vitrine`, `bindTilt`, `avisoRecados` = balão de recado não visto, lido por `src/lib/visto.js`), `src/views/caixinha.js`
+  (`Estojo`, `openReading` com recados em post-it em sugerindo/votando e o trailer do YouTube ao lado), `src/views/tema.js` (flâmula do tema da
   rodada acima da prateleira; admin clica e edita), `src/views/mesa.js` (`caixa()`, layouts PC/celular por fase, inclusive `login`; `mountMesa`),
   `src/lib/motion.js` (motor WAAPI + `rolaNaMao` + `elastico`, este só no sorteio), `src/lib/festa.js` (confete em canvas), `src/lib/rickroll.js` (easter egg de toda TV: clique →
   pulo, chiado em canvas + ruído WebAudio (`chiar`/`somDeChiado` exportados, reusados no sorteio), vídeo `public/rickroll.mp4` (H.264/AAC, toca em celular); TV comum liga por `[data-tv-liga]`), `src/lib/scene.js` (luz nasce de `data-luz="tv|abajur|neon"`;
@@ -44,8 +44,8 @@
 
 ## Telas / rotas
 - **Ir direto para:** `src/main.js` (array `ROUTES`, hash routing, casca/nav, telas soltas `solo()`: espera,
-  carregando, erro; login é `src/views/login.js`) → a tela em `src/views/`: `round.js` (carrega a rodada, cabeçalho/ficha/TV de
-  sugerindo/votando, balcão do admin) que delega para `phases/suggest.js` | `phases/vote.js` |
+  carregando, erro; login é `src/views/login.js`) → a tela em `src/views/`: `round.js` (carrega a rodada e, em sugerindo/votando, os recados de
+  todos os jogos; cabeçalho/ficha/TV, balcão do admin com "quem falta votar" em votando) que delega para `phases/suggest.js` | `phases/vote.js` |
   `phases/play.js` (jogando/encerrada: monta a página inteira com a mesa; ZEREI grava `zerei/{uid}` e `mountMesa().solta(i)` derruba a estatueta; o quadro de jogando abre por `src/views/diario.js` (3 páginas, setinhas giram o quadro; sem Firestore: recebe `salvar`); o quadro aberto da encerrada e o de jogando usam o quadro livre de `src/views/quadro.js` (modo resenha ou `notinhas: true`; grava pela `salvar` recebida): palco fixo 1730x1210 escalado + zoom até 5x (botões, ctrl+roda, pinça; janela rola), notas ocupam espaço (`separa` empurra a sua ao arrastar, `arruma` desvia as sobrepostas ao abrir, só na tela), mover/caneta/borracha/foto com ícones pixel de `icons.js` e atalhos V/B/E/Ctrl+Z; no PC (≥ 900px) o formulário da nota fica em linha no canto de baixo, à direita do quadro; salva com debounce e no fechar; CSS `.ql-*` em `round.css`); `shelf.js`, `stats.js`,
   `profile.js`, `admin.js` (aprova fila e remove sócio com `removeMember`, que apaga o doc de `members`; só admin, nunca a si mesmo; jogos/votos ficam e o nome vira "Ex-sócio"; quem volta a logar cai na fila de novo); `sorteio.js` (overlay de fechar a votação, chamado por `closeVoting` em `phases/vote.js`:
   vencedor único ou empate com clone da TV, glitch, roda de `roulette.js` e explosão; voa até `#caso-obj`).
@@ -61,10 +61,12 @@
 ## Dados (Firestore) / regras de negócio
 - **Ir direto para:** `src/api.js` (todas as leituras/escritas), `firestore.rules`,
   `tests/firestore.rules.test.js`.
-- **Testes:** `npm run test:rules`.
+- **Testes:** `npm run test:rules`. Se o emulador do app já ocupa a 8080, rodar com outra config (porta 8085) em vez de
+  apontar pros dados dele (os testes apagam o banco).
 - **Capa:** `game.cover` (link da RAWG/colado) ou `game.coverData` (enviada do aparelho, `fotoParaCapa` em
   `src/lib/util.js`); renderizar sempre por `coverSrc(game)`/`imgSrc()`, nunca `safeUrl(game.cover)` direto.
   Seletor de capa (Busca/Genérica/Link/Aparelho) em `phases/suggest.js` (`opcoesCapa`).
+  **Trailer:** `game.trailer` entra no iframe só pelo ID de `youtubeId()` (`src/lib/util.js`), nunca o link cru.
 - **Cuidados:** mudar campo de documento = mudar `api.js` + `validGame`/`validRound`/etc. nas rules
   + testes, juntos. Voto secreto: durante "votando" membro só lê o próprio voto (por isso
   `getMyVotes` usa getDoc um a um). Voltar status apaga votos/vencedor em `changeStatus` (batch).

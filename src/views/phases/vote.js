@@ -8,7 +8,7 @@ import { RICKROLL_URL } from '../../lib/rickroll.js';
 import { confirmInline, esc, toast, withBusy } from '../../lib/util.js';
 import { memberName, stamp } from '../parts.js';
 import { openReading } from '../caixinha.js';
-import { bindTilt, caseHtml, nicho, postit, rackHtml, vitrine } from '../rack.js';
+import { avisoRecados, bindTilt, caseHtml, nicho, postit, rackHtml, vitrine } from '../rack.js';
 import { revelaVencedor, sorteiaEmpate } from '../sorteio.js';
 import { bindTema, temaHtml } from '../tema.js';
 
@@ -36,12 +36,13 @@ let teimosia = 0; // tentativas depois do limite, só na memória
 export function renderVote(container, data, ctx) {
   const { games, members, uid, myVotes } = data;
   const meta = (g) => [g.year, g.genre].filter(Boolean).map(esc).join(' · ');
+  const aviso = avisoRecados(data);
 
   const slots = games.map((g, i) => {
     const num = String(i + 1).padStart(4, '0');
     if (g.id === uid) {
       return `<li class="rack__slot" data-game="${esc(g.id)}">
-        ${vitrine(nicho(caseHtml(g, `${stamp('Seu', { tone: 'pink' })}<span class="bilhete">esse é seu, calma</span>`)), `Abrir a caixinha de ${esc(g.name)}`)}
+        ${vitrine(nicho(caseHtml(g, `${stamp('Seu', { tone: 'pink' })}<span class="bilhete">esse é seu, calma</span>`)), `Abrir a caixinha de ${esc(g.name)}`, aviso.balao(g.id))}
         <div class="rack__info">${postit(esc(g.name), [meta(g), 'sugestão sua <span class="sr-only">(esse é seu, calma)</span>'])}
           <div class="rack__acoes">
             <button class="ticket" type="button" disabled>
@@ -54,7 +55,7 @@ export function renderVote(container, data, ctx) {
     }
     const voted = myVotes.has(g.id);
     return `<li class="rack__slot" data-game="${esc(g.id)}">
-      ${vitrine(nicho(caseHtml(g, voted ? ETIQUETA.replace(' hidden', '') : ETIQUETA)), `Abrir a caixinha de ${esc(g.name)}: manual do jogo`)}
+      ${vitrine(nicho(caseHtml(g, voted ? ETIQUETA.replace(' hidden', '') : ETIQUETA)), `Abrir a caixinha de ${esc(g.name)}: manual do jogo`, aviso.balao(g.id))}
       <div class="rack__info">${postit(esc(g.name), [meta(g), `sugestão de ${esc(memberName(members, g.suggestedBy))}`])}
         <div class="rack__acoes">
           <button class="ticket" type="button" aria-pressed="${voted}" data-vote="${esc(g.id)}">
@@ -155,7 +156,7 @@ export function renderVote(container, data, ctx) {
       const fonte = slot.querySelector('.case');
       const votar = game.id === uid ? null : { voted: () => myVotes.has(game.id), toggle: (ancora) => alterna(slot.querySelector('[data-vote]'), ancora) };
       openReading({ game, members, uid, fonte, gatilho: abrir, front: slot.querySelector('.case__front').innerHTML, votar,
-        recados: { roundId: data.round.id, isAdmin: ctx.session.isAdmin } });
+        recados: { roundId: data.round.id, isAdmin: ctx.session.isAdmin, aoVer: aviso.aoVer(slot, game.id) } });
       return;
     }
     alterna(event.target.closest('[data-vote]'));

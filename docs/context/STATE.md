@@ -15,8 +15,7 @@
 
 ## Pendências (prioridade)
 1. Usuário criar o projeto Firebase real e fazer o primeiro deploy (README §2–9, §13).
-2. **Campos novos que os mocks pedem (perguntar antes; mudam modelo + rules + testes):** balões de
-   recado na capa (os recados já existem, só no mural da caixinha), extras do "zerei" (tempo, recado, placar,
+2. **Campos novos que os mocks pedem (perguntar antes; mudam modelo + rules + testes):** extras do "zerei" (tempo, recado, placar,
    vitrine da estatueta, estatuetas na mesa da encerrada, "quem zera primeiro"/lanterninha nas stats), descrição
    do jogo ("Do que se trata" no manual). Hoje omitidos; as resenhas do quadro usam o comentário das notas.
    Voltar de jogando pra votando não apaga `zerei`/`diario` (sobram se a rodada voltar a jogando).

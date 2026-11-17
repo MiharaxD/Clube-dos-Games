@@ -3,9 +3,9 @@
 // rodada-sugerindo.html. Dois usos: leitura (manual do jogo) e formulário (sugestão).
 import { addComment, deleteComment, listComments } from '../api.js';
 import { icon } from '../lib/icons.js';
-import { DURATION_LABEL, MODE_LABEL, esc, fmtPrice, imgSrc, coverSrc, toast, withBusy } from '../lib/util.js';
+import { DURATION_LABEL, MODE_LABEL, esc, fmtPrice, imgSrc, coverSrc, toast, withBusy, youtubeId } from '../lib/util.js';
 import { ENTRA_RAPIDO, NA_TELA, SAI, anim, calma, entrar, espera, rolaNaMao, sumir } from '../lib/motion.js';
-import { coverPalette, memberName } from './parts.js';
+import { avatar, coverPalette, memberName } from './parts.js';
 
 const $ = (root, sel) => root.querySelector(sel);
 // Abrindo, a tampa passa de 90° em 0,12 + (94/184)·0,88 do giro (4° de antecipação, depois até −180°).
@@ -56,6 +56,8 @@ export class Estojo {
     this.titulo.id = id;
     this.el.setAttribute('aria-labelledby', id);
     rolaNaMao(this.manual);
+    // Enter/clique durante o voo de entrada (antes do listener da tela) não pode enviar o form nativo
+    this.formEl?.addEventListener('submit', (e) => e.preventDefault());
     this.giro = null;
     this.ocupado = false;
   }
@@ -241,20 +243,22 @@ export async function openReading({ game, members, uid, fonte, gatilho, front, c
   });
   cx.setDisc(game.name, coverSrc(game));
   cx.verso.inert = true;
+  const trailer = montaTrailer(cx, game);
   if (recados) montaRecados(cx, game, members, uid, recados);
   const pecas = [...cx.manual.children];
   pecas.forEach((el) => (el.style.opacity = '0'));
+  if (trailer) trailer.style.opacity = '0';
   cx.ocupado = true;
   await cx.voaDe(fonte, gatilho);
   await espera(140);
-  await Promise.all([cx.abreTampa(), entrar(pecas, 460, 35)]);
+  await Promise.all([cx.abreTampa(), entrar(pecas, 460, 35), trailer ? entrar([trailer], 560) : null]);
   cx.ocupado = false;
   cx.titulo.focus({ preventScroll: true });
 
   const fecha = async () => {
     if (cx.ocupado) return;
     cx.ocupado = true;
-    await cx.fechaTampa();
+    await Promise.all([cx.fechaTampa(), trailer ? sumir([trailer], 200) : null]);
     await cx.voaDeVolta();
   };
   cx.el.addEventListener('click', (e) => {
@@ -282,11 +286,32 @@ export async function openReading({ game, members, uid, fonte, gatilho, front, c
   return cx;
 }
 
+// ------------------------------------------------------------ trailer
+
+// Trailer do YouTube do lado da caixinha (embaixo no celular). Só o ID validado vai pra URL do embed;
+// youtube-nocookie não grava cookie até a pessoa dar play.
+function montaTrailer(cx, game) {
+  const id = youtubeId(game.trailer);
+  if (!id) return null;
+  cx.el.querySelector('.leitura').insertAdjacentHTML('beforeend', `
+    <figure class="trailer">
+      <div class="trailer__tela"><iframe src="https://www.youtube-nocookie.com/embed/${id}?rel=0" title="Trailer de ${esc(game.name)}"
+        loading="lazy" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>
+      <figcaption class="trailer__legenda">Trailer</figcaption>
+    </figure>`);
+  return cx.el.querySelector('.trailer');
+}
+
 // ------------------------------------------------------------ mural de recados
 
 const RECADO_MAX = 300;
 
-function montaRecados(cx, game, members, uid, { roundId, isAdmin }) {
+// Cada recado é um post-it: a cor e a inclinação vêm da posição, pra não ficarem todos iguais.
+const POSTIT_COR = ['#ffe98a', '#ffc2d4', '#b8ecdf', '#ffd59e', '#d9ccff'];
+const POSTIT_GIRO = ['-2deg', '1.6deg', '-0.8deg', '2.2deg', '-1.4deg'];
+
+// aoVer(itens) (opcional): chamado com os recados que a pessoa acabou de ver (marca o balão como lido).
+function montaRecados(cx, game, members, uid, { roundId, isAdmin, aoVer }) {
   cx.el.querySelector('.modal__palco').insertAdjacentHTML('beforeend', `
     <section class="papel recados" aria-label="Recados sobre ${esc(game.name)}">
       <h3 class="recados__titulo">Recados</h3>
@@ -303,13 +328,14 @@ function montaRecados(cx, game, members, uid, { roundId, isAdmin }) {
 
   const desenha = (itens) => {
     lista.innerHTML = itens.length
-      ? itens.map((c) => `<li class="recados__item">
-          <p class="recados__quem">${c.createdBy === uid ? 'Você' : esc(memberName(members, c.createdBy))}</p>
+      ? itens.map((c, i) => `<li class="recados__item" style="--postit: ${POSTIT_COR[i % POSTIT_COR.length]}; --giro: ${POSTIT_GIRO[i % POSTIT_GIRO.length]}">
           <p class="recados__txt">${esc(c.text)}</p>
+          <p class="recados__quem">${avatar(members.find((m) => m.id === c.createdBy), 'sm')}<span>${c.createdBy === uid ? 'Você' : esc(memberName(members, c.createdBy))}</span></p>
           ${c.createdBy === uid || isAdmin || game.id === uid
-            ? `<button class="btn btn--sm" type="button" data-apagar="${esc(c.id)}">Apagar</button>` : ''}
+            ? `<button class="recados__x" type="button" data-apagar="${esc(c.id)}" aria-label="Apagar recado">×</button>` : ''}
         </li>`).join('')
       : '<li class="recados__vazio">Ninguém falou nada ainda. Começa aí.</li>';
+    aoVer?.(itens);
   };
   const carrega = () => listComments(roundId, game.id).then(desenha).catch(() => {
     lista.innerHTML = '<li class="recados__vazio">Não deu pra carregar os recados.</li>';

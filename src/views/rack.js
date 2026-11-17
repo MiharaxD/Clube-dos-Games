@@ -3,7 +3,8 @@
 // REGRA: nada de filter/opacity/blend/mask/clip-path nos ancestrais da cadeia 3D.
 import { DURATION_LABEL, MODE_LABEL, esc, coverSrc } from '../lib/util.js';
 import { calma } from '../lib/motion.js';
-import { coverPalette, genericCover, priceTag } from './parts.js';
+import { naoVistos, marcaVisto } from '../lib/visto.js';
+import { avatar, coverPalette, genericCover, priceTag } from './parts.js';
 
 // Props decorativos em cima do móvel (abajur, consoles, capinhas deitadas). O abajur acende a poça âmbar.
 export const CENARIO = `<div class="cenario" aria-hidden="true">
@@ -148,8 +149,32 @@ export const postit = (title, lines = []) =>
   `<div class="postit"><h3 class="rack__nome">${title}</h3>${lines.filter(Boolean).map((l) => `<p class="rack__meta">${l}</p>`).join('')}</div>`;
 
 // Nicho clicável: um botão invisível por cima da capinha (fora da cadeia 3D) abre a caixinha.
-export const vitrine = (inner, label) =>
-  `<div class="rack__vitrine">${inner}<button class="rack__abrir" type="button" data-abrir aria-haspopup="dialog"><span class="sr-only">${label}</span></button></div>`;
+// `extra` = o que fica por cima do botão (o balão de recado novo).
+export const vitrine = (inner, label, extra = '') =>
+  `<div class="rack__vitrine">${inner}<button class="rack__abrir" type="button" data-abrir aria-haspopup="dialog"><span class="sr-only">${label}</span></button>${extra}</div>`;
+
+// Balão de recado novo em cima da capinha: a fotinha de quem comentou (até 3, o mais novo na frente).
+// Não pega clique: tocar na capinha abre a caixinha e lá os recados ficam vistos.
+function balaoRecados(novos, members) {
+  if (!novos.length) return '';
+  const quem = [...new Set(novos.map((c) => c.createdBy).reverse())];
+  const fotos = quem.slice(0, 3).map((id) => avatar(members.find((m) => m.id === id), 'sm')).join('');
+  const mais = quem.length > 3 ? `<span class="balao__mais">+${quem.length - 3}</span>` : '';
+  const n = novos.length;
+  return `<span class="balao" data-balao><span class="sr-only">${n} ${n === 1 ? 'recado novo' : 'recados novos'}</span>${fotos}${mais}</span>`;
+}
+
+// Liga o balão da prateleira (sugerindo/votando) aos recados carregados em data.comments.
+export function avisoRecados({ round, uid, members, comments = {} }) {
+  return {
+    balao: (gameId) => balaoRecados(naoVistos(round.id, gameId, uid, comments[gameId]), members),
+    // a caixinha chama depois de mostrar os recados: grava como visto e o balão some
+    aoVer: (slot, gameId) => (itens) => {
+      marcaVisto(round.id, gameId, uid, itens);
+      slot.querySelector('[data-balao]')?.remove();
+    },
+  };
+}
 
 // Completa a grade com nichos vazios (2 colunas no celular, 4 no PC) pra fileira não ficar banguela.
 function fill(slots) {

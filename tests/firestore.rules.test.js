@@ -383,6 +383,22 @@ describe('capa enviada do aparelho (coverData)', () => {
   });
 });
 
+describe('trailer do YouTube', () => {
+  it('controle: links do YouTube (www, youtu.be) e vazio são aceitos', async () => {
+    await assertSucceeds(setDoc(doc(as('bob'), 'rounds/r-sug/games/bob'), game('bob', { trailer: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ' })));
+    await assertSucceeds(updateDoc(doc(as('bob'), 'rounds/r-sug/games/bob'), { trailer: 'https://youtu.be/dQw4w9WgXcQ' }));
+    await assertSucceeds(updateDoc(doc(as('bob'), 'rounds/r-sug/games/bob'), { trailer: '' }));
+  });
+
+  it('link de outro site é negado', async () => {
+    await assertFails(setDoc(doc(as('bob'), 'rounds/r-sug/games/bob'), game('bob', { trailer: 'https://evil.com/youtube.com/x' })));
+  });
+
+  it('trailer acima de 200 caracteres é negado', async () => {
+    await assertFails(setDoc(doc(as('bob'), 'rounds/r-sug/games/bob'), game('bob', { trailer: `https://youtu.be/${'a'.repeat(200)}` })));
+  });
+});
+
 // ---------------------------------------------------------------------------
 describe('voto secreto durante "votando"', () => {
   it('bob não lê o voto do admin', async () => {

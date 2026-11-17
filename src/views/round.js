@@ -4,6 +4,7 @@ import {
   changeStatus,
   createRound,
   getMyVotes,
+  listAllComments,
   listAllVotes,
   listDateVotes,
   listDiario,
@@ -18,7 +19,7 @@ import { icon } from '../lib/icons.js';
 import { rankGames } from '../lib/tally.js';
 import { STATUS_LABEL, STATUS_ORDER, confirmInline, copyText, esc, toast, withBusy } from '../lib/util.js';
 import { ENTRA_RAPIDO, SAI, anim, calma } from '../lib/motion.js';
-import { memberName, phaseSteps, tv } from './parts.js';
+import { memberChip, memberName, phaseSteps, tv } from './parts.js';
 import { renderSuggest } from './phases/suggest.js';
 import { closeVoting, renderVote } from './phases/vote.js';
 import { renderPlay } from './phases/play.js';
@@ -42,6 +43,10 @@ export async function renderRound(main, ctx) {
   const games = await listGames(round.id);
   const data = { round, games, members: session.members, uid, isLatest: round.id === latest.id };
 
+  if (round.status === 'sugerindo' || round.status === 'votando') {
+    // recados de todos os jogos: o balão com a foto de quem comentou e a pessoa ainda não viu
+    data.comments = await listAllComments(round.id, games).catch(() => ({}));
+  }
   if (round.status === 'votando') {
     data.myVotes = await getMyVotes(round.id, games, uid);
     // Voto secreto: só o admin lê todos os votos enquanto a votação está aberta.
@@ -237,7 +242,22 @@ function bindCreateRound(main, { refresh }, number, { finaliza = false } = {}) {
   });
 }
 
-function adminPanel({ round, games }) {
+// Só o admin lê os votos durante "votando": quem aprovado ainda não marcou nenhum jogo.
+function faltaVotar({ games, members, votesByGame = {}, uid }) {
+  const votaram = new Set(Object.values(votesByGame).flat());
+  // quem não tem em quem votar (só o próprio jogo na prateleira) não conta
+  const podeVotar = (m) => games.some((g) => g.id !== m.id);
+  const elegiveis = members.filter((m) => m.approved && podeVotar(m));
+  const faltam = elegiveis.filter((m) => !votaram.has(m.id));
+  if (!faltam.length) return '<p class="balcao__dica balcao__falta">Todo mundo já votou. Pode fechar.</p>';
+  return `<div class="balcao__falta">
+      <p class="balcao__dica">Falta${faltam.length === 1 ? '' : 'm'} votar <b>${faltam.length}</b> de ${elegiveis.length}:</p>
+      <ul class="balcao__faltam">${faltam.map((m) => `<li>${memberChip(m)}${m.id === uid ? ' <small>(você)</small>' : ''}</li>`).join('')}</ul>
+    </div>`;
+}
+
+function adminPanel(data) {
+  const { round, games } = data;
   const i = STATUS_ORDER.indexOf(round.status);
   const buttons = [];
 
@@ -267,6 +287,7 @@ function adminPanel({ round, games }) {
       <p class="balcao__dica">Etapa <b>${i + 1} de 4</b>. Avance quando o grupo já tiver tido tempo.</p>
       <div class="balcao__acoes">${buttons.join('')}</div>
       ${hint}
+      ${round.status === 'votando' ? faltaVotar(data) : ''}
     </section>`;
 }
 

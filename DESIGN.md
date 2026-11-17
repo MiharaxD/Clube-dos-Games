@@ -449,12 +449,16 @@ props decorativos (abajur, consoles, capinhas deitadas). Cada jogo é um **estoj
 nome); no PC a caixa endireita no hover/foco e o reflexo segue o ponteiro. Embaixo do beiço, um **post-it de papel creme**
 (nome à mão + metadados) e as ações. Na votação o voto é um **ticket** (canhoto | picote | corpo): votar rasga o corpo, que
 cai, e a etiqueta VOTADO cola na capa; o canhoto que sobra desfaz. O próprio jogo tem o ticket anulado e o bilhete
-"esse é seu, calma". Área com rolagem dentro de `preserve-3d` rola por `rolaNaMao` (`src/lib/motion.js`).
+"esse é seu, calma". Em sugerindo/votando, recado que a pessoa ainda não viu vira um **balão de fala** de papel no canto
+de cima da capinha, com as fotinhas de quem comentou (até 3, +N), dando um pulinho de vez em quando; some ao abrir a caixinha. Área com rolagem dentro de `preserve-3d` rola por `rolaNaMao` (`src/lib/motion.js`).
 
 ### Caixinha
 Clicar na capinha tira o estojo do nicho num arco até o centro; a tampa destrava e gira na dobradiça; o **manual** (papel)
 fica no verso e o **CD** gira na bandeja. Leitura: o manual traz pitch, ano, gênero, duração, modo, preço e plataformas
 (cabem sem rolar por dentro); na votação a caixinha tem "Votar nesse" / "Votado · desfazer" (menos no jogo da própria pessoa).
+Com trailer, o vídeo do YouTube (moldura escura 16:9, legenda TRAILER) entra do lado da caixinha aberta no PC e embaixo no
+celular. Embaixo, os **recados** são post-its coloridos (amarelo, rosa, teal, laranja, lilás) tortinhos com fita, texto à mão,
+fotinha e nome de quem escreveu; o formulário de recado fica num papel creme.
 Sugestão: a caixinha vira o formulário em dois passos (capa: nome + imagem; manual: o resto); ao finalizar a tampa fecha,
 tarja e preço aparecem, o carimbo SEU bate e a caixa volta pro nicho.
 
