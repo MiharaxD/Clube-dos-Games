@@ -201,7 +201,8 @@ function botaoHtml(placa) {
     + `<div class="cupula">${discos}</div>`;
 }
 
-// estatueta: pedestal de pedra + boneco de metal; a cabeça é a foto (ou inicial) de quem zerou
+// estatueta: pedestal de pedra + boneco de metal; a cabeça é a foto (ou inicial) de quem zerou.
+// membro.recado (opcional) vira um balãozinho em cima da cabeça, sempre virado pra câmera.
 function estatuetaCorpo(membro, i) {
   const ph = PEDESTAL[i] ?? 22;
   const y0 = ph + 6;
@@ -216,7 +217,8 @@ function estatuetaCorpo(membro, i) {
     + `<div class="braco" style="--ax:-15px;--ay:${y0 + 64}px;--a:-34deg">${caixa({ w: 8, h: 30, t: 8, cls: 'm-metal' })}</div>`
     + `<div class="braco" style="--ax:15px;--ay:${y0 + 64}px;--a:34deg">${caixa({ w: 8, h: 30, t: 8, cls: 'm-metal' })}</div>`
     + caixa({ w: 12, h: 6, t: 10, y: y0 + 70, cls: 'm-metal', faces: 'flr' })
-    + `<div class="cabeca3d" style="--hy:${y0 + 97}px">${rosto}</div>`;
+    + `<div class="cabeca3d" style="--hy:${y0 + 97}px">${rosto}</div>`
+    + (membro?.recado ? `<div class="balao3d" style="--hy:${y0 + 124 + (i % 2) * 50}px"><span>${esc(membro.recado)}</span></div>` : '');
 }
 function estatuetaHtml(L, membro, i) {
   const [x, z] = slot(L, i);
@@ -227,7 +229,7 @@ function estatuetaHtml(L, membro, i) {
 // Mesmo boneco 3D: palco próprio com perspectiva e câmera fixa de 3/4.
 export function estatuetaSoloHtml(membro, i) {
   return `<div class="est-solo" aria-hidden="true"><div class="est-solo__mundo">
-    <div class="obj" style="--x:0px;--z:0px;--ry:0deg;--s:2;${metalVars(i)}"><div class="mola"><div class="est__corpo">${estatuetaCorpo(membro, i)}</div></div></div>
+    <div class="obj" style="--x:0px;--z:0px;--ry:0deg;--s:2;${metalVars(i)}"><div class="mola"><div class="est__corpo">${estatuetaCorpo({ ...membro, recado: '' }, i)}</div></div></div>
   </div></div>`;
 }
 

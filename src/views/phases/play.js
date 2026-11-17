@@ -19,7 +19,7 @@ import {
 } from '../../api.js';
 import { icon } from '../../lib/icons.js';
 import { ENTRA_RAPIDO, NA_TELA, SAI, anim, calma, entrar } from '../../lib/motion.js';
-import { confirmInline, esc, fmtDateTime, fmtDay, fmtPrice, fotoParaQuadro, listJoin, safeImgData, safeUrl, toast, withBusy, DURATION_LABEL, MODE_LABEL } from '../../lib/util.js';
+import { confirmInline, esc, fmtDateTime, fmtDay, fmtPrice, fotoParaQuadro, listJoin, safeImgData, safeUrl, toast, youtubeId, withBusy, DURATION_LABEL, MODE_LABEL } from '../../lib/util.js';
 import { avatar, empty, memberName, stamp } from '../parts.js';
 import { openReading } from '../caixinha.js';
 import { caseFront } from '../rack.js';
@@ -51,7 +51,11 @@ export function renderPlay(main, data, ctx, extra) {
   const pages = ratingPages(data);
 
   // quem zerou, em ordem de chegada (as estatuetas); some quem saiu do clube
-  const zerados = (data.zerei ?? []).map((z) => members.find((m) => m.id === z.id)).filter(Boolean);
+  // (o recado vai junto pra virar balão em cima da estatueta)
+  const zerados = (data.zerei ?? []).map((z) => {
+    const m = members.find((x) => x.id === z.id);
+    return m && { ...m, recado: String(z.recado ?? '').trim() };
+  }).filter(Boolean);
   const minhaPos = zerados.findIndex((m) => m.id === uid);
 
   const alvos = [{ obj: 'caso-obj', label: `Abrir a caixinha de ${esc(game.name)}: manual do jogo` }];
@@ -144,7 +148,7 @@ export function renderPlay(main, data, ctx, extra) {
       zerando = false;
       return;
     }
-    const eu = members.find((m) => m.id === uid) ?? { id: uid, name: ctx.session.member?.name };
+    const eu = { ...(members.find((m) => m.id === uid) ?? { id: uid, name: ctx.session.member?.name }), recado: prova.recado };
     zerados.push(eu);
     data.zerei = [...(data.zerei ?? []), { id: uid, ...prova }];
     const i = zerados.length - 1;
@@ -168,7 +172,6 @@ export function renderPlay(main, data, ctx, extra) {
     }
   });
 
-  main.querySelector('[data-announce]')?.addEventListener('click', extra.announce);
   bindInfo(main, data, ctx);
   bindDates(main, data, ctx);
   if (!playing) bindQuestions(main, data, ctx);
@@ -220,7 +223,10 @@ function infoSection({ round, members, ranking, me }, game, tied, isAdmin) {
           <h3 class="painel__titulo">Por que jogar</h3>
           <figure class="pitch"><blockquote>${esc(game.pitch)}</blockquote><figcaption>${esc(by)}, quando sugeriu</figcaption></figure>
         </div>` : ''}
-      ${isAdmin ? `<div class="info__bloco actions"><button class="btn" type="button" data-announce>${icon('copy')} Copiar mensagem pro grupo</button></div>` : ''}
+      ${youtubeId(game.trailer) ? `<div class="info__bloco"><figure class="trailer">
+        <div class="trailer__tela"><iframe src="https://www.youtube-nocookie.com/embed/${youtubeId(game.trailer)}?rel=0" title="Trailer de ${esc(game.name)}"
+          loading="lazy" allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>
+        <figcaption class="trailer__legenda">Trailer</figcaption></figure></div>` : ''}
     </section>`;
 }
 
@@ -771,7 +777,7 @@ function pedeProva(nomeJogo) {
         <h2 class="modal__titulo" id="prova-titulo" tabindex="-1">Prova ou não aconteceu</h2>
         <p class="modal__dica">Manda uma foto ou print de ${esc(nomeJogo)} zerado: créditos, troféu, tela final. Sem foto, sem estatueta.</p>
         <label class="btn"><input class="sr-only" type="file" accept="image/*" data-arq>Escolher foto</label>
-        <figure class="prova" hidden><img alt="Prévia da foto de prova"><figcaption>a prova</figcaption></figure>
+        <figure class="prova" hidden><img alt="Prévia da foto de prova"></figure>
         <label class="field prova-form__recado"><span>Recado (opcional)</span>
           <textarea class="input" data-recado maxlength="${RECADO_MAX}" placeholder="Ex.: aquele final me quebrou"></textarea>
         </label>
@@ -830,7 +836,7 @@ function openEstatueta(gatilho, zerados, data, ctx) {
         <h2 class="est-info__pos" id="est-titulo" tabindex="-1">${i + 1}º · ${metal.nome}</h2>
         <p class="est-info__quem">${voce ? 'Você' : esc(nome)} zerou ${esc(data.round.winner?.name ?? 'o jogo')}.</p>
         ${foto
-          ? `<figure class="prova"><img src="${esc(foto)}" alt="Foto de prova do zerado de ${esc(nome)}"><figcaption>a prova</figcaption></figure>`
+          ? `<figure class="prova"><img src="${esc(foto)}" alt="Foto de prova do zerado de ${esc(nome)}"></figure>`
           : '<p class="prova prova--vazia">Zerou antes da regra da foto. Confia.</p>'}
         ${recado ? `<blockquote class="est-recado"><p>${esc(recado)}</p></blockquote>` : ''}
         <div class="modal__acoes">

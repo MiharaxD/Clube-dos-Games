@@ -39,7 +39,7 @@
 ## Textos da interface
 - **Ir direto para:** strings ficam inline nas telas (`src/views/**`); ficha "o que falta fazer" em
   `round.js` (função `todo`, que também devolve o `cta` do botão principal; `bindCta` abre a caixinha, foca o
-  ticket ou abre calendário/quadro); mensagem de anúncio em `src/lib/announce.js` (botão de copiar só pro admin); erros genéricos em
+  ticket ou abre calendário/quadro); mensagem de anúncio em `src/lib/announce.js` (botão de copiar só pro admin, fora da tela de jogando, onde o lugar é do trailer); erros genéricos em
   `src/lib/util.js` (`withBusy`). Frase obrigatória: "esse é seu, calma" (`phases/vote.js`).
 
 ## Telas / rotas

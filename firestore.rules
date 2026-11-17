@@ -407,7 +407,7 @@ service cloud.firestore {
       // desfazer (apagar) enquanto a rodada está em "jogando"; o admin também
       // anula o zerei de qualquer um (mentiroso) nessa fase. "foto" = prova do
       // zerado (obrigatória), JPEG em data URL com o mesmo limite da capa;
-      // "recado" opcional (até 280), aparece do lado da foto na estatueta.
+      // "recado" opcional (até 280): balão em cima da estatueta e ao lado da foto.
       // -----------------------------------------------------------------------
       match /zerei/{ownerId} {
         allow read: if isApproved();

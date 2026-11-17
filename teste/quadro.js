@@ -59,7 +59,9 @@ const zeradosTxt = (zerados) => (zerados.length
 
 function render() {
   const playing = estado.fase === 'jogando';
-  const zerados = estado.zerei.map((id) => MEMBROS.find((m) => m.id === id)).filter(Boolean);
+  // recados falsos pra ver o balão em cima das estatuetas
+  const RECADOS = { mari: 'aquele final me quebrou, chorei no sofá', caio: 'fácil demais kkk' };
+  const zerados = estado.zerei.map((id) => MEMBROS.find((m) => m.id === id)).filter(Boolean).map((m) => ({ ...m, recado: RECADOS[m.id] ?? '' }));
   const minhaPos = zerados.findIndex((m) => m.id === estado.eu);
   const alvos = [];
   if (playing) alvos.push({ obj: 'botao-obj', label: minhaPos < 0 ? 'Zerei!' : `Você já zerou (${minhaPos + 1}º)`, popup: false });
