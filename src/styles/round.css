@@ -612,7 +612,13 @@ textarea.campo-papel { display: block; width: 100%; min-height: 96px; margin-top
 .ql-foto:nth-child(even) { rotate: 2deg; }
 .ql-foto img { display: block; width: 100%; height: auto; pointer-events: none; }
 .ql-foto > .tacha { top: -6px; width: 16px; height: 16px; --tacha: var(--pink); }
-.ql-foto__x { position: absolute; top: -12px; right: -12px; width: 32px; height: 32px; border: 0; border-radius: 50%; background: var(--paper-ink); color: var(--paper); font: 700 1.1rem/1 var(--f-texto); cursor: pointer; }
+/* área de toque 44px (Regra do Toque de 44); o círculo visual continua 32px, centralizado via ::before */
+.ql-foto__x {
+  position: absolute; top: -18px; right: -18px; isolation: isolate; width: var(--toque); height: var(--toque); padding: 0; border: 0;
+  background: none; color: var(--paper); font: 700 1.1rem/1 var(--f-texto); cursor: pointer; display: grid; place-items: center;
+}
+.ql-foto__x::before { content: ''; position: absolute; width: 32px; height: 32px; border-radius: 50%; background: var(--paper-ink); z-index: -1; }
+.ql-foto__x:focus-visible { outline: 3px solid var(--amber); outline-offset: -6px; border-radius: 50%; }
 .ql-foto__alca { position: absolute; right: -6px; bottom: -6px; width: 22px; height: 22px; border: 3px solid var(--paper-ink); border-left: 0; border-top: 0; cursor: nwse-resize; }
 .ql-palco:not([data-ferr='mover']) .ql-foto__x, .ql-palco:not([data-ferr='mover']) .ql-foto__alca { display: none; }
 .ql-tinta { position: absolute; inset: 0; z-index: 10; pointer-events: none; fill: none; stroke-linecap: round; stroke-linejoin: round; }
@@ -708,7 +714,13 @@ textarea.campo-papel { display: block; width: 100%; min-height: 96px; margin-top
 .ql-notinha--minha { cursor: grab; touch-action: none; }
 .ql-palco:not([data-ferr='mover']) .ql-notinha { cursor: default; }
 .ql-palco:not([data-ferr='mover']) .ql-notinha__x { display: none; }
-.ql-notinha__x { position: absolute; top: -12px; right: -12px; width: 32px; height: 32px; border: 0; border-radius: 50%; background: var(--paper-ink); color: var(--paper); font: 700 1.1rem/1 var(--f-texto); cursor: pointer; }
+/* área de toque 44px (Regra do Toque de 44); o círculo visual continua 32px, centralizado via ::before */
+.ql-notinha__x {
+  position: absolute; top: -18px; right: -18px; isolation: isolate; width: var(--toque); height: var(--toque); padding: 0; border: 0;
+  background: none; color: var(--paper); font: 700 1.1rem/1 var(--f-texto); cursor: pointer; display: grid; place-items: center;
+}
+.ql-notinha__x::before { content: ''; position: absolute; width: 32px; height: 32px; border-radius: 50%; background: var(--paper-ink); z-index: -1; }
+.ql-notinha__x:focus-visible { outline: 3px solid var(--amber); outline-offset: -6px; border-radius: 50%; }
 /* folhear: setas dos lados do quadro + qual página é */
 .diario__folhas { display: flex; align-items: center; justify-content: center; gap: 12px; }
 /* setas: plaquinha de papel em forma de flecha, com setinha de pixel e "Vira"/"Volta" à mão.

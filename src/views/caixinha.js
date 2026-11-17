@@ -3,6 +3,7 @@
 // rodada-sugerindo.html. Dois usos: leitura (manual do jogo) e formulário (sugestão).
 import { addComment, deleteComment, listComments } from '../api.js';
 import { icon } from '../lib/icons.js';
+import { playableCount } from '../lib/platforms.js';
 import { DURATION_LABEL, MODE_LABEL, esc, fmtPrice, imgSrc, coverSrc, toast, withBusy, youtubeId } from '../lib/util.js';
 import { ENTRA_RAPIDO, NA_TELA, SAI, anim, calma, entrar, espera, rolaNaMao, sumir } from '../lib/motion.js';
 import { avatar, coverPalette, memberName } from './parts.js';
@@ -221,7 +222,15 @@ export function readingManual(game, members, uid) {
     <p class="manual__por">${by}</p>
     ${game.pitch ? `<h3 class="manual__sec">Por que jogar</h3><p class="manual__pitch">“${esc(game.pitch)}”</p>` : ''}
     ${facts.length ? `<dl class="manual__fatos">${facts.map(([k, v]) => `<div><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>` : ''}
-    ${game.platforms?.length ? `<h3 class="manual__sec">Plataformas</h3><ul class="manual__plats">${game.platforms.map((p) => `<li>${esc(p)}</li>`).join('')}</ul>` : ''}`;
+    ${game.platforms?.length ? `<h3 class="manual__sec">Plataformas</h3><ul class="manual__plats">${game.platforms.map((p) => `<li>${esc(p)}</li>`).join('')}</ul>${avisoPlataforma(game.platforms, members)}` : ''}`;
+}
+
+// Quantos sócios não vão conseguir jogar nessas plataformas (DESIGN.md: aviso rosa com ícone).
+// Só aparece quando falta alguém; ninguém de fora ou sem plataforma cadastrada não conta.
+function avisoPlataforma(gamePlatforms, members) {
+  const { able, total } = playableCount(gamePlatforms, members);
+  if (!total || able >= total) return '';
+  return `<p class="aviso aviso--papel">${icon('warn', 'Atenção')}Só ${able} de ${total} sócios conseguem jogar nessas plataformas</p>`;
 }
 
 // Abre a caixinha em modo leitura a partir da capinha (fonte) e devolve quando fechar.

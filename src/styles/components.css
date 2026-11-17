@@ -230,6 +230,8 @@ fieldset { border: 0; padding: 0; min-width: 0; }
 .chip .icon { width: 16px; height: 16px; }
 /* aviso de plataforma incompatível: rosa com ícone */
 .aviso { display: inline-flex; align-items: center; gap: 6px; color: var(--pink); font-weight: 700; }
+/* mesmo aviso sobre papel (manual): rosa não passa de 4,5:1 em paper (The Tinta Certa Rule) */
+.aviso--papel { color: var(--stamp); }
 
 /* ---------- Toast ---------- */
 .toast {
