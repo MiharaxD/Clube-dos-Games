@@ -22,11 +22,11 @@ const obj = (id, [x, z, ry = 0], s, inner, y = 0, extra = '') =>
 // Encerrada: quadro de resenha + o quadro de jogando guardado no fundo.
 const LAYOUTS = {
   jogando: {
-    pc: { W: 1040, H: 900, cy: 640, cam: -26, mesa: [1000, 440], lamp: [-440, -170, 0], cal: [-315, -10, 20], console: [-70, 40, -8], controle: [105, 172, 14],
-      est: { dx: 120, larg: 860, z: -270, s: 0.8, y: 280 }, botao: [432, 130, -12], diario: [235, -60, -8],
+    pc: { W: 1040, H: 1000, cy: 740, cam: -26, mesa: [1000, 440], lamp: [-440, -170, 0], cal: [-315, -10, 20], console: [-70, 40, -8], controle: [105, 172, 14],
+      est: { dx: 150, larg: 960, z: -270, s: 0.95, y: 230 }, botao: [432, 130, -12], diario: [235, -60, -8],
       esc: { cal: 1, caso: 1, console: 1, botao: 0.95, diario: 1.02 }, nota: [-300, 160], notaZ: [330, 196] },
-    cel: { W: 600, H: 800, cy: 520, cam: -30, mesa: [580, 560], lamp: [-248, -238, 0], cal: [-178, -112, 18], console: [-8, 118, -6], controle: [62, 238, 18],
-      est: { dx: 90, larg: 560, z: -295, s: 0.6, y: 200 }, botao: [205, 196, -12], diario: [160, -70, -6],
+    cel: { W: 600, H: 960, cy: 680, cam: -30, mesa: [580, 560], lamp: [-248, -238, 0], cal: [-178, -112, 18], console: [-8, 118, -6], controle: [62, 238, 18],
+      est: { dx: 90, larg: 560, z: -295, s: 0.62, y: 200 }, botao: [205, 196, -12], diario: [160, -70, -6],
       esc: { cal: 0.95, caso: 0.85, console: 0.8, botao: 0.85, diario: 0.74 }, nota: [-205, 70], notaZ: [180, 272] },
   },
   encerrada: {
@@ -50,8 +50,16 @@ function geoPrat(est, vagas) {
   const dx = Math.min(est.dx, est.larg / cols);
   return { ...est, cols, dx, x0: -((cols - 1) * dx) / 2 };
 }
+// Assentos: o 1º no meio da tábua, o 2º à esquerda dele, o 3º à direita, 4º mais à esquerda...
+const assento = (i) => (i === 0 ? 0 : i % 2 ? -(i + 1) / 2 : i / 2);
+const meioAssentos = (n) => (-Math.floor(n / 2) + Math.floor((n - 1) / 2)) / 2;
 // lugar da estatueta i: [x, z, altura da tábua]
-const slot = (L, i) => [L.est.x0 + i * L.est.dx, L.est.z, L.est.y];
+const slot = (L, i) => [(assento(i) - meioAssentos(L.est.cols)) * L.est.dx, L.est.z, L.est.y];
+// paridade do assento (da esquerda pra direita), pra alternar a altura dos balões
+const parAssento = (L, i) => (assento(i) + Math.floor(L.est.cols / 2)) % 2;
+// tamanho por posição: o 1º é o maior de longe
+const TAMANHO = [1.4, 1.15, 1.05];
+const tam = (i) => TAMANHO[i] ?? 0.9;
 function prateleiraHtml(L) {
   const { dx, z, cols, y } = L.est;
   const w = cols * dx + 24;
@@ -209,42 +217,64 @@ function botaoHtml(placa) {
     + `<div class="cupula">${discos}</div>`;
 }
 
-// Balões de recado: se o vão entre estatuetas (em px da estatueta) é mais largo que o balão
-// (.balao3d tem 140px), ficam todos na mesma altura; senão alternam em dois andares (ímpares em
-// cima), com o andar mais alto que o balão mais alto (10 linhas). Assim nenhum tampa o outro.
+// Balões de recado: têm sempre o mesmo tamanho na tela (desfazem o tamanho da estatueta). Se o vão
+// entre estatuetas é mais largo que o balão (.balao3d tem 140px), cada um fica em cima da sua cabeça;
+// senão todos alinham numa linha só, alternando dois andares pela paridade do assento, com o andar
+// mais alto que o balão mais alto (10 linhas). Assim nenhum tampa o outro.
 const BALAO_LARG = 150;
-const BALAO_ANDAR = 172;
-const andarBalao = (est) => (est.dx / est.s >= BALAO_LARG ? 0 : BALAO_ANDAR);
+const BALAO_ANDAR = 192;
+const BALAO_SOBE = 150; // da base do boneco (y0) até o pé do balão
+const COROA = 34; // o 1º tem coroa na cabeça: o balão sobe isso
+function balaoPos(L, i) {
+  const k = tam(i);
+  const y0 = (PEDESTAL[i] ?? 22) + 6;
+  if (L.est.dx / L.est.s >= BALAO_LARG) return { hy: y0 + BALAO_SOBE + (i === 0 ? COROA : 0), k };
+  const linha = TAMANHO[0] * (PEDESTAL[0] + 6 + BALAO_SOBE + COROA); // acima da cabeça mais alta
+  return { hy: (linha + parAssento(L, i) * BALAO_ANDAR) / k, k };
+}
+
+// Glória do pódio (atrás e em volta do boneco, sempre virada pra câmera):
+// 1º = raios dourados girando + holofote + brilhos piscando + coroa; 2º e 3º = aura do metal + brilhos.
+function gloriaHtml(i, y0, idCoroa) {
+  if (i > 2) return '';
+  const brilhos = (n) => Array.from({ length: n }, (_, k) => `<span class="brilho" style="--b:${k}"></span>`).join('');
+  if (i > 0) return `<div class="bb3d aura3d" style="--hy:${y0 + 60}px;--bz:-24px"><span class="aura"></span>${brilhos(3)}</div>`;
+  return `<div class="bb3d holofote3d" style="--hy:${-6}px;--bz:-34px"></div>`
+    + `<div class="bb3d gloria3d" style="--hy:${y0 + 66}px;--bz:-40px"><span class="raios"></span><span class="raios raios--2"></span>${brilhos(6)}</div>`
+    + `<div class="bb3d coroa3d" style="--hy:${y0 + 130}px">${coroaSvg(idCoroa)}</div>`;
+}
 
 // estatueta: pedestal de pedra + boneco de metal; a cabeça é a foto (ou inicial) de quem zerou.
-// membro.recado (opcional) vira um balãozinho em cima da cabeça, sempre virado pra câmera.
-function estatuetaCorpo(membro, i, andar = 0) {
+// balao = { hy, k } (opcional): o recado vira um balãozinho em cima, sempre virado pra câmera.
+function estatuetaCorpo(membro, i, balao = null, idCoroa = 'coroa-est') {
   const ph = PEDESTAL[i] ?? 22;
   const y0 = ph + 6;
   const photo = safeUrl(membro?.photoURL);
   const rosto = photo
     ? `<img src="${esc(photo)}" alt="" referrerpolicy="no-referrer">`
     : `<b>${esc((membro?.name ?? '?').trim().charAt(0).toUpperCase())}</b>`;
-  return caixa({ w: 58, h: ph, t: 58, cls: 'm-pedra', f: `<span class="est__placa">${i + 1}º</span>` })
+  return gloriaHtml(i, y0, idCoroa)
+    + caixa({ w: 58, h: ph, t: 58, cls: 'm-pedra', f: `<span class="est__placa">${i + 1}º</span>` })
     + caixa({ w: 62, h: 6, t: 62, y: ph, cls: 'm-metal' })
     + caixa({ w: 24, h: 34, t: 14, y: y0, cls: 'm-metal est__pernas', faces: 'flr' })
     + caixa({ w: 34, h: 36, t: 18, y: y0 + 34, cls: 'm-metal' })
     + `<div class="braco" style="--ax:-15px;--ay:${y0 + 64}px;--a:-34deg">${caixa({ w: 8, h: 30, t: 8, cls: 'm-metal' })}</div>`
     + `<div class="braco" style="--ax:15px;--ay:${y0 + 64}px;--a:34deg">${caixa({ w: 8, h: 30, t: 8, cls: 'm-metal' })}</div>`
     + caixa({ w: 12, h: 6, t: 10, y: y0 + 70, cls: 'm-metal', faces: 'flr' })
-    + `<div class="cabeca3d" style="--hy:${y0 + 97}px">${rosto}</div>`
-    + (membro?.recado ? `<div class="balao3d" style="--hy:${y0 + 124 + (i % 2) * andar}px"><span>${esc(membro.recado)}</span></div>` : '');
+    + `<div class="cabeca3d" style="--hy:${y0 + 106}px">${rosto}</div>`
+    + (membro?.recado && balao ? `<div class="balao3d" style="--hy:${Math.round(balao.hy)}px;--kb:${(1 / balao.k).toFixed(3)}"><span>${esc(membro.recado)}</span></div>` : '');
 }
 function estatuetaHtml(L, membro, i) {
   const [x, z, y] = slot(L, i);
-  return obj(`est-${i}`, [x, z, -6 + (i % 5) * 3], L.est.s, `<div class="est__corpo">${estatuetaCorpo(membro, i, andarBalao(L.est))}</div>`, y, metalVars(i));
+  const top = i < 3 ? ' est--top' : '';
+  return obj(`est-${i}`, [x, z, -6 + (i % 5) * 3], L.est.s * tam(i), `<div class="est__corpo${top}">${estatuetaCorpo(membro, i, balaoPos(L, i))}</div>`, y, metalVars(i));
 }
 
 // Estatueta sozinha, grande, fora da mesa (o modal de quando você clica nela).
 // Mesmo boneco 3D: palco próprio com perspectiva e câmera fixa de 3/4.
 export function estatuetaSoloHtml(membro, i) {
   return `<div class="est-solo" aria-hidden="true"><div class="est-solo__mundo">
-    <div class="obj" style="--x:0px;--z:0px;--ry:0deg;--s:2;${metalVars(i)}"><div class="mola"><div class="est__corpo">${estatuetaCorpo({ ...membro, recado: '' }, i)}</div></div></div>
+    <div class="obj" style="--x:0px;--z:0px;--ry:0deg;--s:2;${metalVars(i)}"><div class="mola"><div class="est__corpo${i < 3 ? ' est--top' : ''}">${estatuetaCorpo({ ...membro, recado: '' }, i, null, 'coroa-solo')}</div></div></div>
   </div></div>`;
 }
 
@@ -462,7 +492,7 @@ export function mountMesa(section, opts) {
     if (!corpo || calma.matches) return;
     // parte de logo acima da borda de cima da tela, pra queda inteira ser vista
     const cabeca = corpo.querySelector('.cabeca3d').getBoundingClientRect();
-    const k = (parseFloat(palco.style.scale) || 1) * L.est.s * Math.cos((L.cam * Math.PI) / 180);
+    const k = (parseFloat(palco.style.scale) || 1) * L.est.s * tam(i) * Math.cos((L.cam * Math.PI) / 180);
     const tela = Math.max(260, cabeca.bottom + 40);
     const alto = tela / k;
     const QUEDA = Math.round(Math.min(760, Math.max(480, 360 + tela * 0.45)));
@@ -472,6 +502,8 @@ export function mountMesa(section, opts) {
       { transform: 'translateY(0) rotateZ(0deg) scale(0.92, 1.12)' },
     ], { duration: QUEDA, easing: GRAVIDADE });
     impacto(i, est);
+    sacodePrateleira();
+    if (i < 3) explode(est);
     await anim(corpo, [
       { transform: 'translateY(0) scale(0.92, 1.12)', easing: 'cubic-bezier(0.2, 0, 0.4, 1)' },
       { transform: 'translateY(0) scale(1.18, 0.78)', offset: 0.1, easing: 'cubic-bezier(0.2, 0.8, 0.3, 1)' },
@@ -482,6 +514,27 @@ export function mountMesa(section, opts) {
       { transform: 'none' },
     ], { duration: 820 });
   }
+  // a tábua balança no impacto (presa na parede pela mão-francesa)
+  function sacodePrateleira() {
+    const tabua = mesa.querySelector('#prat-obj > .mola');
+    if (!tabua) return;
+    anim(tabua, [
+      { transform: 'none' }, { transform: 'translateY(7px) rotateZ(-1.2deg)', offset: 0.15 },
+      { transform: 'translateY(-3px) rotateZ(0.7deg)', offset: 0.45 }, { transform: 'translateY(1px) rotateZ(-0.3deg)', offset: 0.7 },
+      { transform: 'none' },
+    ], { duration: 620, easing: SAI });
+  }
+  // pódio: a glória nasce do impacto (raios/aura abrem com exagero e assentam)
+  function explode(est) {
+    est.querySelectorAll('.gloria3d, .aura3d').forEach((g) => anim(g, [
+      { scale: '0.1', opacity: 0 }, { scale: '1.7', opacity: 1, offset: 0.35 }, { scale: '1' },
+    ], { duration: 900, easing: SAI }));
+    est.querySelectorAll('.coroa3d').forEach((c) => anim(c, [
+      { translate: '0 -160px', rotate: '-30deg', opacity: 0 }, { translate: '0 -160px', rotate: '-30deg', opacity: 1, offset: 0.3 },
+      { translate: '0 6px', rotate: '6deg', offset: 0.75, easing: GRAVIDADE }, { translate: '0 0', rotate: '0deg' },
+    ], { duration: 1100, delay: 250, easing: SAI }));
+  }
+
   // o botão afunda e volta
   async function aperta() {
     const cupula = mesa.querySelector('#botao-obj .cupula');

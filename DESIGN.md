@@ -468,8 +468,9 @@ falta. A mesa é CSS 3D puro (caixas de faces, câmera que acompanha o mouse no 
 vencedor com a coroa, console e controle. No jogando: **calendário** de mesa (a folha voa pra frente e os dias oferecidos são
 circulados), a capinha em pé **em cima do videogame**, **estatuetas** de quem zerou (pedestal de pedra, boneco de metal na cor
 da posição: ouro, prata, bronze e metais próprios; a cabeça é a foto, sempre virada pra câmera; recado em balãozinho) numa
-**prateleira de parede** atrás da mesa (PC: uma tábua com as 12; celular: duas de 6), que caem do céu com squash e
-fazem a mesa pular; clicar numa estatueta traz ela pra frente com a foto de prova, o **botão ZEREI** de fliperama na ponta e o **quadro de jogando** grande à direita (post-its coloridos com
+**prateleira de parede** atrás da mesa (uma vaga por sócio; o 1º no meio, 2º à esquerda, 3º à direita), em pódio:
+o 1º bem maior, de coroa, raios dourados girando, holofote e brilhos; 2º e 3º com aura e metal que brilha. Caem do céu
+com squash, a tábua sacode e a glória do pódio explode no impacto; clicar numa estatueta traz ela pra frente com a foto de prova, o **botão ZEREI** de fliperama na ponta e o **quadro de jogando** grande à direita (post-its coloridos com
 comentários curtos, rabiscos e fotos; 3 páginas, a setinha gira o quadro meia volta e ele volta na outra página). Na
 encerrada o **quadro de cortiça** da resenha, onde cada nota vira uma página de caderno pregada, e o quadro de jogando guardado
 ao lado. Cliques em botões reais (.alvo, ≥ 44px) por cima da projeção. Finalizar a encerrada faz tudo da mesa voar pra cima.
