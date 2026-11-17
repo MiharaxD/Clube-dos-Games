@@ -541,7 +541,8 @@ describe('quadro de jogando (diario)', () => {
 
 // ---------------------------------------------------------------------------
 describe('zerei', () => {
-  const zerei = () => ({ at: serverTimestamp() });
+  const FOTO = 'data:image/jpeg;base64,/9j/4AAQSkZJRg==';
+  const zerei = () => ({ at: serverTimestamp(), foto: FOTO });
 
   it('cada um marca o próprio zerei em "jogando" e pode desfazer', async () => {
     await assertSucceeds(setDoc(doc(as('alice'), 'rounds/r-jog/zerei/alice'), zerei()));
@@ -555,8 +556,18 @@ describe('zerei', () => {
     await assertFails(deleteDoc(doc(as('alice'), 'rounds/r-jog/zerei/bob')));
   });
 
+  it('admin anula o zerei de qualquer um em "jogando"', async () => {
+    await assertSucceeds(setDoc(doc(as('bob'), 'rounds/r-jog/zerei/bob'), zerei()));
+    await assertSucceeds(deleteDoc(doc(as('admin'), 'rounds/r-jog/zerei/bob')));
+  });
+
+  it('sem foto de prova (ou foto que não é JPEG) é negado', async () => {
+    await assertFails(setDoc(doc(as('alice'), 'rounds/r-jog/zerei/alice'), { at: serverTimestamp() }));
+    await assertFails(setDoc(doc(as('alice'), 'rounds/r-jog/zerei/alice'), { at: serverTimestamp(), foto: 'https://x.com/a.jpg' }));
+  });
+
   it('data inventada (furar a fila do ouro) é negada', async () => {
-    await assertFails(setDoc(doc(as('alice'), 'rounds/r-jog/zerei/alice'), { at: Timestamp.fromDate(new Date('2020-01-01')) }));
+    await assertFails(setDoc(doc(as('alice'), 'rounds/r-jog/zerei/alice'), { at: Timestamp.fromDate(new Date('2020-01-01')), foto: FOTO }));
   });
 
   it('não dá pra regravar por cima (mudar a posição)', async () => {

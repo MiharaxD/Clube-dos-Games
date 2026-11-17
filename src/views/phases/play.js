@@ -19,11 +19,11 @@ import {
 } from '../../api.js';
 import { icon } from '../../lib/icons.js';
 import { ENTRA_RAPIDO, NA_TELA, SAI, anim, calma, entrar } from '../../lib/motion.js';
-import { confirmInline, esc, fmtDateTime, fmtDay, fmtPrice, listJoin, safeUrl, toast, withBusy, DURATION_LABEL, MODE_LABEL } from '../../lib/util.js';
+import { confirmInline, esc, fmtDateTime, fmtDay, fmtPrice, fotoParaQuadro, listJoin, safeImgData, safeUrl, toast, withBusy, DURATION_LABEL, MODE_LABEL } from '../../lib/util.js';
 import { avatar, empty, memberName, stamp } from '../parts.js';
 import { openReading } from '../caixinha.js';
 import { caseFront } from '../rack.js';
-import { METAIS, coroaSvg, mesaSection, mountMesa } from '../mesa.js';
+import { METAIS, coroaSvg, estatuetaSoloHtml, mesaSection, mountMesa } from '../mesa.js';
 import { montaQuadro } from '../quadro.js';
 import { abreDiario } from '../diario.js';
 
@@ -57,7 +57,8 @@ export function renderPlay(main, data, ctx, extra) {
   const alvos = [{ obj: 'caso-obj', label: `Abrir a caixinha de ${esc(game.name)}: manual do jogo` }];
   if (playing) {
     alvos.push({ obj: 'cal-obj', label: 'Abrir o calendário e marcar os dias que você pode na reunião' });
-    alvos.push({ obj: 'botao-obj', label: minhaPos < 0 ? 'Zerei! Marcar que você zerou o jogo' : `Você já zerou (${minhaPos + 1}º lugar)`, popup: false });
+    alvos.push({ obj: 'botao-obj', label: minhaPos < 0 ? 'Zerei! Mandar a foto de prova e marcar que você zerou' : `Você já zerou (${minhaPos + 1}º lugar)`, popup: false });
+    zerados.forEach((m, i) => alvos.push(alvoEst(m, i)));
   } else alvos.push({ obj: 'quadro-obj', label: 'Abrir o quadro de resenhas' });
   alvos.push({ obj: 'diario-obj', label: playing ? 'Abrir o quadro de jogando: notinhas, rabiscos e fotos' : 'Rever o quadro de jogando' });
 
@@ -113,7 +114,13 @@ export function renderPlay(main, data, ctx, extra) {
     aoFechar: (mexeu) => (mexeu ? ctx.refresh() : null),
   }));
 
-  // ZEREI: grava, a estatueta cai na mesa; desfazer fica no texto embaixo da mesa
+  // estatueta → vem pra frente com a foto de prova; o admin anula dali
+  sec.addEventListener('click', (e) => {
+    const alvo = e.target.closest('[data-obj^="est-"]');
+    if (alvo) openEstatueta(alvo, zerados, data, ctx);
+  });
+
+  // ZEREI: pede a foto de prova, grava, a estatueta cai na mesa; desfazer fica no texto embaixo da mesa
   let zerando = false;
   sec.querySelector('[data-obj="botao-obj"]')?.addEventListener('click', async (e) => {
     const botao = e.currentTarget;
@@ -124,8 +131,13 @@ export function renderPlay(main, data, ctx, extra) {
       return;
     }
     zerando = true;
+    const foto = await pedeProva(game.name);
+    if (!foto) {
+      zerando = false;
+      return;
+    }
     try {
-      await marcaZerei(round.id, uid);
+      await marcaZerei(round.id, uid, foto);
     } catch (err) {
       console.error(err);
       toast('Não deu pra marcar. Tenta de novo.', 'erro');
@@ -134,9 +146,11 @@ export function renderPlay(main, data, ctx, extra) {
     }
     const eu = members.find((m) => m.id === uid) ?? { id: uid, name: ctx.session.member?.name };
     zerados.push(eu);
-    data.zerei = [...(data.zerei ?? []), { id: uid }];
+    data.zerei = [...(data.zerei ?? []), { id: uid, foto }];
     const i = zerados.length - 1;
     mesa.remonta({ zerados, ...textosBotao(i) });
+    sec.querySelector('.palco-wrap').insertAdjacentHTML('beforeend', mesaAlvo(alvoEst(eu, i)));
+    mesa.alinha();
     sec.querySelector('.zerados').outerHTML = zeradosHtml(zerados, uid, playing, members);
     botao.querySelector('.sr-only').textContent = `Você já zerou (${i + 1}º lugar)`;
     await mesa.solta(i);
@@ -694,3 +708,138 @@ function bindDates(container, data, ctx) {
   });
 }
 
+
+// ------------------------------------------------------------ zerei: prova e estatueta em evidência
+
+const alvoEst = (m, i) => ({ obj: `est-${i}`, label: `Ver a estatueta de ${esc(m.name ?? 'Ex-sócio')} (${i + 1}º) e a foto do zerado` });
+const mesaAlvo = (a) => `<button class="alvo" type="button" data-obj="${a.obj}" aria-haspopup="dialog"><span class="sr-only">${a.label}</span></button>`;
+
+// Modal do zerei: fundo + conteúdo; origem (opcional) = de onde o conteúdo voa.
+// Devolve { modal, fecha }; fecha() some com o modal, devolve o foco e avisa aoFechar.
+function modalZerei({ html, rotulo, gatilho, origem, aoFechar }) {
+  const modal = document.createElement('div');
+  modal.className = 'modal modal--est';
+  modal.setAttribute('role', 'dialog');
+  modal.setAttribute('aria-modal', 'true');
+  modal.setAttribute('aria-labelledby', rotulo);
+  modal.innerHTML = `<div class="modal__fundo" data-fechar></div>${html}`;
+  document.body.append(modal);
+  const fundo = modal.querySelector('.modal__fundo');
+  const corpo = fundo.nextElementSibling;
+  const longe = () => {
+    if (!origem?.isConnected) return 'translateY(24px) scale(0.92)';
+    const a = origem.getBoundingClientRect();
+    const b = corpo.getBoundingClientRect();
+    const k = Math.min(1, a.height / b.height);
+    return `translate(${a.left + a.width / 2 - (b.left + b.width / 2)}px, ${a.top + a.height / 2 - (b.top + b.height / 2)}px) scale(${k})`;
+  };
+  document.getElementById('app').inert = true;
+  document.documentElement.classList.add('trava');
+  anim(fundo, [{ opacity: 0 }, { opacity: 1 }], { duration: 300, easing: SAI });
+  anim(corpo, [{ transform: longe(), opacity: 0 }, { opacity: 1, offset: 0.25 }, { transform: 'none', opacity: 1 }], { duration: 520, easing: NA_TELA });
+  modal.querySelector(`#${rotulo}`).focus({ preventScroll: true });
+
+  let fechando = false;
+  const fecha = async () => {
+    if (fechando) return;
+    fechando = true;
+    anim(fundo, [{ opacity: 1 }, { opacity: 0 }], { duration: 260, easing: ENTRA_RAPIDO });
+    await anim(corpo, [{ transform: 'none', opacity: 1 }, { transform: longe(), opacity: 0 }], { duration: 360, easing: ENTRA_RAPIDO });
+    modal.remove();
+    document.getElementById('app').inert = false;
+    document.documentElement.classList.remove('trava');
+    if (gatilho?.isConnected) gatilho.focus({ preventScroll: true });
+    aoFechar?.();
+  };
+  modal.addEventListener('click', (e) => e.target.closest('[data-fechar]') && fecha());
+  modal.addEventListener('keydown', (e) => e.key === 'Escape' && fecha());
+  return { modal, fecha };
+}
+
+// Antes de zerar: a foto do jogo zerado (créditos, troféu, tela final). Resolve com o JPEG ou null.
+function pedeProva(nomeJogo) {
+  return new Promise((resolve) => {
+    let foto = '';
+    let confirmou = false;
+    const { modal, fecha } = modalZerei({
+      rotulo: 'prova-titulo',
+      gatilho: document.querySelector('[data-obj="botao-obj"]'),
+      aoFechar: () => resolve(confirmou ? foto : null),
+      html: `<div class="prova-form">
+        <h2 class="modal__titulo" id="prova-titulo" tabindex="-1">Prova ou não aconteceu</h2>
+        <p class="modal__dica">Manda uma foto ou print de ${esc(nomeJogo)} zerado: créditos, troféu, tela final. Sem foto, sem estatueta.</p>
+        <label class="btn"><input class="sr-only" type="file" accept="image/*" data-arq>Escolher foto</label>
+        <figure class="prova" hidden><img alt="Prévia da foto de prova"><figcaption>a prova</figcaption></figure>
+        <p class="modal__erro" aria-live="polite" data-erro></p>
+        <div class="modal__acoes">
+          <button class="btn btn--primary" type="button" data-ok disabled>Zerei!</button>
+          <button class="btn" type="button" data-fechar>Cancelar</button>
+        </div>
+      </div>`,
+    });
+    const ok = modal.querySelector('[data-ok]');
+    const erro = modal.querySelector('[data-erro]');
+    const prova = modal.querySelector('.prova');
+    modal.querySelector('[data-arq]').addEventListener('change', async (e) => {
+      const arq = e.target.files?.[0];
+      if (!arq) return;
+      erro.textContent = '';
+      try {
+        foto = await fotoParaQuadro(arq, 720);
+      } catch (err) {
+        console.error(err);
+        foto = '';
+        erro.textContent = err.message === 'nao-imagem' ? 'Isso não é imagem não, hein.' : 'Não deu pra usar essa foto. Tenta outra.';
+      }
+      prova.hidden = !foto;
+      if (foto) prova.querySelector('img').src = foto;
+      ok.disabled = !foto;
+    });
+    ok.addEventListener('click', () => {
+      if (!foto) return;
+      confirmou = true;
+      fecha();
+    });
+  });
+}
+
+// Clique na estatueta: ela vem pra frente com a foto de prova. Admin anula o zerei dali.
+function openEstatueta(gatilho, zerados, data, ctx) {
+  const i = Number(gatilho.dataset.obj.slice(4));
+  const m = zerados[i];
+  if (!m) return;
+  const foto = safeImgData(data.zerei?.find((z) => z.id === m.id)?.foto);
+  const voce = m.id === data.uid;
+  const podeAnular = ctx.session.isAdmin && data.isLatest && data.round.status === 'jogando';
+  const metal = METAIS[i % METAIS.length];
+  const nome = m.name ?? 'Ex-sócio';
+  const { modal, fecha } = modalZerei({
+    rotulo: 'est-titulo',
+    gatilho,
+    origem: gatilho,
+    html: `<div class="est-cartao" style="--m:${metal.m}">
+      ${estatuetaSoloHtml(m, i)}
+      <div class="est-info">
+        <h2 class="est-info__pos" id="est-titulo" tabindex="-1">${i + 1}º · ${metal.nome}</h2>
+        <p class="est-info__quem">${voce ? 'Você' : esc(nome)} zerou ${esc(data.round.winner?.name ?? 'o jogo')}.</p>
+        ${foto
+          ? `<figure class="prova"><img src="${esc(foto)}" alt="Foto de prova do zerado de ${esc(nome)}"><figcaption>a prova</figcaption></figure>`
+          : '<p class="prova prova--vazia">Zerou antes da regra da foto. Confia.</p>'}
+        <div class="modal__acoes">
+          ${podeAnular ? '<button class="btn btn--danger" type="button" data-anular>Anular zerei</button>' : ''}
+          <button class="btn" type="button" data-fechar>Fechar</button>
+        </div>
+      </div>
+    </div>`,
+  });
+  modal.querySelector('[data-anular]')?.addEventListener('click', async (e) => {
+    const btn = e.currentTarget;
+    const quem = voce ? 'teu zerei' : `o zerei de ${nome}`;
+    if (!(await confirmInline(btn, `Anular ${quem}? A estatueta sai da mesa e a fila anda.`, 'Anular'))) return;
+    const ok = await withBusy(btn, () => desfazZerei(data.round.id, m.id).then(() => true));
+    if (!ok) return;
+    toast(voce ? 'Zerei anulado.' : `Zerei de ${nome} anulado. Mentiroso pego.`);
+    await fecha();
+    await ctx.refresh();
+  });
+}

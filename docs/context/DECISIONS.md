@@ -7,8 +7,8 @@
   `strokes` ≤ 150 strings `cor|largura|x,y x,y…`, `images` ≤ 3 `{data JPEG ≤ 100 mil, x, y, w 60–500}`; cada um só grava o seu),
   `diario/{uid}_{0|1|2}` (quadro de jogando, 3 páginas por pessoa: `notes` ≤ 6 `{x,y,text 1–140}`, `strokes`/`images`
   iguais ao board; sem nota; só grava em "jogando", depois fica pra ver; 6 notinhas é o teto que cabe no limite de
-  1000 expressões das rules junto com 3 fotos), `zerei/{uid}` (`{at: hora do servidor}`; ordem de `at` = posição
-  da estatueta; cria/apaga só em "jogando", sem update).
+  1000 expressões das rules junto com 3 fotos), `zerei/{uid}` (`{at: hora do servidor, foto}`; foto de prova obrigatória, JPEG data URL ≤ 100 mil;
+  ordem de `at` = posição da estatueta; cria/apaga só em "jogando", sem update; o dono desfaz, o admin anula qualquer um).
   Por quê: ID = uid deixa as rules garantirem "1 por pessoa". Exige: não mudar sem perguntar.
 - **Status anda 1 passo para frente ou para trás** (só admin). Voltar de votando apaga votos; voltar
   de jogando apaga vencedor. Exige: rules com `validStatusStep`; vencedor obrigatório a partir de jogando.

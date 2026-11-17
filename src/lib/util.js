@@ -44,11 +44,11 @@ export async function fotoParaCapa(file) {
   throw new Error('grande-demais');
 }
 
-// Foto pro quadro livre: sem corte, lado maior até 360px, mesmo limite da capa.
-export async function fotoParaQuadro(file) {
+// Foto pro quadro livre (e a prova do zerei, com lado maior): sem corte, mesmo limite da capa.
+export async function fotoParaQuadro(file, lado = 360) {
   if (!file?.type?.startsWith('image/')) throw new Error('nao-imagem');
   const bmp = await createImageBitmap(file);
-  const escala = Math.min(1, 360 / Math.max(bmp.width, bmp.height));
+  const escala = Math.min(1, lado / Math.max(bmp.width, bmp.height));
   const tela = document.createElement('canvas');
   tela.width = Math.max(1, Math.round(bmp.width * escala));
   tela.height = Math.max(1, Math.round(bmp.height * escala));

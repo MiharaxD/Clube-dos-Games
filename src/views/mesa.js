@@ -223,6 +223,14 @@ function estatuetaHtml(L, membro, i) {
   return obj(`est-${i}`, [x, z, -6 + (i % 5) * 3], L.est.s, `<div class="est__corpo">${estatuetaCorpo(membro, i)}</div>`, 0, metalVars(i));
 }
 
+// Estatueta sozinha, grande, fora da mesa (o modal de quando você clica nela).
+// Mesmo boneco 3D: palco próprio com perspectiva e câmera fixa de 3/4.
+export function estatuetaSoloHtml(membro, i) {
+  return `<div class="est-solo" aria-hidden="true"><div class="est-solo__mundo">
+    <div class="obj" style="--x:0px;--z:0px;--ry:0deg;--s:2;${metalVars(i)}"><div class="mola"><div class="est__corpo">${estatuetaCorpo(membro, i)}</div></div></div>
+  </div></div>`;
+}
+
 // TV de tubo da mesa do login: carcaça + tubo atrás; o vidro repete o texto da tela (aria-hidden,
 // o texto de verdade fica num h1/p escondido na seção).
 function tvHtml(titulo, texto) {
@@ -334,7 +342,7 @@ export function mountMesa(section, opts) {
     const base = wrap.getBoundingClientRect();
     wrap.querySelectorAll('.alvo').forEach((alvo) => {
       const o = mesa.querySelector(`#${alvo.dataset.obj}`);
-      const pecas = PECAS[alvo.dataset.obj];
+      const pecas = PECAS[alvo.dataset.obj] ?? (alvo.dataset.obj.startsWith('est-') ? ['.bx', '.cabeca3d'] : null);
       const els = pecas ? pecas.flatMap((s) => [...(o?.querySelectorAll(s) ?? [])]) : [o?.querySelector('.bx')].filter(Boolean);
       if (!els.length) return;
       const rs = els.map((e) => e.getBoundingClientRect());

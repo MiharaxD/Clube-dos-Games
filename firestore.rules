@@ -404,18 +404,23 @@ service cloud.firestore {
       // rounds/{roundId}/zerei/{ownerId}: o botão ZEREI da mesa. ID = uid.
       // A ordem de "at" decide a estatueta (1º ouro, 2º prata...); "at" é a hora
       // do servidor, então ninguém fura a fila. Só em "jogando", e o dono pode
-      // desfazer (apagar) enquanto a rodada está em "jogando".
+      // desfazer (apagar) enquanto a rodada está em "jogando"; o admin também
+      // anula o zerei de qualquer um (mentiroso) nessa fase. "foto" = prova do
+      // zerado (obrigatória), JPEG em data URL com o mesmo limite da capa.
       // -----------------------------------------------------------------------
       match /zerei/{ownerId} {
         allow read: if isApproved();
         allow create: if isApproved()
           && ownerId == me()
           && roundStatus(roundId) == 'jogando'
-          && request.resource.data.keys().hasOnly(['at'])
-          && request.resource.data.at == request.time;
+          && request.resource.data.keys().hasOnly(['at', 'foto'])
+          && request.resource.data.at == request.time
+          && request.resource.data.foto is string
+          && request.resource.data.foto.size() <= 100000
+          && request.resource.data.foto.matches('^data:image/jpeg;base64,[A-Za-z0-9+/=]+$');
         allow update: if false;
         allow delete: if isApproved()
-          && ownerId == me()
+          && (ownerId == me() || isAdmin())
           && roundStatus(roundId) == 'jogando';
       }
 
