@@ -282,6 +282,11 @@ export function saveDiario(roundId, uid, pagina, { notes, strokes, images }) {
   });
 }
 
+// admin: acrescenta mais 1 página ao quadro de jogando da rodada (nunca diminui).
+export function addDiarioPagina(roundId, totalAtual) {
+  return updateDoc(doc(db, 'rounds', roundId), { diarioPaginas: totalAtual + 1 });
+}
+
 // ---------------------------------------------------------------- zerei
 
 // Ordem de chegada: quem zerou primeiro vem primeiro (ouro).

@@ -4,6 +4,7 @@
 // (diario.js). Encerrada: quadro de resenha (notas) + o de jogando guardado + perguntas.
 // O tempo/recado do "zerei" dos mocks ficou fora: o zerei grava só a hora (ordem de chegada).
 import {
+  addDiarioPagina,
   addQuestion,
   desfazZerei,
   listBoard,
@@ -124,6 +125,12 @@ export function renderPlay(main, data, ctx, extra) {
     nomeDe: (id) => memberName(members, id),
     soLeitura: !playing,
     salvar: (pagina, estado) => saveDiario(round.id, uid, pagina, estado),
+    totalPaginas: round.diarioPaginas ?? 3,
+    isAdmin: ctx.session.isAdmin,
+    adicionaPagina: async (totalAtual) => {
+      await addDiarioPagina(round.id, totalAtual);
+      round.diarioPaginas = totalAtual + 1;
+    },
     // mexeu: busca só o quadro de jogando e redesenha a mesa (sem recarregar a tela inteira)
     aoFechar: async (mexeu) => {
       if (!mexeu) return;

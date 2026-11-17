@@ -14,7 +14,8 @@ rules_version = '2';
 //     ratings/{uid}                    nota pós-jogo
 //     questions/{autoId}               perguntas pra discussão
 //     board/{uid}                      quadro livre da encerrada (notas, rabiscos, fotos)
-//     diario/{uid}_{0|1|2}             quadro de jogando: 3 páginas por pessoa (notinhas, rabiscos, fotos)
+//     diario/{uid}_{0..N-1}             quadro de jogando: N páginas por pessoa (notinhas, rabiscos, fotos);
+//                                       N = rounds/{roundId}.diarioPaginas (3 por padrão, admin só aumenta até 9)
 //     zerei/{uid}                      quem zerou o jogo (ordem de chegada = posição da estatueta)
 //
 // Tudo que não está liberado aqui é negado por padrão.
@@ -66,6 +67,11 @@ service cloud.firestore {
 
     function roundStatus(roundId) {
       return get(/databases/$(database)/documents/rounds/$(roundId)).data.status;
+    }
+
+    // Total de páginas do quadro de jogando (diario) da rodada; 3 se o campo não existir ainda.
+    function diarioPaginas(roundId) {
+      return get(/databases/$(database)/documents/rounds/$(roundId)).data.get('diarioPaginas', 3);
     }
 
     // =========================================================================
@@ -128,7 +134,7 @@ service cloud.firestore {
         return d.keys().hasOnly([
             'number', 'status', 'createdAt',
             'winnerGameId', 'winner', 'tiebreak',
-            'deadline', 'callLink', 'dateOptions', 'meetingDate', 'theme', 'fotoVencedor'
+            'deadline', 'callLink', 'dateOptions', 'meetingDate', 'theme', 'fotoVencedor', 'diarioPaginas'
           ])
           // De "jogando" em diante precisa ter vencedor, e ele precisa existir.
           // Antes disso não pode ter (ao voltar pra "votando" o vencedor é limpo).
@@ -144,7 +150,10 @@ service cloud.firestore {
           // foto do ganhador da votação (porta-retrato da mesa): JPEG em data URL, mesmo limite da capa
           && (d.get('fotoVencedor', '') == ''
             || (d.fotoVencedor is string && d.fotoVencedor.size() <= 100000
-                && d.fotoVencedor.matches('^data:image/jpeg;base64,[A-Za-z0-9+/=]+$')));
+                && d.fotoVencedor.matches('^data:image/jpeg;base64,[A-Za-z0-9+/=]+$')))
+          // páginas do quadro de jogando: começa em 3, admin só aumenta, até 9.
+          && d.get('diarioPaginas', 3) is int
+          && d.get('diarioPaginas', 3) >= 3 && d.get('diarioPaginas', 3) <= 9;
       }
 
       allow read: if isApproved();
@@ -161,7 +170,9 @@ service cloud.firestore {
         && validRound(request.resource.data)
         && validStatusStep(resource.data.status, request.resource.data.status)
         && request.resource.data.number == resource.data.number
-        && request.resource.data.createdAt == resource.data.createdAt;
+        && request.resource.data.createdAt == resource.data.createdAt
+        // diarioPaginas só cresce: nunca tira página já escrita de baixo de ninguém.
+        && request.resource.data.get('diarioPaginas', 3) >= resource.data.get('diarioPaginas', 3);
 
       allow delete: if false;
 
@@ -353,12 +364,21 @@ service cloud.firestore {
       }
 
       // -----------------------------------------------------------------------
-      // rounds/{roundId}/diario/{pageId}: quadro de jogando. Cada pessoa tem 3 docs,
-      // um por página, com ID "{uid}_{0|1|2}": cada um só mexe nas próprias páginas.
+      // rounds/{roundId}/diario/{pageId}: quadro de jogando. Cada pessoa tem N docs,
+      // um por página, com ID "{uid}_{0..N-1}" (N = diarioPaginas da rodada): cada
+      // um só mexe nas próprias páginas, dentro do total atual (admin só aumenta N).
       // Só grava durante "jogando"; depois fica salvo pra ver na mesa da rodada.
       // Sem nota de estrelas aqui: só notinhas, rabiscos e fotos.
       // -----------------------------------------------------------------------
       match /diario/{pageId} {
+        // "{uid}_{indice}": uid de Auth não tem "_", então a divisão é sempre em 2.
+        function donoPagina(id) {
+          return id.split('_')[0];
+        }
+        function indicePagina(id) {
+          return int(id.split('_')[1]);
+        }
+
         function validImgD(m) {
           return m is map
             && m.keys().hasOnly(['data', 'x', 'y', 'w'])
@@ -398,7 +418,8 @@ service cloud.firestore {
 
         allow read: if isApproved();
         allow create, update: if isApproved()
-          && pageId in [me() + '_0', me() + '_1', me() + '_2']
+          && donoPagina(pageId) == me()
+          && indicePagina(pageId) >= 0 && indicePagina(pageId) < diarioPaginas(roundId)
           && roundStatus(roundId) == 'jogando'
           && validDiario(request.resource.data);
         allow delete: if false;

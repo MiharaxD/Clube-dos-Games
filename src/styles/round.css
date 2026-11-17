@@ -732,6 +732,16 @@ textarea.campo-papel { display: block; width: 100%; min-height: 96px; margin-top
 .diario__seta:focus-visible { outline: none; }
 .diario__seta:focus-visible span { text-decoration: underline 2px; text-underline-offset: 4px; }
 .diario__pag { min-width: 9ch; padding: 4px 12px 2px; background: var(--paper); color: var(--paper-ink); text-align: center; font: 400 1.35rem/1 var(--f-placa); letter-spacing: 0.06em; box-shadow: 2px 3px 0 rgb(12 6 9 / 0.45); }
+/* botão do admin pra acrescentar página: mesma plaquinha de papel das setas, só que redonda */
+.diario__btn--add {
+  display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px;
+  border: 0; border-radius: 50%; background: var(--paper); color: var(--paper-ink); cursor: pointer;
+  box-shadow: 2px 3px 0 rgb(12 6 9 / 0.45); transition: translate 140ms ease-out, background-color 140ms;
+}
+.diario__btn--add svg { width: 16px; height: 16px; fill: var(--stamp); }
+.diario__btn--add:hover:not(:disabled) { translate: 0 -2px; background: var(--amber); }
+.diario__btn--add:active:not(:disabled) { translate: 0 1px; }
+.diario__btn--add:disabled { opacity: 0.4; cursor: default; }
 .diario__aviso { margin: 0; padding: 6px 12px; background: var(--paper); color: var(--paper-ink); font: 400 0.95rem/1.35 var(--f-dati); rotate: -0.6deg; box-shadow: 2px 3px 0 rgb(12 6 9 / 0.45); }
 .diario .ql-moldura { transform-origin: 50% 50%; backface-visibility: hidden; }
 .ql-form--notinha .pagina--nova { padding: 16px; }

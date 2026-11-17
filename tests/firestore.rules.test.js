@@ -299,6 +299,21 @@ describe('tema da rodada', () => {
   });
 });
 
+// ---------------------------------------------------------------------------
+describe('páginas do quadro de jogando (diarioPaginas)', () => {
+  it('só o admin aumenta o total de páginas', async () => {
+    await assertSucceeds(updateDoc(doc(as('admin'), 'rounds/r-jog'), { diarioPaginas: 4 }));
+    await assertFails(updateDoc(doc(as('alice'), 'rounds/r-jog'), { diarioPaginas: 4 }));
+  });
+
+  it('não dá pra diminuir nem passar do teto', async () => {
+    await testEnv.withSecurityRulesDisabled((ctx) =>
+      updateDoc(doc(ctx.firestore(), 'rounds/r-jog'), { diarioPaginas: 5 }));
+    await assertFails(updateDoc(doc(as('admin'), 'rounds/r-jog'), { diarioPaginas: 4 }));
+    await assertFails(updateDoc(doc(as('admin'), 'rounds/r-jog'), { diarioPaginas: 10 }));
+  });
+});
+
 describe('recados no jogo', () => {
   const recado = (uid, extra = {}) => ({ text: 'Esse eu topo!', createdBy: uid, createdAt: serverTimestamp(), ...extra });
 
@@ -515,6 +530,13 @@ describe('quadro de jogando (diario)', () => {
 
   it('não existe 4ª página', async () => {
     await assertFails(setDoc(doc(as('alice'), 'rounds/r-jog/diario/alice_3'), pagina()));
+  });
+
+  it('admin aumenta o total e a 4ª página passa a existir', async () => {
+    await testEnv.withSecurityRulesDisabled((ctx) =>
+      updateDoc(doc(ctx.firestore(), 'rounds/r-jog'), { diarioPaginas: 4 }));
+    await assertSucceeds(setDoc(doc(as('alice'), 'rounds/r-jog/diario/alice_3'), pagina()));
+    await assertFails(setDoc(doc(as('alice'), 'rounds/r-jog/diario/alice_4'), pagina()));
   });
 
   it('ninguém grava a página dos outros', async () => {

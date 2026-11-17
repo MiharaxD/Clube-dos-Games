@@ -139,6 +139,12 @@ function render() {
       estado.diario.push({ uid: estado.eu, pagina, notes: dados.notes, strokes: dados.strokes, images: dados.images, em: Date.now() });
       grava();
     },
+    totalPaginas: estado.diarioPaginas ?? 3,
+    isAdmin: true,
+    adicionaPagina: async (totalAtual) => {
+      estado.diarioPaginas = totalAtual + 1;
+      grava();
+    },
     aoFechar: (mexeu) => mexeu && mesa.remonta({ diario: estado.diario }),
   });
   sec.querySelector('[data-obj="diario-obj"]').addEventListener('click', (e) => abre(e.currentTarget));
