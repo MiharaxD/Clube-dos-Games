@@ -22,10 +22,10 @@ const obj = (id, [x, z, ry = 0], s, inner, y = 0, extra = '') =>
 // Encerrada: quadro de resenha + o quadro de jogando guardado no fundo.
 const LAYOUTS = {
   jogando: {
-    pc: { W: 1040, H: 1000, cy: 740, cam: -26, mesa: [1000, 440], lamp: [-440, -170, 0], cal: [-315, -10, 20], console: [-70, 40, -8], controle: [105, 172, 14],
+    pc: { W: 1040, H: 1000, cy: 740, po: 532, cam: -26, mesa: [1000, 440], lamp: [-440, -170, 0], cal: [-315, -10, 20], console: [-70, 40, -8], controle: [105, 172, 14],
       est: { dx: 150, larg: 960, z: -270, s: 0.95, y: 230 }, botao: [432, 130, -12], diario: [235, -60, -8],
       esc: { cal: 1, caso: 1, console: 1, botao: 0.95, diario: 1.02 }, nota: [-300, 160], notaZ: [330, 196] },
-    cel: { W: 600, H: 960, cy: 680, cam: -30, mesa: [580, 560], lamp: [-248, -238, 0], cal: [-178, -112, 18], console: [-8, 118, -6], controle: [62, 238, 18],
+    cel: { W: 600, H: 960, cy: 680, po: 444, cam: -30, mesa: [580, 560], lamp: [-248, -238, 0], cal: [-178, -112, 18], console: [-8, 118, -6], controle: [62, 238, 18],
       est: { dx: 90, larg: 560, z: -295, s: 0.62, y: 200 }, botao: [205, 196, -12], diario: [160, -70, -6],
       esc: { cal: 0.95, caso: 0.85, console: 0.8, botao: 0.85, diario: 0.74 }, nota: [-205, 70], notaZ: [180, 272] },
   },
@@ -348,6 +348,8 @@ export function mountMesa(section, opts) {
     palco.style.width = `${L.W}px`;
     palco.style.height = `${L.H}px`;
     mundo.style.top = `${L.cy}px`;
+    // po: ponto de fuga em px (cena mais alta por causa da prateleira, mesma perspectiva na mesa)
+    palco.style.perspectiveOrigin = L.po ? `50% ${L.po}px` : '';
     mundo.style.setProperty('--cam', `${L.cam}deg`);
     const zerados = L.est ? (opts.zerados ?? []) : [];
     let html = mesaHtml(L, opts.nota, opts.notaZ) + (L.lamp ? obj('abajur-obj', L.lamp, 1, abajurHtml()) : '');

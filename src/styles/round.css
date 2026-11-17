@@ -38,6 +38,7 @@
   }
 }
 
+.rodada--mesa > .faixa { grid-area: faixa; }
 .rodada--mesa > .falta { grid-area: falta; }
 .rodada--mesa > .info { grid-area: info; }
 .rodada--mesa > .placar { grid-area: placar; }
@@ -95,7 +96,7 @@
 .palco-wrap {
   position: relative; width: 100%; margin: 0 auto;
   /* recorta só embaixo (pernas da mesa); em cima fica livre para a estatueta cair "do céu" */
-  clip-path: inset(-2000px -40px 0 -40px);
+  clip-path: inset(-2000px -64px 0 -64px);
 }
 .palco { position: absolute; left: 0; top: 0; transform-origin: 0 0; perspective: 1700px; perspective-origin: 50% 22%; }
 .mundo {
@@ -108,7 +109,7 @@
 .obj.ativo > .mola { translate: 0 -8px 0; }
 /* chão: o pé da mesa some no escuro do quarto (camada 2D por cima, decorativa) */
 .palco-chao {
-  position: absolute; left: -40px; right: -40px; bottom: 0; height: 22%; pointer-events: none;
+  position: absolute; left: -64px; right: -64px; bottom: 0; height: 22%; pointer-events: none;
   background: linear-gradient(180deg, transparent, rgb(20 11 16 / 0.85) 60%, var(--ground));
 }
 
