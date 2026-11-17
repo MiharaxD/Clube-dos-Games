@@ -139,7 +139,7 @@ function render() {
       estado.diario.push({ uid: estado.eu, pagina, notes: dados.notes, strokes: dados.strokes, images: dados.images, em: Date.now() });
       grava();
     },
-    aoFechar: (mexeu) => mexeu && render(),
+    aoFechar: (mexeu) => mexeu && mesa.remonta({ diario: estado.diario }),
   });
   sec.querySelector('[data-obj="diario-obj"]').addEventListener('click', (e) => abre(e.currentTarget));
   main.querySelector('[data-abre]').addEventListener('click', (e) => abre(e.currentTarget));

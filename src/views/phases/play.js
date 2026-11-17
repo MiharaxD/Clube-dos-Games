@@ -7,6 +7,7 @@ import {
   addQuestion,
   desfazZerei,
   listBoard,
+  listDiario,
   deleteQuestion,
   marcaZerei,
   saveBoard,
@@ -123,7 +124,17 @@ export function renderPlay(main, data, ctx, extra) {
     nomeDe: (id) => memberName(members, id),
     soLeitura: !playing,
     salvar: (pagina, estado) => saveDiario(round.id, uid, pagina, estado),
-    aoFechar: (mexeu) => (mexeu ? ctx.refresh() : null),
+    // mexeu: busca só o quadro de jogando e redesenha a mesa (sem recarregar a tela inteira)
+    aoFechar: async (mexeu) => {
+      if (!mexeu) return;
+      try {
+        data.diario = await listDiario(round.id);
+        mesa.remonta({ diario: data.diario });
+      } catch (err) {
+        console.error(err);
+        await ctx.refresh();
+      }
+    },
   }));
 
   // porta-retrato (só o admin): escolhe a foto do ganhador da votação, corta 3:4 e grava na rodada
@@ -526,7 +537,8 @@ async function openBoard(gatilho, mesa, data, ctx, pages) {
     <ul class="ql-form">${formHtml(mine, mine?.score ?? 5)}</ul>
     <div class="modal__acoes"><button class="btn" type="button" data-fechar>Fechar o quadro</button></div></div>`;
   let board = [];
-  let sujo = false; // gravou algo: a tela de trás recarrega ao fechar
+  let sujo = false; // mexeu no quadro: a mesa redesenha a miniatura ao fechar
+  let notaNova = false; // salvou nota: a mesa ganha a página nova e o bilhete muda
   try { board = await listBoard(data.round.id); } catch (err) { console.error(err); }
   const livre = montaQuadro(modal.querySelector('.ql'), {
     uid: data.uid, pages, board, pagina: pageHtml,
@@ -569,12 +581,27 @@ async function openBoard(gatilho, mesa, data, ctx, pages) {
     modal.remove();
     document.getElementById('app').inert = false;
     document.documentElement.classList.remove('trava');
-    if (sujo) await ctx.refresh();
-    else if (gatilho.isConnected) gatilho.focus({ preventScroll: true });
+    if (sujo || notaNova) {
+      try {
+        if (sujo) data.board = await listBoard(data.round.id);
+        const aprovados = data.members.filter((m) => m.approved).length;
+        mesa.remonta({ board: data.board, pages: ratingPages(data), nota: `${data.ratings.length} de ${aprovados} deram nota` });
+        // o bilhete "falta sua resenha" vira o de agradecimento (mesmo texto do todo() do round.js)
+        if (notaNova) {
+          const falta = document.querySelector('.rodada--mesa .falta');
+          if (falta) falta.innerHTML = '<p>Rodada encerrada. Valeu! Sua resenha tá no quadro.</p>';
+        }
+      } catch (err) {
+        console.error(err);
+        return ctx.refresh();
+      }
+    }
+    // remonta recria a mesa, mas o gatilho é o botão .alvo, que fica
+    if (gatilho.isConnected) gatilho.focus({ preventScroll: true });
   };
   // salvar a nota não fecha o quadro: troca a página ali mesmo; a tela de trás atualiza ao fechar
   bindRating(modal, data, ctx, async (nota) => {
-    sujo = true;
+    notaNova = true;
     const resto = data.ratings.filter((r) => r.id !== data.uid);
     data.ratings = [...resto, { id: data.uid, ...nota }];
     livre.trocaNotas(ratingPages(data));

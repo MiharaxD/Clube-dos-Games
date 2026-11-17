@@ -50,7 +50,7 @@
   `profile.js`, `admin.js` (aprova fila e remove sócio com `removeMember`, que apaga o doc de `members`; só admin, nunca a si mesmo; jogos/votos ficam e o nome vira "Ex-sócio"; quem volta a logar cai na fila de novo); `sorteio.js` (overlay de fechar a votação, chamado por `closeVoting` em `phases/vote.js`:
   vencedor único ou empate com clone da TV, glitch, roda de `roulette.js` e explosão; voa até `#caso-obj`).
 - **Cuidados:** telas recriam `<main>` a cada navegação (a casca aparece antes de `listMembers()` voltar; `rotaAtual` descarta navegação velha); listeners ficam no container da tela. A espera de aprovação reconfere `getMember` ao voltar pra aba. O `toast()` fala por `#toast-status`/`#toast-alert` (balão `aria-hidden`).
-  Ações chamam `ctx.refresh()` depois de gravar. O `route()` põe `document.title` (campo `title` em `ROUTES`),
+  Ações chamam `ctx.refresh()` depois de gravar (exceção: fechar os quadros da mesa só rebusca o quadro e faz `mesa.remonta`, sem recarregar a tela). O `route()` põe `document.title` (campo `title` em `ROUTES`),
   foca o `<main>` e a casca traz o link `.pular`; `href="#main"` cairia no roteador, então o clique é interceptado.
   `.fatos`/`.fato` existem em `round.css` (escopo `.info`) e em `stats.css`: não remover o escopo.
   Voto: desfazer é limitado a 2 por rodada (pegadinha só da UI, contador em `localStorage` `clube:desfez:<rodada>:<uid>`
