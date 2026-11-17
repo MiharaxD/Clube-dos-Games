@@ -9,6 +9,8 @@ import { caseFront } from '../src/views/rack.js';
 import { stamp } from '../src/views/parts.js';
 import { METAIS, mesaSection, mountMesa } from '../src/views/mesa.js';
 import { abreDiario } from '../src/views/diario.js';
+import { balaoRecados } from '../src/views/rack.js';
+import { marcaVisto, naoVistos } from '../src/lib/visto.js';
 
 const CHAVE = 'clube:teste:quadro';
 const MEMBROS = [
@@ -21,6 +23,22 @@ const MEMBROS = [
 ];
 const nomeDe = (id) => MEMBROS.find((m) => m.id === id)?.name ?? 'Ex-sócio';
 const GAME = { name: 'Outer Wilds', duration: 'medio', mode: 'solo', price: 60, genre: 'Aventura', platforms: ['PC'] };
+
+// quadro da resenha falso (só pra ver a miniatura na fase encerrada; não abre)
+const RESENHA = {
+  pages: [
+    { id: 'mari', score: 5, comment: 'Melhor jogo que a gente já jogou no clube, sem discussão.', photo: '', initial: 'M' },
+    { id: 'caio', score: 4, comment: 'Bom, mas me perdi umas 40 vezes.', photo: '', initial: 'C' },
+    { id: 'bia', score: 3, comment: '', photo: '', initial: 'B' },
+    { id: 'yuri', score: 5, comment: 'Chorei no final e não tenho vergonha disso. O último planeta é lindo demais.', spoiler: true, photo: '', initial: 'Y' },
+  ],
+  board: [
+    { id: 'mari', note: { x: 900, y: 600 }, strokes: ['2|12|200,900 300,860 420,920 560,860 700,930'], images: [] },
+    { id: 'caio', strokes: ['1|6|1300,200 1400,320 1500,200 1600,320'], images: [] },
+  ],
+};
+// hora falsa (no app vem do servidor): o balão de novidade compara com o que você já viu
+const comHora = (d) => ({ ...d, updatedAt: { toMillis: () => d.em ?? 1 } });
 
 // o que os "outros" já pregaram (pra ver como fica com o quadro cheio)
 function semente() {
@@ -72,8 +90,9 @@ function render() {
   const minhaPos = zerados.findIndex((m) => m.id === estado.eu);
   const alvos = [];
   if (playing) alvos.push({ obj: 'botao-obj', label: minhaPos < 0 ? 'Zerei!' : `Você já zerou (${minhaPos + 1}º)`, popup: false });
-  alvos.push({ obj: 'diario-obj', label: playing ? 'Abrir o quadro de jogando' : 'Rever o quadro de jogando' });
-  const notinhas = estado.diario.reduce((n, d) => n + (d.notes?.length ?? 0), 0);
+  const docs = estado.diario.map(comHora);
+  const balao = balaoRecados(naoVistos('teste', 'diario', estado.eu, docs), MEMBROS, ['novidade no quadro', 'novidades no quadro']);
+  alvos.push({ obj: 'diario-obj', label: playing ? 'Abrir o quadro de jogando' : 'Rever o quadro de jogando', balao });
 
   main.innerHTML = `
     <div class="rodada--mesa">
@@ -98,11 +117,16 @@ function render() {
   const textos = (pos) => (pos < 0 ? { placa: 'Zerei!', notaZ: 'aperta quando zerar' } : { placa: `Zerado · ${pos + 1}º`, notaZ: 'já foi, chora' });
   const mini = { mes: 'Dezembro', ano: 2026, ini: 2, fim: 31, of: new Set([4, 5, 11, 12, 18, 19]), sel: new Set([11]), nota: 'marca teus dias' };
   const mesa = mountMesa(sec, {
-    fase: estado.fase, game: GAME, front: caseFront(GAME, stamp('Vencedor')), mini, pages: [], nota: playing ? '' : '5 de 6 deram nota', nomeVencedor: 'Mari', podeTrocarFoto: true,
-    zerados, vagas: MEMBROS.length, ...textos(minhaPos), notinhas,
+    fase: estado.fase, game: GAME, front: caseFront(GAME, stamp('Vencedor')), mini, pages: RESENHA.pages, board: RESENHA.board, nota: playing ? '' : '5 de 6 deram nota', nomeVencedor: 'Mari', podeTrocarFoto: true,
+    zerados, vagas: MEMBROS.length, ...textos(minhaPos), uid: estado.eu, diario: estado.diario,
   });
 
-  const abre = (gatilho) => abreDiario({
+  const abre = (gatilho) => {
+    marcaVisto('teste', 'diario', estado.eu, docs);
+    sec.querySelector('[data-obj="diario-obj"] [data-balao]')?.remove();
+    abreQuadro(gatilho);
+  };
+  const abreQuadro = (gatilho) => abreDiario({
     gatilho,
     objeto: mesa.mesa.querySelector('#diario-obj'),
     face: () => mesa.mesa.querySelector('#diario-obj .m-quadro > .f'),
@@ -112,7 +136,7 @@ function render() {
     soLeitura: !playing,
     salvar: async (pagina, dados) => {
       estado.diario = estado.diario.filter((d) => !(d.uid === estado.eu && d.pagina === pagina));
-      estado.diario.push({ uid: estado.eu, pagina, notes: dados.notes, strokes: dados.strokes, images: dados.images });
+      estado.diario.push({ uid: estado.eu, pagina, notes: dados.notes, strokes: dados.strokes, images: dados.images, em: Date.now() });
       grava();
     },
     aoFechar: (mexeu) => mexeu && render(),

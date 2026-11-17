@@ -7,7 +7,7 @@
 // Todo mundo vê tudo; cada um só mexe no que é seu (as rules garantem). Quem grava é a função
 // salvar() que vem de fora: este módulo não fala com o Firestore.
 import { icon } from '../lib/icons.js';
-import { CAPA_DATA_MAX, esc, fotoParaQuadro, safeImgData, toast } from '../lib/util.js';
+import { CAPA_DATA_MAX, esc, fotoParaQuadro, safeImgData, safeUrl, toast } from '../lib/util.js';
 
 export const LARG = 1730;
 export const ALT = 1210;
@@ -48,6 +48,49 @@ function fotoHtml(f, dono, i, minha) {
     <img src="${src}" alt="Foto pregada" draggable="false">
     ${minha ? `<button class="ql-foto__x" type="button" data-tira="${i}" aria-label="Despregar foto">×</button><span class="ql-foto__alca" data-alca="${i}" aria-hidden="true"></span>` : ''}
   </div>`;
+}
+
+// ---------- miniatura: a face do quadro na mesa 3D é o mesmo palco, encolhido
+// Notas, fotos e rabiscos na posição salva; o texto vira rabisco (ilegível nesse tamanho).
+// O arruma() só roda no quadro aberto, então notas sobrepostas podem aparecer encavaladas aqui.
+// board: docs com .id = uid de quem pregou; pages (resenha): as páginas de nota na ordem do quadro;
+// sem pages = notinhas do diário (as minhas por último, por cima, como no quadro aberto).
+const ROTQ = ['-2.4deg', '1.8deg', '-1deg', '2.6deg', '-1.8deg', '0.8deg', '-2.8deg', '1.2deg'];
+const TACHAS = ['var(--amber)', 'var(--teal)', 'var(--pink)', 'var(--paper)'];
+const linhasDe = (txt, porLinha) => Math.max(1, Math.min(7, Math.ceil(String(txt ?? '').length / porLinha)));
+const rabiscos = (n) => Array.from({ length: n }, (_, k) => `<i style="--w:${[92, 74, 84, 58][k % 4]}%"></i>`).join('');
+export function miniaturaHtml({ board = [], uid = '', pages = null }) {
+  let notas;
+  if (pages) {
+    notas = pages.map((p, i) => {
+      const n = board.find((b) => b.id === p.id)?.note;
+      const d = posPadrao(i);
+      const foto = safeUrl(p.photo);
+      const linhas = p.comment && !p.spoiler ? linhasDe(p.comment, 24) : 1;
+      return `<li class="qv-nota" style="left:${prende(n?.x ?? d.x, -50, LARG - 60)}px;top:${prende(n?.y ?? d.y, -20, ALT - 60)}px;--r:${ROTQ[i % ROTQ.length]};--tacha:${TACHAS[i % TACHAS.length]}">
+        <span class="qv-tacha"></span><span class="qv-nota__topo"><span class="qv-nota__foto">${foto ? `<img src="${esc(foto)}" alt="" referrerpolicy="no-referrer">` : `<b>${esc(p.initial)}</b>`}</span><i></i></span>${rabiscos(linhas)}</li>`;
+    }).join('');
+  } else {
+    let k = 0;
+    const ordem = [...board.filter((b) => b.id !== uid), ...board.filter((b) => b.id === uid)];
+    notas = ordem.flatMap((b) => (b.notes ?? []).filter(notinhaOk)).map((n) => {
+      const i = k++;
+      return `<li class="qv-notinha" style="left:${prende(n.x, -50, LARG - 60)}px;top:${prende(n.y, -20, ALT - 60)}px;--r:${GIROS[i % GIROS.length]};--papel:${PAPEIS[i % PAPEIS.length]}">
+        <span class="qv-tacha"></span>${rabiscos(linhasDe(n.text, 17))}<i class="qv-quem"></i></li>`;
+    }).join('');
+  }
+  const fotos = board.flatMap((b) => b.images ?? []).map((f) => {
+    const src = safeImgData(f.data);
+    return src ? `<span class="qv-foto" style="left:${prende(f.x, -100, LARG)}px;top:${prende(f.y, -100, ALT)}px;width:${prende(f.w, 60, 500)}px"><span class="qv-tacha"></span><img src="${src}" alt=""></span>` : '';
+  }).join('');
+  // traço fino some no tamanho da mesa: engrossa só aqui
+  const tinta = board.flatMap((b) => b.strokes ?? []).map((t) => {
+    const m = TRACO.exec(t);
+    return m ? `<polyline points="${m[3]}" stroke="${CORES[m[1]]}" stroke-width="${Math.max(Number(m[2]) * 1.5, 8)}"/>` : '';
+  }).join('');
+  if (!notas && !fotos && !tinta) return '';
+  return `<span class="qv"><span class="qv__palco">${fotos}<ul>${notas}</ul>
+    <svg class="qv-tinta" viewBox="0 0 ${LARG} ${ALT}" width="${LARG}" height="${ALT}">${tinta}</svg></span></span>`;
 }
 
 // opts:

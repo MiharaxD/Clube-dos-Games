@@ -22,7 +22,8 @@ import { ENTRA_RAPIDO, NA_TELA, SAI, anim, calma, entrar } from '../../lib/motio
 import { confirmInline, esc, fmtDateTime, fmtPrice, fotoParaCapa, fotoParaQuadro, listJoin, safeImgData, toast, youtubeId, withBusy, DURATION_LABEL, MODE_LABEL } from '../../lib/util.js';
 import { avatar, empty, memberName, stamp } from '../parts.js';
 import { openReading } from '../caixinha.js';
-import { caseFront } from '../rack.js';
+import { balaoRecados, caseFront } from '../rack.js';
+import { marcaVisto, naoVistos } from '../../lib/visto.js';
 import { METAIS, coroaSvg, estatuetaSoloHtml, mesaSection, mountMesa } from '../mesa.js';
 import { montaQuadro } from '../quadro.js';
 import { abreDiario } from '../diario.js';
@@ -63,9 +64,9 @@ export function renderPlay(main, data, ctx, extra) {
     alvos.push({ obj: 'cal-obj', label: 'Abrir o calendário e marcar os dias que você pode na reunião' });
     alvos.push({ obj: 'botao-obj', label: minhaPos < 0 ? 'Zerei! Mandar a foto de prova e marcar que você zerou' : `Você já zerou (${minhaPos + 1}º lugar)`, popup: false });
     zerados.forEach((m, i) => alvos.push(alvoEst(m, i)));
-  } else alvos.push({ obj: 'quadro-obj', label: 'Abrir o quadro de resenhas' });
+  } else alvos.push({ obj: 'quadro-obj', label: 'Abrir o quadro de resenhas', balao: balaoRecados(naoVistos(round.id, 'resenha', uid, resenhaDocs(data)), members, NOVIDADE) });
   if (canEdit) alvos.push({ obj: 'retrato-obj', label: 'Pôr a foto do ganhador da votação no porta-retrato', popup: false });
-  alvos.push({ obj: 'diario-obj', label: playing ? 'Abrir o quadro de jogando: notinhas, rabiscos e fotos' : 'Rever o quadro de jogando' });
+  alvos.push({ obj: 'diario-obj', label: playing ? 'Abrir o quadro de jogando: notinhas, rabiscos e fotos' : 'Rever o quadro de jogando', balao: balaoRecados(naoVistos(round.id, 'diario', uid, data.diario ?? []), members, NOVIDADE) });
 
   main.innerHTML = `
     <div class="rodada--mesa">
@@ -89,6 +90,12 @@ export function renderPlay(main, data, ctx, extra) {
     ${extra.balcao}`;
 
   const sec = main.querySelector('.mesa-sec');
+  // abrir o quadro = viu tudo: grava e tira o balão; devolve o botão (vira o gatilho do modal)
+  const visto = (botao, onde, docs) => {
+    marcaVisto(round.id, onde, uid, docs);
+    botao.querySelector('[data-balao]')?.remove();
+    return botao;
+  };
   // jogando: no lugar do bilhete fica o porta-retrato do ganhador da votação
   const notaMesa = playing ? '' : `${data.ratings.length} de ${members.filter((m) => m.approved).length} deram nota`;
   const textosBotao = (pos) => (pos < 0
@@ -97,7 +104,7 @@ export function renderPlay(main, data, ctx, extra) {
   const mesa = mountMesa(sec, {
     fase: playing ? 'jogando' : 'encerrada', game, front, mini, pages, nota: notaMesa,
     fotoVencedor: safeImgData(round.fotoVencedor), nomeVencedor: memberName(members, game.suggestedBy), podeTrocarFoto: canEdit,
-    zerados, vagas: members.filter((m) => m.approved).length, ...textosBotao(minhaPos), notinhas: (data.diario ?? []).reduce((n, d) => n + (d.notes?.length ?? 0), 0),
+    zerados, vagas: members.filter((m) => m.approved).length, ...textosBotao(minhaPos), uid, diario: data.diario ?? [], board: data.board ?? [],
   });
 
   // capinha da mesa → caixinha (manual do jogo, só leitura)
@@ -106,9 +113,9 @@ export function renderPlay(main, data, ctx, extra) {
     openReading({ game, members, uid, fonte, gatilho: e.currentTarget, front, coroa: coroaSvg('coroa-caixinha') });
   });
   sec.querySelector('[data-obj="cal-obj"]')?.addEventListener('click', (e) => openCalendar(e.currentTarget, mesa, data, ctx));
-  sec.querySelector('[data-obj="quadro-obj"]')?.addEventListener('click', (e) => openBoard(e.currentTarget, mesa, data, ctx, pages));
+  sec.querySelector('[data-obj="quadro-obj"]')?.addEventListener('click', (e) => openBoard(visto(e.currentTarget, 'resenha', resenhaDocs(data)), mesa, data, ctx, pages));
   sec.querySelector('[data-obj="diario-obj"]')?.addEventListener('click', (e) => abreDiario({
-    gatilho: e.currentTarget,
+    gatilho: visto(e.currentTarget, 'diario', data.diario ?? []),
     objeto: mesa.mesa.querySelector('#diario-obj'),
     face: () => mesa.mesa.querySelector('#diario-obj .m-quadro > .f'),
     docs: data.diario ?? [],
@@ -434,6 +441,11 @@ const ROTQ = ['-2.4deg', '1.8deg', '-1deg', '2.6deg', '-1.8deg', '0.8deg', '-2.8
 const TACHAS = ['var(--amber)', 'var(--teal)', 'var(--pink)', 'var(--paper)'];
 
 // Cada nota vira uma página de caderno pregada no quadro (resenha = comentário da nota).
+// Balão de novidade nos quadros da mesa (mesmo aviso dos recados da prateleira): conta doc dos
+// outros salvo depois da última vez que a pessoa abriu aquele quadro neste aparelho.
+const NOVIDADE = ['novidade no quadro', 'novidades no quadro'];
+const resenhaDocs = (data) => [...(data.board ?? []), ...data.ratings];
+
 function ratingPages({ ratings, members, uid }) {
   return [...ratings].sort((a, b) => b.score - a.score).map((r) => {
     const m = members.find((x) => x.id === r.id) ?? { name: 'Ex-sócio' };
@@ -514,9 +526,15 @@ async function openBoard(gatilho, mesa, data, ctx, pages) {
     <ul class="ql-form">${formHtml(mine, mine?.score ?? 5)}</ul>
     <div class="modal__acoes"><button class="btn" type="button" data-fechar>Fechar o quadro</button></div></div>`;
   let board = [];
+  let sujo = false; // gravou algo: a tela de trás recarrega ao fechar
   try { board = await listBoard(data.round.id); } catch (err) { console.error(err); }
   const livre = montaQuadro(modal.querySelector('.ql'), {
-    uid: data.uid, pages, board, pagina: pageHtml, salvar: (estado) => saveBoard(data.round.id, data.uid, estado),
+    uid: data.uid, pages, board, pagina: pageHtml,
+    // mexeu no quadro → a mesa redesenha a miniatura ao fechar
+    salvar: (estado) => {
+      sujo = true;
+      return saveBoard(data.round.id, data.uid, estado);
+    },
   });
   document.body.append(modal);
   const fundo = modal.querySelector('.modal__fundo');
@@ -555,7 +573,6 @@ async function openBoard(gatilho, mesa, data, ctx, pages) {
     else if (gatilho.isConnected) gatilho.focus({ preventScroll: true });
   };
   // salvar a nota não fecha o quadro: troca a página ali mesmo; a tela de trás atualiza ao fechar
-  let sujo = false;
   bindRating(modal, data, ctx, async (nota) => {
     sujo = true;
     const resto = data.ratings.filter((r) => r.id !== data.uid);

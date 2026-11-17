@@ -8,6 +8,7 @@ import {
   listAllVotes,
   listDateVotes,
   listDiario,
+  listBoard,
   listGames,
   listQuestions,
   listRatings,
@@ -53,15 +54,17 @@ export async function renderRound(main, ctx) {
     if (session.isAdmin) data.votesByGame = await listAllVotes(round.id, games);
   }
   if (round.status === 'jogando' || round.status === 'encerrada') {
-    const [votesByGame, dateVotes, ratings, questions, zerei, diario] = await Promise.all([
+    // board = quadro da resenha (só existe na encerrada; vai pra miniatura e pro balão de novidade)
+    const [votesByGame, dateVotes, ratings, questions, zerei, diario, board] = await Promise.all([
       listAllVotes(round.id, games),
       listDateVotes(round.id),
       listRatings(round.id),
       listQuestions(round.id),
       listZerei(round.id),
       listDiario(round.id),
+      round.status === 'encerrada' ? listBoard(round.id) : [],
     ]);
-    Object.assign(data, { votesByGame, dateVotes, ratings, questions, zerei, diario });
+    Object.assign(data, { votesByGame, dateVotes, ratings, questions, zerei, diario, board });
     data.ranking = rankGames(games, votesByGame);
   }
 

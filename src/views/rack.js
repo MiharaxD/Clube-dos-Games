@@ -3,7 +3,7 @@
 // REGRA: nada de filter/opacity/blend/mask/clip-path nos ancestrais da cadeia 3D.
 import { DURATION_LABEL, MODE_LABEL, esc, coverSrc } from '../lib/util.js';
 import { calma } from '../lib/motion.js';
-import { naoVistos, marcaVisto } from '../lib/visto.js';
+import { autor, naoVistos, marcaVisto } from '../lib/visto.js';
 import { avatar, coverPalette, genericCover, priceTag } from './parts.js';
 
 // Props decorativos em cima do móvel (abajur, consoles, capinhas deitadas). O abajur acende a poça âmbar.
@@ -155,13 +155,13 @@ export const vitrine = (inner, label, extra = '') =>
 
 // Balão de recado novo em cima da capinha: a fotinha de quem comentou (até 3, o mais novo na frente).
 // Não pega clique: tocar na capinha abre a caixinha e lá os recados ficam vistos.
-function balaoRecados(novos, members) {
+export function balaoRecados(novos, members, nome = ['recado novo', 'recados novos']) {
   if (!novos.length) return '';
-  const quem = [...new Set(novos.map((c) => c.createdBy).reverse())];
+  const quem = [...new Set(novos.map(autor).reverse())];
   const fotos = quem.slice(0, 3).map((id) => avatar(members.find((m) => m.id === id), 'sm')).join('');
   const mais = quem.length > 3 ? `<span class="balao__mais">+${quem.length - 3}</span>` : '';
   const n = novos.length;
-  return `<span class="balao" data-balao><span class="sr-only">${n} ${n === 1 ? 'recado novo' : 'recados novos'}</span>${fotos}${mais}</span>`;
+  return `<span class="balao" data-balao><span class="sr-only">${n} ${n === 1 ? nome[0] : nome[1]}</span>${fotos}${mais}</span>`;
 }
 
 // Liga o balão da prateleira (sugerindo/votando) aos recados carregados em data.comments.

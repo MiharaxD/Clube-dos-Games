@@ -395,15 +395,34 @@ textarea.campo-papel { display: block; width: 100%; min-height: 96px; margin-top
   background: var(--paper); color: var(--paper-ink); font: 400 17px/1.15 var(--f-placa); letter-spacing: 0.12em;
   box-shadow: 1px 2px 0 rgb(12 6 9 / 0.45);
 }
-.qm {
-  position: absolute; width: 62px; height: 76px; padding: 14px 6px 0 9px; rotate: var(--r);
-  background: repeating-linear-gradient(180deg, transparent 0 8px, rgb(70 160 170 / 0.3) 8px 9px) 0 20px / 100% 100% no-repeat, var(--paper);
-  box-shadow: 2px 3px 0 rgb(12 6 9 / 0.45);
+/* miniatura: o palco do quadro aberto (1730x1210) encolhido pra caber dentro da moldura (292x216);
+   medidas abaixo em px do palco grande. Sem opacidade/filtro: está dentro da cadeia 3D. */
+.qv { position: absolute; inset: 14px; overflow: hidden; }
+.qv__palco { position: absolute; left: 0; top: 6px; width: 1730px; height: 1210px; transform-origin: 0 0; transform: scale(calc(292 / 1730)); }
+.qv__palco > ul { margin: 0; padding: 0; list-style: none; }
+.qv-nota, .qv-notinha, .qv-foto { position: absolute; box-shadow: 14px 20px 0 rgb(12 6 9 / 0.45); }
+.qv-nota { width: 300px; padding: 40px 22px 26px 46px; rotate: var(--r); background: var(--paper); }
+.qv-nota::before { content: ''; position: absolute; left: 26px; top: 0; bottom: 0; width: 4px; background: rgb(179 33 63 / 0.4); }
+.qv-nota__topo { display: flex; align-items: center; gap: 16px; }
+.qv-nota__foto { flex: none; width: 60px; height: 60px; overflow: hidden; border-radius: 50%; border: 6px solid var(--paper-ink); }
+.qv-nota__foto img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.qv-nota__foto b { display: grid; place-items: center; width: 100%; height: 100%; background: var(--pink); color: var(--deep); font: 800 30px/1 var(--f-texto); }
+.qv-notinha { width: 280px; min-height: 150px; padding: 44px 24px 26px; rotate: var(--r); background: var(--papel); }
+.qv-nota i, .qv-notinha i { display: block; width: var(--w); height: 10px; margin-top: 24px; border-radius: 5px; background: rgb(42 29 23 / 0.55); }
+.qv-nota__topo i { flex: 0 0 55%; margin: 0; height: 14px; background: var(--paper-ink); }
+.qv-notinha .qv-quem { width: 38%; margin: 28px 0 0 auto; background: rgb(42 29 23 / 0.3); }
+.qv-foto { padding: 12px 12px 34px; background: var(--paper); rotate: -1.5deg; }
+.qv-foto img { display: block; width: 100%; }
+.qv-tacha {
+  position: absolute; left: 50%; top: -10px; z-index: 1; width: 44px; height: 44px; translate: -50% 0; border-radius: 50%;
+  background: radial-gradient(circle at 34% 32%, rgb(255 255 255 / 0.85) 0 12%, var(--tacha) 32%, color-mix(in srgb, var(--tacha), #0c0609 45%) 100%);
+  box-shadow: 8px 8px 0 rgb(12 6 9 / 0.45);
 }
-.qm::before { content: ''; position: absolute; left: 6px; top: 0; bottom: 0; width: 1px; background: rgb(179 33 63 / 0.4); }
-.qm__foto { display: block; width: 20px; height: 20px; overflow: hidden; border-radius: 50%; border: 2px solid var(--paper-ink); }
-.qm__foto svg { display: block; width: 100%; height: 100%; }
-.qm__rabisco { display: block; width: var(--w); height: 2px; margin-top: 6px; border-radius: 1px; background: rgb(42 29 23 / 0.55); }
+.qv-notinha > .qv-tacha { --tacha: var(--stamp); }
+.qv-foto > .qv-tacha { --tacha: var(--pink); }
+.qv-tinta { position: absolute; inset: 0; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+/* balão de novidade no quadro (mesmo .balao dos recados da prateleira), preso no botão do quadro */
+.alvo > .balao { top: -26px; left: 10%; }
 /* tachinha: cabeça de plástico colorida com brilho e sombra curta na cortiça */
 .tacha {
   position: absolute; left: 50%; top: 2px; width: 11px; height: 11px; translate: -50% 0; border-radius: 50%;
@@ -529,8 +548,6 @@ textarea.campo-papel { display: block; width: 100%; min-height: 96px; margin-top
 .modal--quadro .modal__acoes { margin-top: 4px; }
 
 /* miniatura das páginas no quadro da mesa: foto real ou a inicial */
-.qm__foto img { display: block; width: 100%; height: 100%; object-fit: cover; }
-.qm__foto b { display: grid; place-items: center; width: 100%; height: 100%; background: var(--pink); color: var(--deep); font: 800 10px/1 var(--f-texto); }
 
 /* folha do calendário: um bloco por mês e, se precisar, os horários do mesmo dia */
 .folha__mesano { margin-top: 12px; font: 400 1.4rem/1 var(--f-placa); letter-spacing: 0.05em; }
@@ -679,11 +696,6 @@ textarea.campo-papel { display: block; width: 100%; min-height: 96px; margin-top
 .zerados b { color: var(--ink); font-weight: 700; }
 
 /* ---------- Quadro de jogando (diário): miniatura na mesa e o quadro aberto com 3 páginas ---------- */
-.qn {
-  position: absolute; width: 46px; height: 46px; padding: 14px 6px 0; rotate: var(--r);
-  background: var(--papel); box-shadow: 2px 3px 0 rgb(12 6 9 / 0.45);
-}
-.qn .qm__rabisco { margin-top: 5px; }
 /* notinha: post-it pequeno com o comentário, quem pregou embaixo */
 .ql-notinha {
   position: absolute; min-height: 150px; padding: 26px 18px 14px; rotate: var(--r); color: var(--paper-ink);

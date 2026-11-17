@@ -6,6 +6,7 @@ import { GRAVIDADE, SAI, anim, calma } from '../lib/motion.js';
 import { esc, safeUrl } from '../lib/util.js';
 import { placeLights } from '../lib/scene.js';
 import { coverPalette } from './parts.js';
+import { miniaturaHtml } from './quadro.js';
 
 // caixa de faces (sem fundo): base no chão do objeto; faces = quais desenhar (f u l r b)
 export function caixa({ w, h, t, x = 0, y = 0, z = 0, cls = '', faces = 'fulr', f = '', u = '', l = '', r = '', s = '' }) {
@@ -166,34 +167,12 @@ function retratoHtml(foto, nome, podeTrocar) {
     <span class="retrato3d__foto">${dentro}</span>${nome ? `<span class="retrato3d__placa">${esc(nome)}</span>` : ''}</div></div>`;
 }
 
-// Quadro de cortiça no cavalete: miniaturas das páginas (foto + rabiscos); o texto fica no modal.
-const ROTQ = ['-2.4deg', '1.8deg', '-1deg', '2.6deg', '-1.8deg', '0.8deg', '-2.8deg', '1.2deg'];
-const TACHAS = ['var(--amber)', 'var(--teal)', 'var(--pink)', 'var(--paper)'];
-function quadroHtml(pages) {
-  return cavalete('Resenha', pages.slice(0, 8).map((p, i) => {
-    const c = i % 4;
-    const r = Math.floor(i / 4);
-    const w = ['82%', '64%', '74%', '56%'];
-    const rabiscos = [0, 1, 2].map((k) => `<span class="qm__rabisco" style="--w:${w[(i + k) % 4]}"></span>`).join('');
-    const photo = safeUrl(p.photo);
-    const foto = photo ? `<img src="${esc(photo)}" alt="" referrerpolicy="no-referrer">` : `<b>${esc(p.initial)}</b>`;
-    return `<span class="qm" style="left:${26 + c * 70}px;top:${48 + r * 92}px;--r:${ROTQ[i % ROTQ.length]};--tacha:${TACHAS[i % TACHAS.length]}">
-      <span class="qm__foto">${foto}</span>${rabiscos}<span class="tacha"></span></span>`;
-  }).join(''));
-}
-// Quadro de jogando: post-its miniatura das notinhas (de todas as páginas), sem texto.
-const PAPEIS = ['#ffd77a', '#9fe0d4', '#ffb3c6', '#d6ef9f', '#fbf6e6'];
-function diarioHtml(qtd) {
-  const minis = Array.from({ length: Math.min(qtd, 10) }, (_, i) => {
-    const c = i % 5;
-    const r = Math.floor(i / 5);
-    return `<span class="qn" style="left:${28 + c * 56}px;top:${58 + r * 80}px;--r:${ROTQ[(i + 3) % ROTQ.length]};--papel:${PAPEIS[i % PAPEIS.length]};--tacha:${TACHAS[i % TACHAS.length]}">
-      <span class="qm__rabisco" style="--w:80%"></span><span class="qm__rabisco" style="--w:56%"></span><span class="tacha"></span></span>`;
-  }).join('');
-  return cavalete('Jogando', minis);
-}
+// Quadros de cortiça no cavalete: a face é a miniatura do quadro aberto (miniaturaHtml de quadro.js).
+// Resenha: as páginas de nota + o board; jogando: a página 1 do diário.
+const quadroHtml = (o) => cavalete('Resenha', miniaturaHtml({ board: o.board ?? [], uid: o.uid, pages: o.pages ?? [] }));
+const diarioHtml = (o) => cavalete('Jogando', miniaturaHtml({ board: (o.diario ?? []).filter((d) => d.pagina === 0).map((d) => ({ ...d, id: d.uid })), uid: o.uid }));
 function cavalete(titulo, minis) {
-  const face = `<span class="qm-faixa">${titulo}</span>${minis}`;
+  const face = `${minis}<span class="qm-faixa">${titulo}</span>`;
   return caixa({ w: 40, h: 30, t: 74, x: -112, cls: 'm-perna' }) + caixa({ w: 40, h: 30, t: 74, x: 112, cls: 'm-perna' })
     + `<div class="quadro3d">${caixa({ w: 320, h: 244, t: 16, y: 24, cls: 'm-quadro', f: face })}</div>`;
 }
@@ -329,10 +308,11 @@ function videogameHtml() {
 // opts: { fase: 'jogando'|'encerrada', game, front, mini, pages, nota, alvos: [{ obj, label, attr }],
 //         fotoVencedor/nomeVencedor/podeTrocarFoto: o porta-retrato do jogando,
 //         zerados: [membro] em ordem de chegada, vagas: quantos sócios (lugares na prateleira), placa (texto do botão), notaZ (bilhete do botão),
-//         notinhas: quantas notinhas tem o quadro de jogando }
+//         uid, board (resenha) e diario (docs do quadro de jogando): as miniaturas dos quadros }
+// alvo.balao: html do balão de novidade (fica dentro do botão, fora da cadeia 3D)
 export function mesaSection(opts) {
   const alvos = opts.alvos.map((a) =>
-    `<button class="alvo" type="button" data-obj="${a.obj}" ${a.attr ?? ''} ${a.popup === false ? '' : 'aria-haspopup="dialog"'}><span class="sr-only">${a.label}</span></button>`).join('');
+    `<button class="alvo" type="button" data-obj="${a.obj}" ${a.attr ?? ''} ${a.popup === false ? '' : 'aria-haspopup="dialog"'}><span class="sr-only">${a.label}</span>${a.balao ?? ''}</button>`).join('');
   return `<section class="mesa-sec" aria-labelledby="mesa-titulo">
     <h2 class="sr-only" id="mesa-titulo">A mesa da rodada</h2>
     <div class="palco-wrap">
@@ -368,8 +348,8 @@ export function mountMesa(section, opts) {
     if (L.est) html += prateleiraHtml(L);
     if (L.cal) html += obj('cal-obj', L.cal, L.esc.cal, calHtml(opts.mini));
     if (L.retrato) html += obj('retrato-obj', L.retrato, L.esc.retrato, retratoHtml(opts.fotoVencedor, opts.nomeVencedor, opts.podeTrocarFoto));
-    if (L.quadro) html += obj('quadro-obj', L.quadro, L.esc.quadro, quadroHtml(opts.pages ?? []));
-    if (L.diario) html += obj('diario-obj', L.diario, L.esc.diario, diarioHtml(opts.notinhas ?? 0));
+    if (L.quadro) html += obj('quadro-obj', L.quadro, L.esc.quadro, quadroHtml(opts));
+    if (L.diario) html += obj('diario-obj', L.diario, L.esc.diario, diarioHtml(opts));
     if (L.caso) html += obj('caso-obj', L.caso, L.esc.caso, casoHtml(opts.game.name, opts.front));
     // sem lugar próprio (jogando): a capinha fica em pé em cima do videogame
     else if (opts.game && L.console) html += obj('caso-obj', L.console, L.esc.caso, casoHtml(opts.game.name, opts.front), 60 * L.esc.console);
