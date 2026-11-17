@@ -110,7 +110,9 @@
 /* chão: o pé da mesa some no escuro do quarto (camada 2D por cima, decorativa) */
 .palco-chao {
   position: absolute; left: -64px; right: -64px; bottom: 0; height: 22%; pointer-events: none;
-  background: linear-gradient(180deg, transparent, rgb(20 11 16 / 0.85) 60%, var(--ground));
+  /* translúcido e esfumado nas laterais: não vira uma caixa preta por cima da luz/furos da parede */
+  background: linear-gradient(180deg, transparent, rgb(12 6 9 / 0.62) 55%, rgb(12 6 9 / 0.9));
+  mask: linear-gradient(90deg, transparent, #000 9%, #000 91%, transparent);
 }
 
 /* caixa de faces: base no chão do objeto, centrada em x/z; --by sobe a caixa */
