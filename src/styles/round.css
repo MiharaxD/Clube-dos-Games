@@ -754,16 +754,17 @@ textarea.campo-papel { display: block; width: 100%; min-height: 96px; margin-top
   font: 400 1rem/1.35 var(--f-dati); overflow-wrap: anywhere; box-shadow: 2px 3px 0 rgb(12 6 9 / 0.45);
 }
 .est-recado p { margin: 0; white-space: pre-wrap; }
-/* recado do zerei: balãozinho em cima da cabeça (billboard como a cabeça; texto cortado em 2 linhas) */
+/* recado do zerei: balãozinho em cima da cabeça (billboard como a cabeça). Até 10 linhas: cabe o recado
+   inteiro (máx. 140 letras, RECADO_MAX do play.js). Altura máx. < BALAO_ANDAR do mesa.js */
 .balao3d {
-  position: absolute; left: -66px; bottom: 0; width: 132px;
+  position: absolute; left: -70px; bottom: 0; width: 140px;
   transform: translate3d(0, calc(var(--hy) * -1), 0) rotateY(calc(-1 * (var(--ry) + var(--yaw, 0deg)))) rotateX(calc(-1 * (var(--cam) + var(--pitch, 0deg))));
   transform-origin: 50% 100%;
 }
 .balao3d span {
-  position: relative; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
+  position: relative; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 10; overflow: hidden;
   padding: 5px 7px; border-radius: 8px; background: var(--paper); color: var(--paper-ink);
-  font: 400 14px/1.2 var(--f-dati); text-align: center; overflow-wrap: anywhere; box-shadow: 2px 2px 0 rgb(12 6 9 / 0.45);
+  font: 400 13px/1.2 var(--f-dati); text-align: center; overflow-wrap: anywhere; box-shadow: 2px 2px 0 rgb(12 6 9 / 0.45);
 }
 .balao3d::after {
   content: ''; position: absolute; left: 50%; top: 100%; translate: -50% 0;

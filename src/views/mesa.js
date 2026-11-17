@@ -22,11 +22,11 @@ const obj = (id, [x, z, ry = 0], s, inner, y = 0, extra = '') =>
 // Encerrada: quadro de resenha + o quadro de jogando guardado no fundo.
 const LAYOUTS = {
   jogando: {
-    pc: { W: 1040, H: 760, cy: 500, cam: -26, mesa: [1000, 440], lamp: [-440, -170, 0], cal: [-315, -10, 20], console: [-70, 40, -8], controle: [105, 172, 14],
-      est: { x0: -330, dx: 60, z: -270, cols: 12, s: 0.74, y0: 280, dy: 0 }, botao: [432, 130, -12], diario: [235, -60, -8],
+    pc: { W: 1040, H: 900, cy: 640, cam: -26, mesa: [1000, 440], lamp: [-440, -170, 0], cal: [-315, -10, 20], console: [-70, 40, -8], controle: [105, 172, 14],
+      est: { dx: 120, larg: 860, z: -270, s: 0.8, y: 280 }, botao: [432, 130, -12], diario: [235, -60, -8],
       esc: { cal: 1, caso: 1, console: 1, botao: 0.95, diario: 1.02 }, nota: [-300, 160], notaZ: [330, 196] },
-    cel: { W: 600, H: 840, cy: 530, cam: -30, mesa: [580, 560], lamp: [-248, -238, 0], cal: [-178, -112, 18], console: [-8, 118, -6], controle: [62, 238, 18],
-      est: { x0: -130, dx: 52, z: -295, cols: 6, s: 0.66, y0: 200, dy: 118 }, botao: [205, 196, -12], diario: [160, -70, -6],
+    cel: { W: 600, H: 800, cy: 520, cam: -30, mesa: [580, 560], lamp: [-248, -238, 0], cal: [-178, -112, 18], console: [-8, 118, -6], controle: [62, 238, 18],
+      est: { dx: 90, larg: 560, z: -295, s: 0.6, y: 200 }, botao: [205, 196, -12], diario: [160, -70, -6],
       esc: { cal: 0.95, caso: 0.85, console: 0.8, botao: 0.85, diario: 0.74 }, nota: [-205, 70], notaZ: [180, 272] },
   },
   encerrada: {
@@ -42,27 +42,21 @@ const LAYOUTS = {
 
 // ------------------------------------------------------------ peças
 
-// Prateleira de parede atrás da mesa: tábuas flutuando (com mão-francesa), uma por fileira.
-// Fileira 0 (do 1º em diante) na tábua de cima; no PC é uma tábua só com as 12.
-const MAX_ZERADOS = 12;
-const fileiras = (L) => Math.ceil(MAX_ZERADOS / L.est.cols);
-const alturaTabua = (L, row) => L.est.y0 + L.est.dy * (fileiras(L) - 1 - row);
+// Prateleira de parede atrás da mesa: uma tábua flutuando (com mão-francesa), com uma vaga por
+// sócio (opts.vagas). est = { dx: vão ideal, larg: largura máx. da tábua, z, s: escala, y: altura }.
+// Com muita gente o vão encolhe pra caber na largura (e os balões passam a alternar altura).
+function geoPrat(est, vagas) {
+  const cols = Math.max(1, vagas);
+  const dx = Math.min(est.dx, est.larg / cols);
+  return { ...est, cols, dx, x0: -((cols - 1) * dx) / 2 };
+}
 // lugar da estatueta i: [x, z, altura da tábua]
-const slot = (L, i) => {
-  const { x0, dx, z, cols } = L.est;
-  const row = Math.floor(i / cols);
-  return [x0 + (i % cols) * dx, z, alturaTabua(L, row)];
-};
+const slot = (L, i) => [L.est.x0 + i * L.est.dx, L.est.z, L.est.y];
 function prateleiraHtml(L) {
-  const { x0, dx, z, cols } = L.est;
+  const { dx, z, cols, y } = L.est;
   const w = cols * dx + 24;
-  const xc = x0 + (cols - 1) * dx / 2;
-  const tabuas = Array.from({ length: fileiras(L) }, (_, r) => {
-    const y = alturaTabua(L, r);
-    const mao = (lado) => caixa({ w: 8, h: 34, t: 30, x: lado * (w / 2 - 30), y: y - 44, z: -8, cls: 'm-prat m-prat--mao', faces: 'flr' });
-    return caixa({ w, h: 10, t: 46, y: y - 10, cls: 'm-prat', faces: 'fulr' }) + mao(-1) + mao(1);
-  }).join('');
-  return obj('prat-obj', [xc, z, 0], 1, tabuas);
+  const mao = (lado) => caixa({ w: 8, h: 34, t: 30, x: lado * (w / 2 - 30), y: y - 44, z: -8, cls: 'm-prat m-prat--mao', faces: 'flr' });
+  return obj('prat-obj', [0, z, 0], 1, caixa({ w, h: 10, t: 46, y: y - 10, cls: 'm-prat', faces: 'fulr' }) + mao(-1) + mao(1));
 }
 
 function mesaHtml(L, nota, notaZ) {
@@ -215,9 +209,16 @@ function botaoHtml(placa) {
     + `<div class="cupula">${discos}</div>`;
 }
 
+// Balões de recado: se o vão entre estatuetas (em px da estatueta) é mais largo que o balão
+// (.balao3d tem 140px), ficam todos na mesma altura; senão alternam em dois andares (ímpares em
+// cima), com o andar mais alto que o balão mais alto (10 linhas). Assim nenhum tampa o outro.
+const BALAO_LARG = 150;
+const BALAO_ANDAR = 172;
+const andarBalao = (est) => (est.dx / est.s >= BALAO_LARG ? 0 : BALAO_ANDAR);
+
 // estatueta: pedestal de pedra + boneco de metal; a cabeça é a foto (ou inicial) de quem zerou.
 // membro.recado (opcional) vira um balãozinho em cima da cabeça, sempre virado pra câmera.
-function estatuetaCorpo(membro, i) {
+function estatuetaCorpo(membro, i, andar = 0) {
   const ph = PEDESTAL[i] ?? 22;
   const y0 = ph + 6;
   const photo = safeUrl(membro?.photoURL);
@@ -232,11 +233,11 @@ function estatuetaCorpo(membro, i) {
     + `<div class="braco" style="--ax:15px;--ay:${y0 + 64}px;--a:34deg">${caixa({ w: 8, h: 30, t: 8, cls: 'm-metal' })}</div>`
     + caixa({ w: 12, h: 6, t: 10, y: y0 + 70, cls: 'm-metal', faces: 'flr' })
     + `<div class="cabeca3d" style="--hy:${y0 + 97}px">${rosto}</div>`
-    + (membro?.recado ? `<div class="balao3d" style="--hy:${y0 + 124 + (i % 2) * 50}px"><span>${esc(membro.recado)}</span></div>` : '');
+    + (membro?.recado ? `<div class="balao3d" style="--hy:${y0 + 124 + (i % 2) * andar}px"><span>${esc(membro.recado)}</span></div>` : '');
 }
 function estatuetaHtml(L, membro, i) {
   const [x, z, y] = slot(L, i);
-  return obj(`est-${i}`, [x, z, -6 + (i % 5) * 3], L.est.s, `<div class="est__corpo">${estatuetaCorpo(membro, i)}</div>`, y, metalVars(i));
+  return obj(`est-${i}`, [x, z, -6 + (i % 5) * 3], L.est.s, `<div class="est__corpo">${estatuetaCorpo(membro, i, andarBalao(L.est))}</div>`, y, metalVars(i));
 }
 
 // Estatueta sozinha, grande, fora da mesa (o modal de quando você clica nela).
@@ -285,7 +286,7 @@ function videogameHtml() {
 // ------------------------------------------------------------ montagem
 
 // opts: { fase: 'jogando'|'encerrada', game, front, mini, pages, nota, alvos: [{ obj, label, attr }],
-//         zerados: [membro] em ordem de chegada, placa (texto do botão), notaZ (bilhete do botão),
+//         zerados: [membro] em ordem de chegada, vagas: quantos sócios (lugares na prateleira), placa (texto do botão), notaZ (bilhete do botão),
 //         notinhas: quantas notinhas tem o quadro de jogando }
 export function mesaSection(opts) {
   const alvos = opts.alvos.map((a) =>
@@ -311,7 +312,9 @@ export function mountMesa(section, opts) {
   let L;
 
   function monta() {
-    L = LAYOUTS[opts.fase][largo.matches ? 'pc' : 'cel'];
+    const base = LAYOUTS[opts.fase][largo.matches ? 'pc' : 'cel'];
+    // a prateleira tem uma vaga por sócio (nunca menos que quem já zerou)
+    L = base.est ? { ...base, est: geoPrat(base.est, Math.max(opts.vagas ?? 6, opts.zerados?.length ?? 0)) } : base;
     palco.style.width = `${L.W}px`;
     palco.style.height = `${L.H}px`;
     mundo.style.top = `${L.cy}px`;

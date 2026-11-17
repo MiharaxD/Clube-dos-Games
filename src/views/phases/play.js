@@ -95,7 +95,7 @@ export function renderPlay(main, data, ctx, extra) {
     : { placa: `Zerado · ${pos + 1}º`, notaZ: 'já foi, chora' });
   const mesa = mountMesa(sec, {
     fase: playing ? 'jogando' : 'encerrada', game, front, mini, pages, nota: notaMesa,
-    zerados, ...textosBotao(minhaPos), notinhas: (data.diario ?? []).reduce((n, d) => n + (d.notes?.length ?? 0), 0),
+    zerados, vagas: members.filter((m) => m.approved).length, ...textosBotao(minhaPos), notinhas: (data.diario ?? []).reduce((n, d) => n + (d.notes?.length ?? 0), 0),
   });
 
   // capinha da mesa → caixinha (manual do jogo, só leitura)
@@ -684,7 +684,7 @@ function bindDates(container, data, ctx) {
 
 // ------------------------------------------------------------ zerei: prova e estatueta em evidência
 
-const RECADO_MAX = 280;
+const RECADO_MAX = 140;
 const alvoEst = (m, i) => ({ obj: `est-${i}`, label: `Ver a estatueta de ${esc(m.name ?? 'Ex-sócio')} (${i + 1}º) e a foto do zerado` });
 const mesaAlvo = (a) => `<button class="alvo" type="button" data-obj="${a.obj}" aria-haspopup="dialog"><span class="sr-only">${a.label}</span></button>`;
 

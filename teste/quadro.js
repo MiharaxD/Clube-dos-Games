@@ -60,7 +60,14 @@ const zeradosTxt = (zerados) => (zerados.length
 function render() {
   const playing = estado.fase === 'jogando';
   // recados falsos pra ver o balão em cima das estatuetas
-  const RECADOS = { mari: 'aquele final me quebrou, chorei no sofá', caio: 'fácil demais kkk' };
+  const RECADOS = {
+    mari: 'aquele final me quebrou, chorei no sofá',
+    caio: 'fácil demais kkk',
+    yuri: 'demorei 40 horas mas valeu cada minuto, o último planeta é a coisa mais linda que eu já vi num jogo',
+    bia: 'zerei no modo difícil sem morrer nenhuma vez, podem me chamar de lenda viva do clube a partir de hoje, obrigada',
+    duda: 'bom',
+    leo: 'escrevi o maior recado possível só pra testar se cabe tudo no balãozinho em cima da minha estatueta, sem cortar nada no final, ok? valeu, falou',
+  };
   const zerados = estado.zerei.map((id) => MEMBROS.find((m) => m.id === id)).filter(Boolean).map((m) => ({ ...m, recado: RECADOS[m.id] ?? '' }));
   const minhaPos = zerados.findIndex((m) => m.id === estado.eu);
   const alvos = [];
@@ -92,7 +99,7 @@ function render() {
   const mini = { mes: 'Dezembro', ano: 2026, ini: 2, fim: 31, of: new Set([4, 5, 11, 12, 18, 19]), sel: new Set([11]), nota: 'marca teus dias' };
   const mesa = mountMesa(sec, {
     fase: estado.fase, game: GAME, front: caseFront(GAME, stamp('Vencedor')), mini, pages: [], nota: playing ? 'reunião sex 19/12 20h' : '5 de 6 deram nota',
-    zerados, ...textos(minhaPos), notinhas,
+    zerados, vagas: MEMBROS.length, ...textos(minhaPos), notinhas,
   });
 
   const abre = (gatilho) => abreDiario({
