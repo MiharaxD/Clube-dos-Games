@@ -18,16 +18,16 @@ const obj = (id, [x, z, ry = 0], s, inner, y = 0, extra = '') =>
 
 // Duas composições da mesma mesa: PC (larga) e celular (mais funda).
 // Jogando: videogame no meio com a capinha em pé em cima, botão ZEREI na ponta e o quadro de
-// jogando (diario) no fundo; estatuetas de quem zerou na prateleira da parede, atrás da mesa (est).
+// jogando (diario) grande à direita; estatuetas de quem zerou na prateleira da parede, atrás da mesa (est).
 // Encerrada: quadro de resenha + o quadro de jogando guardado no fundo.
 const LAYOUTS = {
   jogando: {
     pc: { W: 1040, H: 760, cy: 500, cam: -26, mesa: [1000, 440], lamp: [-440, -170, 0], cal: [-315, -10, 20], console: [-70, 40, -8], controle: [105, 172, 14],
-      est: { x0: -330, dx: 60, z: -270, cols: 12, s: 0.74, y0: 280, dy: 0 }, botao: [432, 110, -12], diario: [175, -168, -6],
-      esc: { cal: 1, caso: 1, console: 1, botao: 0.95, diario: 0.78 }, nota: [-300, 160], notaZ: [330, 196] },
+      est: { x0: -330, dx: 60, z: -270, cols: 12, s: 0.74, y0: 280, dy: 0 }, botao: [432, 130, -12], diario: [235, -60, -8],
+      esc: { cal: 1, caso: 1, console: 1, botao: 0.95, diario: 1.02 }, nota: [-300, 160], notaZ: [330, 196] },
     cel: { W: 600, H: 840, cy: 530, cam: -30, mesa: [580, 560], lamp: [-248, -238, 0], cal: [-178, -112, 18], console: [-8, 118, -6], controle: [62, 238, 18],
-      est: { x0: -130, dx: 52, z: -295, cols: 6, s: 0.66, y0: 200, dy: 118 }, botao: [205, 196, -12], diario: [70, -212, -4],
-      esc: { cal: 0.95, caso: 0.85, console: 0.8, botao: 0.85, diario: 0.6 }, nota: [-205, 70], notaZ: [180, 272] },
+      est: { x0: -130, dx: 52, z: -295, cols: 6, s: 0.66, y0: 200, dy: 118 }, botao: [205, 196, -12], diario: [160, -70, -6],
+      esc: { cal: 0.95, caso: 0.85, console: 0.8, botao: 0.85, diario: 0.74 }, nota: [-205, 70], notaZ: [180, 272] },
   },
   encerrada: {
     pc: { W: 1040, H: 560, cy: 300, cam: -26, mesa: [1000, 440], lamp: [-150, -185, 0], quadro: [-305, -40, 16], caso: [40, 40, -4], console: [300, 0, -12], diario: [205, -168, -8], esc: { quadro: 1, caso: 1, console: 1, diario: 0.72 }, nota: [130, 175], marca: [-130, 165] },
