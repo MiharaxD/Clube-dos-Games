@@ -406,14 +406,16 @@ service cloud.firestore {
       // do servidor, então ninguém fura a fila. Só em "jogando", e o dono pode
       // desfazer (apagar) enquanto a rodada está em "jogando"; o admin também
       // anula o zerei de qualquer um (mentiroso) nessa fase. "foto" = prova do
-      // zerado (obrigatória), JPEG em data URL com o mesmo limite da capa.
+      // zerado (obrigatória), JPEG em data URL com o mesmo limite da capa;
+      // "recado" opcional (até 280), aparece do lado da foto na estatueta.
       // -----------------------------------------------------------------------
       match /zerei/{ownerId} {
         allow read: if isApproved();
         allow create: if isApproved()
           && ownerId == me()
           && roundStatus(roundId) == 'jogando'
-          && request.resource.data.keys().hasOnly(['at', 'foto'])
+          && request.resource.data.keys().hasOnly(['at', 'foto', 'recado'])
+          && isText(request.resource.data.get('recado', ''), 0, 280)
           && request.resource.data.at == request.time
           && request.resource.data.foto is string
           && request.resource.data.foto.size() <= 100000

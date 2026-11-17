@@ -561,6 +561,11 @@ describe('zerei', () => {
     await assertSucceeds(deleteDoc(doc(as('admin'), 'rounds/r-jog/zerei/bob')));
   });
 
+  it('recado opcional até 280', async () => {
+    await assertSucceeds(setDoc(doc(as('alice'), 'rounds/r-jog/zerei/alice'), { ...zerei(), recado: 'final chorei' }));
+    await assertFails(setDoc(doc(as('bob'), 'rounds/r-jog/zerei/bob'), { ...zerei(), recado: 'x'.repeat(281) }));
+  });
+
   it('sem foto de prova (ou foto que não é JPEG) é negado', async () => {
     await assertFails(setDoc(doc(as('alice'), 'rounds/r-jog/zerei/alice'), { at: serverTimestamp() }));
     await assertFails(setDoc(doc(as('alice'), 'rounds/r-jog/zerei/alice'), { at: serverTimestamp(), foto: 'https://x.com/a.jpg' }));

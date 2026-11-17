@@ -285,9 +285,9 @@ export async function listZerei(roundId) {
   return snap.docs.map(withId);
 }
 
-// foto = prova do zerado (JPEG em data URL, fotoParaQuadro); obrigatória nas rules
-export function marcaZerei(roundId, uid, foto) {
-  return setDoc(doc(db, 'rounds', roundId, 'zerei', uid), { at: serverTimestamp(), foto });
+// foto = prova do zerado (JPEG em data URL, fotoParaQuadro), obrigatória nas rules; recado opcional
+export function marcaZerei(roundId, uid, { foto, recado = '' }) {
+  return setDoc(doc(db, 'rounds', roundId, 'zerei', uid), { at: serverTimestamp(), foto, recado });
 }
 
 // o dono desfaz o próprio; o admin anula o de qualquer um

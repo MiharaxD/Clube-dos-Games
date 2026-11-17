@@ -131,13 +131,13 @@ export function renderPlay(main, data, ctx, extra) {
       return;
     }
     zerando = true;
-    const foto = await pedeProva(game.name);
-    if (!foto) {
+    const prova = await pedeProva(game.name);
+    if (!prova) {
       zerando = false;
       return;
     }
     try {
-      await marcaZerei(round.id, uid, foto);
+      await marcaZerei(round.id, uid, prova);
     } catch (err) {
       console.error(err);
       toast('Não deu pra marcar. Tenta de novo.', 'erro');
@@ -146,7 +146,7 @@ export function renderPlay(main, data, ctx, extra) {
     }
     const eu = members.find((m) => m.id === uid) ?? { id: uid, name: ctx.session.member?.name };
     zerados.push(eu);
-    data.zerei = [...(data.zerei ?? []), { id: uid, foto }];
+    data.zerei = [...(data.zerei ?? []), { id: uid, ...prova }];
     const i = zerados.length - 1;
     mesa.remonta({ zerados, ...textosBotao(i) });
     sec.querySelector('.palco-wrap').insertAdjacentHTML('beforeend', mesaAlvo(alvoEst(eu, i)));
@@ -711,6 +711,7 @@ function bindDates(container, data, ctx) {
 
 // ------------------------------------------------------------ zerei: prova e estatueta em evidência
 
+const RECADO_MAX = 280;
 const alvoEst = (m, i) => ({ obj: `est-${i}`, label: `Ver a estatueta de ${esc(m.name ?? 'Ex-sócio')} (${i + 1}º) e a foto do zerado` });
 const mesaAlvo = (a) => `<button class="alvo" type="button" data-obj="${a.obj}" aria-haspopup="dialog"><span class="sr-only">${a.label}</span></button>`;
 
@@ -756,7 +757,8 @@ function modalZerei({ html, rotulo, gatilho, origem, aoFechar }) {
   return { modal, fecha };
 }
 
-// Antes de zerar: a foto do jogo zerado (créditos, troféu, tela final). Resolve com o JPEG ou null.
+// Antes de zerar: a foto do jogo zerado (créditos, troféu, tela final) + recado opcional.
+// Resolve com { foto, recado } ou null.
 function pedeProva(nomeJogo) {
   return new Promise((resolve) => {
     let foto = '';
@@ -764,12 +766,15 @@ function pedeProva(nomeJogo) {
     const { modal, fecha } = modalZerei({
       rotulo: 'prova-titulo',
       gatilho: document.querySelector('[data-obj="botao-obj"]'),
-      aoFechar: () => resolve(confirmou ? foto : null),
+      aoFechar: () => resolve(confirmou ? { foto, recado: modal.querySelector('[data-recado]').value.trim() } : null),
       html: `<div class="prova-form">
         <h2 class="modal__titulo" id="prova-titulo" tabindex="-1">Prova ou não aconteceu</h2>
         <p class="modal__dica">Manda uma foto ou print de ${esc(nomeJogo)} zerado: créditos, troféu, tela final. Sem foto, sem estatueta.</p>
         <label class="btn"><input class="sr-only" type="file" accept="image/*" data-arq>Escolher foto</label>
         <figure class="prova" hidden><img alt="Prévia da foto de prova"><figcaption>a prova</figcaption></figure>
+        <label class="field prova-form__recado"><span>Recado (opcional)</span>
+          <textarea class="input" data-recado maxlength="${RECADO_MAX}" placeholder="Ex.: aquele final me quebrou"></textarea>
+        </label>
         <p class="modal__erro" aria-live="polite" data-erro></p>
         <div class="modal__acoes">
           <button class="btn btn--primary" type="button" data-ok disabled>Zerei!</button>
@@ -808,7 +813,9 @@ function openEstatueta(gatilho, zerados, data, ctx) {
   const i = Number(gatilho.dataset.obj.slice(4));
   const m = zerados[i];
   if (!m) return;
-  const foto = safeImgData(data.zerei?.find((z) => z.id === m.id)?.foto);
+  const doc = data.zerei?.find((z) => z.id === m.id);
+  const foto = safeImgData(doc?.foto);
+  const recado = String(doc?.recado ?? '').trim();
   const voce = m.id === data.uid;
   const podeAnular = ctx.session.isAdmin && data.isLatest && data.round.status === 'jogando';
   const metal = METAIS[i % METAIS.length];
@@ -825,6 +832,7 @@ function openEstatueta(gatilho, zerados, data, ctx) {
         ${foto
           ? `<figure class="prova"><img src="${esc(foto)}" alt="Foto de prova do zerado de ${esc(nome)}"><figcaption>a prova</figcaption></figure>`
           : '<p class="prova prova--vazia">Zerou antes da regra da foto. Confia.</p>'}
+        ${recado ? `<blockquote class="est-recado"><p>${esc(recado)}</p></blockquote>` : ''}
         <div class="modal__acoes">
           ${podeAnular ? '<button class="btn btn--danger" type="button" data-anular>Anular zerei</button>' : ''}
           <button class="btn" type="button" data-fechar>Fechar</button>
