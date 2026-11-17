@@ -310,6 +310,30 @@ const RECADO_MAX = 300;
 const POSTIT_COR = ['#ffe98a', '#ffc2d4', '#b8ecdf', '#ffd59e', '#d9ccff'];
 const POSTIT_GIRO = ['-2deg', '1.6deg', '-0.8deg', '2.2deg', '-1.4deg'];
 
+// Arte em texto (braille, ASCII): 3+ linhas e cheia de símbolo. Vira "modo arte": fonte de largura fixa,
+// sem quebrar linha, e a letra encolhe até o desenho caber no post-it (encaixaArte).
+const BRAILLE = /[\u2800-\u28ff]/;
+function ehArte(text) {
+  const linhas = text.split('\n').filter((l) => l.trim());
+  if (linhas.length < 3) return false;
+  if (BRAILLE.test(text)) return true;
+  const visiveis = text.replace(/\s/g, '');
+  const simbolos = visiveis.replace(/[\p{L}\p{N}]/gu, '');
+  return simbolos.length / visiveis.length > 0.6;
+}
+// No braille o espaço comum tem outra largura que o pontinho e entorta o desenho: troca pelo braille vazio.
+const textoArte = (text) => (BRAILLE.test(text) ? text.replace(/ /g, '\u2800') : text);
+
+// Encolhe a fonte de cada arte até a linha mais comprida caber na largura do post-it.
+function encaixaArte(lista) {
+  lista.querySelectorAll('.recados__item--arte .recados__txt').forEach((el) => {
+    el.style.fontSize = '';
+    const base = parseFloat(getComputedStyle(el).fontSize);
+    const cabe = el.clientWidth / el.scrollWidth;
+    if (cabe < 1) el.style.fontSize = `${Math.max(4, Math.floor(base * cabe * 10) / 10)}px`;
+  });
+}
+
 // aoVer(itens) (opcional): chamado com os recados que a pessoa acabou de ver (marca o balão como lido).
 function montaRecados(cx, game, members, uid, { roundId, isAdmin, aoVer }) {
   cx.el.querySelector('.modal__palco').insertAdjacentHTML('beforeend', `
@@ -328,13 +352,14 @@ function montaRecados(cx, game, members, uid, { roundId, isAdmin, aoVer }) {
 
   const desenha = (itens) => {
     lista.innerHTML = itens.length
-      ? itens.map((c, i) => `<li class="recados__item" style="--postit: ${POSTIT_COR[i % POSTIT_COR.length]}; --giro: ${POSTIT_GIRO[i % POSTIT_GIRO.length]}">
-          <p class="recados__txt">${esc(c.text)}</p>
+      ? itens.map((c, i) => `<li class="recados__item${ehArte(c.text) ? ' recados__item--arte' : ''}" style="--postit: ${POSTIT_COR[i % POSTIT_COR.length]}; --giro: ${POSTIT_GIRO[i % POSTIT_GIRO.length]}">
+          <p class="recados__txt">${esc(ehArte(c.text) ? textoArte(c.text) : c.text)}</p>
           <p class="recados__quem">${avatar(members.find((m) => m.id === c.createdBy), 'sm')}<span>${c.createdBy === uid ? 'Você' : esc(memberName(members, c.createdBy))}</span></p>
           ${c.createdBy === uid || isAdmin || game.id === uid
             ? `<button class="recados__x" type="button" data-apagar="${esc(c.id)}" aria-label="Apagar recado">×</button>` : ''}
         </li>`).join('')
       : '<li class="recados__vazio">Ninguém falou nada ainda. Começa aí.</li>';
+    encaixaArte(lista);
     aoVer?.(itens);
   };
   const carrega = () => listComments(roundId, game.id).then(desenha).catch(() => {

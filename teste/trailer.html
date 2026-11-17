@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex" />
+    <title>Teste · Trailer na caixinha</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <style>
+      /* só a barra de controle do teste; o resto vem do CSS do app */
+      .teste-barra { width: min(100%, 760px); margin: 24px auto; padding: 16px; }
+      .teste-barra form { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; margin-top: 10px; }
+      .teste-barra label { display: grid; gap: 4px; flex: 1 1 260px; font-weight: 700; }
+      .teste-barra input { min-height: 44px; padding: 0 10px; border: 2px solid var(--paper-ink); border-radius: 4px; background: #fbf6e6; color: var(--paper-ink); font: inherit; }
+      .teste-barra .teste-msg { margin-top: 8px; min-height: 1.3em; color: var(--stamp); font-weight: 700; }
+    </style>
+  </head>
+  <body>
+    <!-- Ambiente de teste (só no npm run dev; não entra no build): prateleira com jogos falsos pra testar o
+         trailer do YouTube na caixinha. Sem Firebase e sem login. -->
+    <div class="cena-parede" id="cena-parede" aria-hidden="true"></div>
+    <div class="cena-luz" id="cena-luz" aria-hidden="true"></div>
+    <div class="cena-grao" aria-hidden="true"></div>
+    <div class="cena-vinheta" aria-hidden="true"></div>
+
+    <div id="app" class="app"><main id="main" class="main" tabindex="-1"></main></div>
+    <div id="toast" class="toast" aria-hidden="true" hidden></div>
+    <div id="toast-status" class="sr-only" role="status"></div>
+    <div id="toast-alert" class="sr-only" role="alert"></div>
+    <script type="module" src="./trailer.js"></script>
+  </body>
+</html>

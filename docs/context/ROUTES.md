@@ -10,12 +10,12 @@
   `/* ---------- Nome ---------- */`. JS visual: `src/views/parts.js` (`neonSign`, `tv`, `cover`/`genericCover`/
   `coverPalette`, `priceTag`, `stamp`, `sticker`, `stateChip`, `phaseSteps`, avatar), `src/views/rack.js`
   (prateleira 3D: `rackHtml`, `nicho`, `caseHtml`, `postit`, `vitrine`, `bindTilt`, `avisoRecados` = balão de recado não visto, lido por `src/lib/visto.js`), `src/views/caixinha.js`
-  (`Estojo`, `openReading` com recados em post-it em sugerindo/votando e o trailer do YouTube ao lado), `src/views/tema.js` (flâmula do tema da
+  (`Estojo`, `openReading` com recados em post-it em sugerindo/votando, recado que é desenho em braille/ASCII vira "modo arte" com fonte fixa encolhida pra caber, e o trailer do YouTube ao lado), `src/views/tema.js` (flâmula do tema da
   rodada acima da prateleira; admin clica e edita), `src/views/mesa.js` (`caixa()`, layouts PC/celular por fase, inclusive `login`; `mountMesa`),
   `src/lib/motion.js` (motor WAAPI + `rolaNaMao` + `elastico`, este só no sorteio), `src/lib/festa.js` (confete em canvas), `src/lib/rickroll.js` (easter egg de toda TV: clique →
   pulo, chiado em canvas + ruído WebAudio (`chiar`/`somDeChiado` exportados, reusados no sorteio), vídeo `public/rickroll.mp4` (H.264/AAC, toca em celular); TV comum liga por `[data-tv-liga]`), `src/lib/scene.js` (luz nasce de `data-luz="tv|abajur|neon"`;
   `placeLights` após cada render), `src/lib/icons.js`. Fontes em `public/fonts/` (licenças em `LICENSE.md`).
-- **Testes:** `npm run build`; mesa de jogando/quadro sem Firebase: `npm run dev` → `/teste/quadro.html` (dados falsos no localStorage; `teste/` não entra no build); detector: `impeccable detect --json index.html src`
+- **Testes:** `npm run build`; sem Firebase: `npm run dev` → `/teste/quadro.html` (mesa de jogando/quadro, dados falsos no localStorage) e `/teste/trailer.html` (cola link do YouTube e abre a caixinha com o trailer); `teste/` não entra no build; detector: `impeccable detect --json index.html src`
   (script em `~/.claude/plugins/cache/impeccable/.../scripts/impeccable`).
 - **Mundo:** "Sexta no quarto", definido em `DESIGN.md` (manda em conflito) e já aplicado em todas as telas.
 - **Consulta visual (`Estetica/DOSSIE.md`): leia SÓ quando a tarefa exigir decisão ou inspiração visual

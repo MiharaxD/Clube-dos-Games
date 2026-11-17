@@ -12,6 +12,7 @@ Firestore, Hosting). Node 24.12+. Java 21 só para os emuladores.
 - Build: `npm run build` (o aviso de chunk > 500 kB é o SDK do Firebase; não é erro)
 - Testes das rules: `npm run test:rules` (sobe o emulador sozinho, projeto `demo-clube`)
 - Testar a mesa de jogando/quadro sem Firebase: `npm run dev` → http://localhost:5173/teste/quadro.html
+  (trailer na caixinha: `/teste/trailer.html`)
 - Emuladores p/ testar o app: `npm run emulators` + `.env.local` com `VITE_USE_EMULATORS=true`
   (detalhes em README §11). Se "java não encontrado": abrir terminal novo.
 - **Só com pedido explícito:** `npx firebase deploy`, `npx firebase login`, `npx firebase use`,
